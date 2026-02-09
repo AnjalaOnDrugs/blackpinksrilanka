@@ -1,0 +1,26 @@
+{
+  "version": "2.7",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Login",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "prompt",
+      "id": "ljFDJ",
+      "x": 0,
+      "y": -308,
+      "width": 250,
+      "height": 219,
+      "content": "Dark theme login screen to login frame with black as the primary color and #f7a6b9 as the secondary. This for a blackpink sri lanka community members login"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+
+RewriteEngine on
+
+# HTID:21629493: DO NOT REMOVE OR MODIFY THIS LINE AND THE LINES BELOW
+php_value display_errors 1
+# DO NOT REMOVE OR MODIFY THIS LINE AND THE LINES ABOVE HTID:21629493:
+RewriteCond %{HTTP_HOST} ^blackpinksrilanka\.org$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.blackpinksrilanka\.org$
+RewriteRule ^/?$ "https\:\/\/www\.blackpinksrilanka\.org\/" [R=301,L]

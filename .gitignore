@@ -1,0 +1,20 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+_notes
+dwsync.xml
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node
+node_modules/
+dist/
+.env
