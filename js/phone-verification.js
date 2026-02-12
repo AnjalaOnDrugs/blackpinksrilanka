@@ -49,9 +49,6 @@ async function checkPhoneInSheet(phoneNumber) {
 
     const response = await fetch(CONFIG.googleSheetsUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         action: 'verifyPhone',
         phone: normalizedPhone
@@ -94,20 +91,19 @@ async function sendWhatsAppOTP(phoneNumber, otpCode) {
     const whatsappPhone = formatPhoneForWhatsApp(phoneNumber);
     const message = `[BPSL community] Your login code is ${otpCode}`;
 
-    const response = await fetch(CONFIG.whatsappApiUrl, {
+    // Route through Google Apps Script to avoid CORS
+    // Credentials are stored server-side in the Apps Script, not sent from browser
+    const response = await fetch(CONFIG.googleSheetsUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
-        instance_id: ENV.whatsapp.instanceId,
-        access_token: ENV.whatsapp.accessToken,
+        action: 'sendWhatsApp',
         phone: whatsappPhone,
         message: message
       })
     });
 
-    if (!response.ok) {
+    const data = await response.json();
+    if (data.status !== 'success') {
       throw new Error('WhatsApp API request failed');
     }
 
@@ -220,6 +216,29 @@ async function verifyOTP(phoneNumber, enteredOTP) {
   } catch (error) {
     console.error('OTP verification error:', error);
     throw new Error('Failed to verify OTP. Please try again.');
+  }
+}
+
+/**
+ * Check if an OTP already exists for the phone number
+ *
+ * @param {string} phoneNumber - Normalized phone number
+ * @returns {Promise<boolean>} True if OTP exists
+ */
+async function checkOTPExists(phoneNumber) {
+  try {
+    const userRef = db.collection('users').doc(phoneNumber);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return false;
+    }
+
+    const userData = userDoc.data();
+    return !!userData.otpCode;
+  } catch (error) {
+    console.error('OTP exists check error:', error);
+    return false;
   }
 }
 

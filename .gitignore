@@ -19,3 +19,4 @@ node_modules/
 dist/
 .env
 .env.js
+google-sheets-integration.gs

@@ -2,10 +2,13 @@ window.addEventListener("load", (event) => {
 
     function resize() {
         //document.getElementById("bp_logo").style.height = "30px"
-        var heights = document.getElementById("bp_logo").clientHeight
-        document.getElementById("img_gap").style.height = heights + 20 + "px";
+        var bpLogo = document.getElementById("bp_logo");
+        var imgGap = document.getElementById("img_gap");
+        if (!bpLogo || !imgGap) return;
+        var heights = bpLogo.clientHeight;
+        imgGap.style.height = heights + 20 + "px";
 
-        
+
     }
     resize();
     window.onresize = function () {
@@ -16,15 +19,17 @@ window.addEventListener("load", (event) => {
     var scroll_value = 100;
 
 
-window.addEventListener("scroll", function(){ 
-   var st = window.pageYOffset || document.documentElement.scrollTop; 
+window.addEventListener("scroll", function(){
+   var bpLogo = document.getElementById("bp_logo");
+   if (!bpLogo) return;
+   var st = window.pageYOffset || document.documentElement.scrollTop;
    if (st > lastScrollTop) {
-    
-    document.getElementById("bp_logo").style.transform = "translate(0,"+Math.trunc(window.pageYOffset/5)+"px)"
+
+    bpLogo.style.transform = "translate(0,"+Math.trunc(window.pageYOffset/5)+"px)"
    } else if (st < lastScrollTop) {
-    
-    document.getElementById("bp_logo").style.transform = "translate(0,"+Math.trunc(window.pageYOffset/5)+"px)"
-   } 
-   lastScrollTop = st <= 0 ? 0 : st; 
+
+    bpLogo.style.transform = "translate(0,"+Math.trunc(window.pageYOffset/5)+"px)"
+   }
+   lastScrollTop = st <= 0 ? 0 : st;
 }, false);
 })

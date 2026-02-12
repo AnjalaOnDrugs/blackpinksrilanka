@@ -7,7 +7,7 @@ const CONFIG = {
 
   // Google Apps Script Web App URL
   // TODO: Update this after deploying the Google Apps Script
-  googleSheetsUrl: "https://script.google.com/macros/s/AKfycbxi4DImefm0E7qcu7TK_qxFds_uZdG3W8J8ZlyjCR_rbwFmSn3ZtWA3IV-mskSPQoyU/exec",
+  googleSheetsUrl: "https://script.google.com/macros/s/AKfycbxgDmwP423ZUe42lavvOMOBthAgzQHXh0QFjXbQ6t8Q-CFPkvetxeb6K1Uxg5TDqvgr/exec",
 
   // Google Sheet ID for member verification
   sheetId: "1cgEmVF7eizgMnjYxZUS_5QbLB6bWg2mXEfOfIA9fHnY",

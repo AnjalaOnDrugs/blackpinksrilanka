@@ -5,7 +5,7 @@
 
 // State management
 let currentPhone = '';
-let currentStage = 1;
+let currentStage = 'login';
 let otpCheckInterval = null;
 
 // DOM Elements
@@ -29,7 +29,6 @@ const otpSubmitBtn = document.getElementById('otpSubmitBtn');
 const accountSubmitBtn = document.getElementById('accountSubmitBtn');
 const loginSubmitBtn = document.getElementById('loginSubmitBtn');
 
-const regenerateOtpBtn = document.getElementById('regenerateOtpBtn');
 const resendOtpLink = document.getElementById('resendOtpLink');
 const startOverLink = document.getElementById('startOverLink');
 const showLoginLink = document.getElementById('showLoginLink');
@@ -56,17 +55,22 @@ function showStage(stage) {
   stage2Dot.classList.remove('active', 'completed');
   stage3Dot.classList.remove('active', 'completed');
 
+  // Get stage indicators container
+  const stageIndicators = document.getElementById('stageIndicators');
+
   // Show requested stage
   switch (stage) {
     case 1:
       stage1.classList.remove('hidden');
       stage1Dot.classList.add('active');
+      stageIndicators.classList.remove('hidden');
       currentStage = 1;
       break;
     case 2:
       stage2.classList.remove('hidden');
       stage1Dot.classList.add('completed');
       stage2Dot.classList.add('active');
+      stageIndicators.classList.remove('hidden');
       currentStage = 2;
       startOTPCheck();
       break;
@@ -75,11 +79,13 @@ function showStage(stage) {
       stage1Dot.classList.add('completed');
       stage2Dot.classList.add('completed');
       stage3Dot.classList.add('active');
+      stageIndicators.classList.remove('hidden');
       currentStage = 3;
       stopOTPCheck();
       break;
     case 'login':
       loginStage.classList.remove('hidden');
+      stageIndicators.classList.add('hidden');
       currentStage = 'login';
       break;
   }
@@ -141,11 +147,14 @@ phoneForm.addEventListener('submit', async (e) => {
       return;
     }
 
-    // Check rate limit
-    const rateLimitCheck = await checkOTPRateLimit(currentPhone);
-    if (!rateLimitCheck.allowed) {
-      showMessage(`Please wait ${rateLimitCheck.waitTime} seconds before requesting another code.`, 'error');
-      setButtonLoading(phoneSubmitBtn, false);
+    // Check if OTP already exists - if so, skip sending new OTP
+    const otpExists = await checkOTPExists(currentPhone);
+    if (otpExists) {
+      // Existing OTP is valid, proceed to verification stage without sending new OTP
+      showMessage('A verification code was already sent. Please check your WhatsApp.', 'success');
+      setTimeout(() => {
+        showStage(2);
+      }, 1500);
       return;
     }
 
@@ -230,19 +239,10 @@ resendOtpLink.addEventListener('click', async (e) => {
 
     showMessage('New verification code sent!', 'success');
 
-    // Reset regenerate button
-    regenerateOtpBtn.classList.add('hidden');
-
   } catch (error) {
     console.error('Resend OTP error:', error);
     showMessage(error.message || 'Failed to resend code. Please try again.', 'error');
   }
-});
-
-// Generate Another Code Button
-regenerateOtpBtn.addEventListener('click', async (e) => {
-  e.preventDefault();
-  resendOtpLink.click();
 });
 
 // Start Over
@@ -254,15 +254,10 @@ startOverLink.addEventListener('click', (e) => {
   showStage(1);
 });
 
-// OTP Timer Check (show regenerate button after 10 minutes)
+// OTP Timer Check
 function startOTPCheck() {
   stopOTPCheck();
-  otpCheckInterval = setInterval(async () => {
-    const shouldShow = await shouldShowRegenerateButton(currentPhone);
-    if (shouldShow) {
-      regenerateOtpBtn.classList.remove('hidden');
-    }
-  }, 10000); // Check every 10 seconds
+  // Interval can be used for other OTP-related checks if needed
 }
 
 function stopOTPCheck() {

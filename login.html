@@ -1,102 +1,109 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3595712894194617"
     crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.0/js/bootstrap.min.js"></script>
   <meta charset="utf-8">
   <title>Member Login - BLACKPINK SRI LANKA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/bootstrap.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
 
-<body class="body">
+<body class="auth-body">
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="https://www.blackpinksrilanka.org/">
-        <img src="assets/Logo.png" width="50px" alt="logo">
-        BLACKPINK SRI LANKA
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="news.html">News</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="projects.html">Projects</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="shop.html">Shop</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="downloads.html">Downloads</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="streaming_guidelines.html">Streaming Guidelines</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="about.html">About &nbsp;</a>
-          </li>
-          <li class="nav-item">
-            <a id="authButton" class="nav-link btn btn-danger" href="login.html">Login</a>
-          </li>
-        </ul>
-      </div>
+  <!-- Animated background elements -->
+  <div class="auth-bg">
+    <div class="auth-bg-glow auth-bg-glow--1"></div>
+    <div class="auth-bg-glow auth-bg-glow--2"></div>
+    <div class="auth-bg-glow auth-bg-glow--3"></div>
+    <div class="auth-sparkles">
+      <span class="sparkle" style="top:10%;left:15%;animation-delay:0s">&#10022;</span>
+      <span class="sparkle" style="top:20%;right:20%;animation-delay:1.2s">&#10022;</span>
+      <span class="sparkle" style="bottom:30%;left:10%;animation-delay:2.4s">&#9825;</span>
+      <span class="sparkle" style="bottom:15%;right:15%;animation-delay:0.8s">&#10022;</span>
+      <span class="sparkle" style="top:50%;left:5%;animation-delay:1.8s">&#10022;</span>
+      <span class="sparkle" style="top:40%;right:8%;animation-delay:3s">&#9825;</span>
     </div>
+  </div>
+
+  <!-- Floating nav bar -->
+  <nav class="auth-nav">
+    <a class="auth-nav-brand" href="index.html">
+      <span>Members Section</span>
+    </a>
+    <a href="index.html" class="auth-nav-back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Back to site
+    </a>
   </nav>
 
   <div class="auth-container">
     <div class="auth-card">
 
-      <!-- Stage Indicators -->
-      <div class="stage-indicators">
-        <div class="stage-dot" id="stage1Dot"></div>
-        <div class="stage-dot" id="stage2Dot"></div>
-        <div class="stage-dot" id="stage3Dot"></div>
+      <!-- Glowing border effect -->
+      <div class="auth-card-glow"></div>
+
+      <!-- Stage Indicators (only for signup flow) -->
+      <div class="stage-indicators hidden" id="stageIndicators">
+        <div class="stage-step" id="stage1Dot">
+          <div class="stage-step-circle">1</div>
+          <span class="stage-step-label">Phone</span>
+        </div>
+        <div class="stage-step-line"></div>
+        <div class="stage-step" id="stage2Dot">
+          <div class="stage-step-circle">2</div>
+          <span class="stage-step-label">Verify</span>
+        </div>
+        <div class="stage-step-line"></div>
+        <div class="stage-step" id="stage3Dot">
+          <div class="stage-step-circle">3</div>
+          <span class="stage-step-label">Account</span>
+        </div>
       </div>
 
       <!-- Error/Success Messages -->
       <div id="messageContainer"></div>
 
       <!-- STAGE 1: Phone Number Entry -->
-      <div id="stage1" class="auth-stage">
+      <div id="stage1" class="auth-stage hidden">
         <div class="auth-header">
-          <h2>🖤 Member Login 💗</h2>
+          <div class="auth-logo-badge">
+            <img src="assets/bpsl_website_logo.png" alt="BPSL Logo" style="width: 80px;">
+          </div>
+          <h2>Member Login</h2>
           <p>Enter your phone number to get started</p>
         </div>
 
         <form id="phoneForm" class="auth-form">
           <div class="form-group">
             <label for="phoneNumber">Phone Number</label>
-            <input
-              type="tel"
-              class="form-control"
-              id="phoneNumber"
-              placeholder="0771234567 or +94771234567"
-              required
-            >
-            <small class="auth-helper">Enter your BPSL community WhatsApp number</small>
+            <div class="input-wrapper">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <input
+                type="tel"
+                class="form-control"
+                id="phoneNumber"
+                placeholder="0771234567 or +94771234567"
+                required
+              >
+            </div>
+            <small class="auth-helper-text">Enter your BPSL community <span style="color: #25D366;">WhatsApp</span> number</small>
           </div>
 
           <button type="submit" class="btn auth-btn auth-btn-primary" id="phoneSubmitBtn">
-            Next
+            <span>Next</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </form>
 
-        <div class="auth-helper">
+        <div class="auth-footer-link">
           <p>Already have an account? <a href="#" class="auth-link" id="showLoginLink">Login here</a></p>
         </div>
       </div>
@@ -104,35 +111,38 @@
       <!-- STAGE 2: OTP Verification -->
       <div id="stage2" class="auth-stage hidden">
         <div class="auth-header">
-          <h2>🖤 Verify Code 💗</h2>
-          <p>Enter the 6-digit code sent to your WhatsApp</p>
+          <div class="auth-logo-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h2>Verify Code</h2>
+          <p>Enter the 6-digit code sent to your <span style="color: #25D366;">WhatsApp</span></p>
         </div>
 
         <form id="otpForm" class="auth-form">
           <div class="form-group">
             <label for="otpCode">Verification Code</label>
-            <input
-              type="text"
-              class="form-control otp-input"
-              id="otpCode"
-              placeholder="000000"
-              maxlength="6"
-              pattern="[0-9]{6}"
-              required
-            >
+            <div class="input-wrapper">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input
+                type="text"
+                class="form-control otp-input"
+                id="otpCode"
+                placeholder="000000"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                required
+              >
+            </div>
           </div>
 
           <button type="submit" class="btn auth-btn auth-btn-primary" id="otpSubmitBtn">
-            Verify
-          </button>
-
-          <button type="button" class="btn auth-btn auth-btn-secondary hidden" id="regenerateOtpBtn">
-            Generate another code?
+            <span>Verify</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
         </form>
 
-        <div class="auth-helper">
-          <p><a href="#" class="auth-link" id="resendOtpLink">Resend code</a> |
+        <div class="auth-footer-link">
+          <p><a href="#" class="auth-link" id="resendOtpLink">Resend code</a> &middot;
              <a href="#" class="auth-link" id="startOverLink">Start over</a></p>
         </div>
       </div>
@@ -140,80 +150,105 @@
       <!-- STAGE 3: Account Creation -->
       <div id="stage3" class="auth-stage hidden">
         <div class="auth-header">
-          <h2>🖤 Create Account 💗</h2>
+          <div class="auth-logo-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <h2>Create Account</h2>
           <p>Choose your username and password</p>
         </div>
 
         <form id="accountForm" class="auth-form">
           <div class="form-group">
             <label for="username">Username</label>
-            <input
-              type="text"
-              class="form-control"
-              id="username"
-              placeholder="Choose a username"
-              required
-            >
+            <div class="input-wrapper">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                placeholder="Choose a username"
+                required
+              >
+            </div>
           </div>
 
           <div class="form-group">
             <label for="password">Password</label>
-            <input
-              type="password"
-              class="form-control"
-              id="password"
-              placeholder="At least 8 characters"
-              minlength="8"
-              required
-            >
+            <div class="input-wrapper">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                placeholder="At least 8 characters"
+                minlength="8"
+                required
+              >
+            </div>
           </div>
 
           <button type="submit" class="btn auth-btn auth-btn-primary" id="accountSubmitBtn">
-            Create Account
+            <span>Create Account</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </form>
       </div>
 
       <!-- EXISTING USER LOGIN -->
-      <div id="loginStage" class="auth-stage hidden">
+      <div id="loginStage" class="auth-stage">
         <div class="auth-header">
-          <h2>🖤 Welcome Back 💗</h2>
+          <div class="auth-logo-badge">
+            <img src="assets/bpsl_website_logo.png" alt="BPSL Logo" style="width: 80px;">
+          </div>
+          <h2>Welcome Back</h2>
           <p>Login to your account</p>
         </div>
 
         <form id="loginForm" class="auth-form">
           <div class="form-group">
             <label for="loginUsername">Username</label>
-            <input
-              type="text"
-              class="form-control"
-              id="loginUsername"
-              placeholder="Your username"
-              required
-            >
+            <div class="input-wrapper">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input
+                type="text"
+                class="form-control"
+                id="loginUsername"
+                placeholder="Your username"
+                required
+              >
+            </div>
           </div>
 
           <div class="form-group">
             <label for="loginPassword">Password</label>
-            <input
-              type="password"
-              class="form-control"
-              id="loginPassword"
-              placeholder="Your password"
-              required
-            >
+            <div class="input-wrapper">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input
+                type="password"
+                class="form-control"
+                id="loginPassword"
+                placeholder="Your password"
+                required
+              >
+            </div>
           </div>
 
           <button type="submit" class="btn auth-btn auth-btn-primary" id="loginSubmitBtn">
-            Login
+            <span>Login</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </form>
 
-        <div class="auth-helper">
+        <div class="auth-footer-link">
           <p>Don't have an account? <a href="#" class="auth-link" id="showSignupLink">Sign up here</a></p>
         </div>
       </div>
 
+    </div>
+
+    <!-- Bottom branding -->
+    <div class="auth-brand-footer">
+      <span>BLACKPINK SRI LANKA</span>
     </div>
   </div>
 

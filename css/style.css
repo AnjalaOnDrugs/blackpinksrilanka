@@ -1,3 +1,6 @@
+/* Import Outfit font for login button */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap');
+
 .body {
     background-image: url("../assets/background.png");
     background-repeat: no-repeat;
@@ -197,4 +200,40 @@ background-attachment: fixed;
     width: 100%;
     height: auto;
   }
+}
+
+/* ========== EYE-CATCHING LOGIN BUTTON (Navbar) ========== */
+#authButton {
+  background: linear-gradient(135deg, #f8b4c4 0%, #fcd5de 100%) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  font-family: 'Outfit', sans-serif;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 8px 24px !important;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 0 20px rgba(248, 180, 196, 0.2);
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  animation: navBtnGlow 3s ease-in-out infinite;
+}
+
+#authButton:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow:
+    0 0 30px rgba(247, 166, 185, 0.4),
+    0 8px 24px rgba(250, 91, 255, 0.2) !important;
+  color: #000 !important;
+}
+
+#authButton:active {
+  transform: translateY(0) scale(1) !important;
+}
+
+@keyframes navBtnGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(247, 166, 185, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(247, 166, 185, 0.35), 0 0 60px rgba(250, 91, 255, 0.1); }
 }

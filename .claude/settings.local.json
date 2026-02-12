@@ -7,7 +7,8 @@
       "Bash(python -:*)",
       "Bash(for file in downloads.html news.html projects.html shop.html membership_card.html streaming_guidelines.html jennie.html kim.html lisa.html rose.html)",
       "Bash(do wc -l \"$file\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
