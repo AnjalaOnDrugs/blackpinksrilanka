@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for file in about.html downloads.html jennie.html kim.html lisa.html membership_card.html news.html projects.html rose.html shop.html streaming_guidelines.html)",
+      "Bash(do echo \"Processing: $file\")",
+      "Bash(done)",
+      "Bash(python -:*)",
+      "Bash(for file in downloads.html news.html projects.html shop.html membership_card.html streaming_guidelines.html jennie.html kim.html lisa.html rose.html)",
+      "Bash(do wc -l \"$file\")",
+      "Bash(git add:*)"
+    ]
+  }
+}

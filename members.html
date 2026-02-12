@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3595712894194617"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.0/js/bootstrap.min.js"></script>
+  <meta charset="utf-8">
+  <title>Members Area - BLACKPINK SRI LANKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/bootstrap.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body class="body">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="https://www.blackpinksrilanka.org/">
+        <img src="assets/Logo.png" width="50px" alt="logo">
+        BLACKPINK SRI LANKA
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="news.html">News</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="projects.html">Projects</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="shop.html">Shop</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="downloads.html">Downloads</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="streaming_guidelines.html">Streaming Guidelines</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">About &nbsp;</a>
+          </li>
+          <li class="nav-item">
+            <a id="authButton" class="nav-link btn btn-danger active" href="members.html">Members</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="members-container">
+    <div class="members-card">
+      <div class="construction-icon">
+        🚧
+      </div>
+      <h1>🖤 Welcome to BPSL Members Area 💗</h1>
+      <p>We're working hard to bring you exclusive member content!</p>
+      <p>Stay tuned for updates...</p>
+
+      <div id="welcomeMessage" class="auth-info" style="margin-top: 30px;">
+        <p id="userWelcome">Loading...</p>
+      </div>
+
+      <button class="btn auth-btn auth-btn-primary" id="logoutBtn" style="max-width: 300px; margin: 20px auto;">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Configuration and Auth Scripts -->
+  <script src=".env.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/support.js"></script>
+
+  <!-- Members Page Protection and Logic -->
+  <script>
+    // Protect this page - redirect to login if not authenticated
+    checkAuthState().then(async (user) => {
+      if (!user) {
+        // Not logged in - redirect to login page
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Get user data and display welcome message
+      try {
+        const userData = await getCurrentUserData();
+        if (userData && userData.username) {
+          document.getElementById('userWelcome').textContent = `Welcome back, ${userData.username}! 🎉`;
+        } else {
+          document.getElementById('userWelcome').textContent = 'Welcome, BLINK! 🎉';
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        document.getElementById('userWelcome').textContent = 'Welcome, BLINK! 🎉';
+      }
+    });
+
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await logoutUser();
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Failed to logout. Please try again.');
+      }
+    });
+  </script>
+
+</body>
+
+</html>

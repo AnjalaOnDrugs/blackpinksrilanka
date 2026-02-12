@@ -1,0 +1,237 @@
+<!doctype html>
+<html>
+
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3595712894194617"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.0/js/bootstrap.min.js"></script>
+  <meta charset="utf-8">
+  <title>Member Login - BLACKPINK SRI LANKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/bootstrap.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body class="body">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="https://www.blackpinksrilanka.org/">
+        <img src="assets/Logo.png" width="50px" alt="logo">
+        BLACKPINK SRI LANKA
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="news.html">News</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="projects.html">Projects</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="shop.html">Shop</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="downloads.html">Downloads</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="streaming_guidelines.html">Streaming Guidelines</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">About &nbsp;</a>
+          </li>
+          <li class="nav-item">
+            <a id="authButton" class="nav-link btn btn-danger" href="login.html">Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="auth-container">
+    <div class="auth-card">
+
+      <!-- Stage Indicators -->
+      <div class="stage-indicators">
+        <div class="stage-dot" id="stage1Dot"></div>
+        <div class="stage-dot" id="stage2Dot"></div>
+        <div class="stage-dot" id="stage3Dot"></div>
+      </div>
+
+      <!-- Error/Success Messages -->
+      <div id="messageContainer"></div>
+
+      <!-- STAGE 1: Phone Number Entry -->
+      <div id="stage1" class="auth-stage">
+        <div class="auth-header">
+          <h2>🖤 Member Login 💗</h2>
+          <p>Enter your phone number to get started</p>
+        </div>
+
+        <form id="phoneForm" class="auth-form">
+          <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+            <input
+              type="tel"
+              class="form-control"
+              id="phoneNumber"
+              placeholder="0771234567 or +94771234567"
+              required
+            >
+            <small class="auth-helper">Enter your BPSL community WhatsApp number</small>
+          </div>
+
+          <button type="submit" class="btn auth-btn auth-btn-primary" id="phoneSubmitBtn">
+            Next
+          </button>
+        </form>
+
+        <div class="auth-helper">
+          <p>Already have an account? <a href="#" class="auth-link" id="showLoginLink">Login here</a></p>
+        </div>
+      </div>
+
+      <!-- STAGE 2: OTP Verification -->
+      <div id="stage2" class="auth-stage hidden">
+        <div class="auth-header">
+          <h2>🖤 Verify Code 💗</h2>
+          <p>Enter the 6-digit code sent to your WhatsApp</p>
+        </div>
+
+        <form id="otpForm" class="auth-form">
+          <div class="form-group">
+            <label for="otpCode">Verification Code</label>
+            <input
+              type="text"
+              class="form-control otp-input"
+              id="otpCode"
+              placeholder="000000"
+              maxlength="6"
+              pattern="[0-9]{6}"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn auth-btn auth-btn-primary" id="otpSubmitBtn">
+            Verify
+          </button>
+
+          <button type="button" class="btn auth-btn auth-btn-secondary hidden" id="regenerateOtpBtn">
+            Generate another code?
+          </button>
+        </form>
+
+        <div class="auth-helper">
+          <p><a href="#" class="auth-link" id="resendOtpLink">Resend code</a> |
+             <a href="#" class="auth-link" id="startOverLink">Start over</a></p>
+        </div>
+      </div>
+
+      <!-- STAGE 3: Account Creation -->
+      <div id="stage3" class="auth-stage hidden">
+        <div class="auth-header">
+          <h2>🖤 Create Account 💗</h2>
+          <p>Choose your username and password</p>
+        </div>
+
+        <form id="accountForm" class="auth-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              placeholder="Choose a username"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              placeholder="At least 8 characters"
+              minlength="8"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn auth-btn auth-btn-primary" id="accountSubmitBtn">
+            Create Account
+          </button>
+        </form>
+      </div>
+
+      <!-- EXISTING USER LOGIN -->
+      <div id="loginStage" class="auth-stage hidden">
+        <div class="auth-header">
+          <h2>🖤 Welcome Back 💗</h2>
+          <p>Login to your account</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="loginUsername">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="loginUsername"
+              placeholder="Your username"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="loginPassword"
+              placeholder="Your password"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn auth-btn auth-btn-primary" id="loginSubmitBtn">
+            Login
+          </button>
+        </form>
+
+        <div class="auth-helper">
+          <p>Don't have an account? <a href="#" class="auth-link" id="showSignupLink">Sign up here</a></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Configuration and Auth Scripts -->
+  <script src=".env.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/phone-verification.js"></script>
+  <script src="js/support.js"></script>
+
+  <!-- Login Page Script -->
+  <script src="js/login.js"></script>
+
+</body>
+
+</html>

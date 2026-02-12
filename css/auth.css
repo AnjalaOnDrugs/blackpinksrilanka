@@ -1,0 +1,289 @@
+/**
+ * Authentication Pages Styling
+ * Dark theme with BLACKPINK pink accents (#f7a6b9)
+ */
+
+/* Login Page Container */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Login Card */
+.auth-card {
+  background-color: rgba(0, 0, 0, 0.85);
+  border: 2px solid #f7a6b9;
+  border-radius: 15px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 0 30px rgba(247, 166, 185, 0.3);
+}
+
+/* Card Header */
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-header h2 {
+  color: #f7a6b9;
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.auth-header p {
+  color: #ffffff;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Form Styles */
+.auth-form {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  color: #f7a6b9;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.form-control {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #f7a6b9;
+  color: #ffffff;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #FA5BFF;
+  box-shadow: 0 0 0 0.2rem rgba(247, 166, 185, 0.25);
+  color: #ffffff;
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* OTP Input */
+.otp-input {
+  text-align: center;
+  letter-spacing: 10px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Buttons */
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.auth-btn-primary {
+  background: linear-gradient(135deg, #f7a6b9 0%, #FA5BFF 100%);
+  color: #000000;
+}
+
+.auth-btn-primary:hover {
+  background: linear-gradient(135deg, #FA5BFF 0%, #f7a6b9 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(247, 166, 185, 0.4);
+}
+
+.auth-btn-primary:disabled {
+  background: #666666;
+  color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-btn-secondary {
+  background-color: transparent;
+  border: 2px solid #f7a6b9;
+  color: #f7a6b9;
+  margin-top: 10px;
+}
+
+.auth-btn-secondary:hover {
+  background-color: rgba(247, 166, 185, 0.1);
+  border-color: #FA5BFF;
+  color: #FA5BFF;
+}
+
+/* Links */
+.auth-link {
+  color: #f7a6b9;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.auth-link:hover {
+  color: #FA5BFF;
+  text-decoration: underline;
+}
+
+/* Helper Text */
+.auth-helper {
+  text-align: center;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+/* Error Messages */
+.auth-error {
+  background-color: rgba(220, 53, 69, 0.2);
+  border: 1px solid #dc3545;
+  color: #ff6b7a;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Success Messages */
+.auth-success {
+  background-color: rgba(40, 167, 69, 0.2);
+  border: 1px solid #28a745;
+  color: #6dff8c;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Info Messages */
+.auth-info {
+  background-color: rgba(247, 166, 185, 0.2);
+  border: 1px solid #f7a6b9;
+  color: #f7a6b9;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Stage Indicators */
+.stage-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stage-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.stage-dot.active {
+  background-color: #f7a6b9;
+  width: 16px;
+  height: 16px;
+}
+
+.stage-dot.completed {
+  background-color: #28a745;
+}
+
+/* Loading Spinner */
+.auth-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #f7a6b9;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hidden Elements */
+.hidden {
+  display: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .auth-card {
+    padding: 30px 20px;
+  }
+
+  .auth-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .otp-input {
+    font-size: 1.2rem;
+    letter-spacing: 5px;
+  }
+}
+
+/* Members Page Styles */
+.members-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.members-card {
+  background-color: rgba(0, 0, 0, 0.85);
+  border: 2px solid #f7a6b9;
+  border-radius: 15px;
+  padding: 60px 40px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(247, 166, 185, 0.3);
+}
+
+.members-card h1 {
+  color: #f7a6b9;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.members-card p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.members-card .construction-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
