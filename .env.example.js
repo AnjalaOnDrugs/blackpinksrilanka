@@ -1,5 +1,5 @@
-// .env.example.js - Template for Firebase configuration
-// Copy this file to .env.js and fill in your actual Firebase credentials
+// firebase-config.example.js - Template for Firebase configuration
+// Copy this file to js/firebase-config.js and fill in your actual Firebase credentials
 // Firebase API keys are safe to expose in client-side code
 
 const ENV = {

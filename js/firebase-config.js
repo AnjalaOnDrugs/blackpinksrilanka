@@ -1,4 +1,4 @@
-// .env.js - Firebase Configuration
+// firebase-config.js - Firebase Configuration
 // Firebase API keys are safe to expose in client-side code
 // Security is handled via Firebase Authentication and Firestore Security Rules
 
