@@ -1,5 +1,6 @@
-// .env.example.js - Template for environment variables
-// Copy this file to .env.js and fill in your actual credentials
+// .env.example.js - Template for Firebase configuration
+// Copy this file to .env.js and fill in your actual Firebase credentials
+// Firebase API keys are safe to expose in client-side code
 
 const ENV = {
   firebase: {
@@ -10,9 +11,5 @@ const ENV = {
     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
     appId: "YOUR_APP_ID",
     measurementId: "YOUR_MEASUREMENT_ID"
-  },
-  whatsapp: {
-    instanceId: "YOUR_WHATSAPP_INSTANCE_ID",
-    accessToken: "YOUR_WHATSAPP_ACCESS_TOKEN"
   }
 };
