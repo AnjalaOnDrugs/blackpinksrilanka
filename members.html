@@ -4,77 +4,355 @@
 <head>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3595712894194617"
     crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.0/js/bootstrap.min.js"></script>
   <meta charset="utf-8">
-  <title>Members Area - BLACKPINK SRI LANKA</title>
+  <title>Members Home - BLACKPINK SRI LANKA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="css/bootstrap.css">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/members-home.css">
 </head>
 
-<body class="body">
+<body class="members-home">
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="https://www.blackpinksrilanka.org/">
-        <img src="assets/Logo.png" width="50px" alt="logo">
-        BLACKPINK SRI LANKA
+  <!-- Background Effects -->
+  <div class="mh-bg">
+    <div class="mh-bg-glow mh-bg-glow--1"></div>
+    <div class="mh-bg-glow mh-bg-glow--2"></div>
+    <div class="mh-bg-glow mh-bg-glow--3"></div>
+  </div>
+
+  <!-- Floating Particles -->
+  <div class="mh-particles" id="particles"></div>
+
+  <!-- Top Bar -->
+  <div class="mh-topbar">
+    <a class="mh-topbar-brand" href="index.html">
+      <img src="assets/Logo.png" alt="BPSL" width="36" height="36">
+      <span>BPSL</span>
+    </a>
+    <div class="mh-topbar-actions">
+      <!-- Calendar / Check-in -->
+      <a class="mh-topbar-icon" id="checkinBtn" title="Daily Check-in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <polyline points="9 16 10.5 18 15 13" stroke="#25D366"></polyline>
+        </svg>
+        <span class="mh-badge" id="streakBadge" style="display:none;"></span>
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="news.html">News</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="projects.html">Projects</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="shop.html">Shop</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="downloads.html">Downloads</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="streaming_guidelines.html">Streaming Guidelines</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="about.html">About &nbsp;</a>
-          </li>
-          <li class="nav-item">
-            <a id="authButton" class="nav-link btn btn-danger active" href="members.html">Members</a>
-          </li>
-        </ul>
+      <!-- Leaderboard -->
+      <a class="mh-topbar-icon" id="leaderboardBtn" title="Leaderboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+          <path d="M4 22h16"></path>
+          <path d="M10 22V8a2 2 0 0 1 4 0v14"></path>
+          <path d="M6 13l2-2"></path>
+          <path d="M18 13l-2-2"></path>
+          <path d="M12 2v2"></path>
+          <circle cx="12" cy="8" r="0" fill="#f7a6b9">
+            <animate attributeName="r" values="0;3;0" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </a>
+      <!-- Profile -->
+      <a class="mh-topbar-profile" id="profileBtn" title="Profile">
+        <span id="profileInitial">?</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="mh-content">
+
+    <!-- Greeting -->
+    <div class="mh-greeting">
+      <div class="mh-greeting-hello">Welcome back</div>
+      <div class="mh-greeting-name" id="greetingName">Loading<span class="mh-pink">...</span></div>
+    </div>
+
+    <!-- Event Rooms Section -->
+    <div class="mh-section-label">
+      <span class="mh-live-dot"></span>
+      Live Rooms
+    </div>
+
+    <!-- Featured Streaming Room -->
+    <div class="mh-rooms">
+      <div class="mh-room-featured" id="streamingRoom">
+
+        <!-- BG Visual: YouTube Video Background -->
+        <div class="mh-room-bg">
+          <div class="mh-room-bg-video">
+            <iframe
+              id="roomBgVideo"
+              src="https://www.youtube.com/embed/-f0MQzVMuUE?autoplay=1&mute=1&loop=1&playlist=-f0MQzVMuUE&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&start=30"
+              frameborder="0"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+            ></iframe>
+          </div>
+          <div class="mh-room-bg-overlay"></div>
+        </div>
+
+        <!-- Floating Music Icons (scattered across card) -->
+        <div class="mh-floating-icons" id="floatingIcons"></div>
+
+        <!-- Content -->
+        <div class="mh-room-featured-content">
+
+          <!-- Top Row: Tag + Avatars -->
+          <div class="mh-room-top-row">
+            <div class="mh-room-tag">
+              <span class="mh-room-tag-dot"></span>
+              Live Now
+            </div>
+            <div class="mh-room-top-users">
+              <div class="mh-room-users" id="roomAvatars">
+                <div class="mh-room-avatar mh-room-avatar--online" style="background: linear-gradient(135deg, #f7a6b9, #e8758a);">
+                  <span>D</span>
+                </div>
+                <div class="mh-room-avatar mh-room-avatar--online" style="background: linear-gradient(135deg, #25D366, #1da851);">
+                  <span>S</span>
+                </div>
+                <div class="mh-room-avatar" style="background: linear-gradient(135deg, #FA5BFF, #c44fd4);">
+                  <span>K</span>
+                </div>
+                <div class="mh-room-avatar mh-room-avatar--online" style="background: linear-gradient(135deg, #ffc107, #e0a800);">
+                  <span>R</span>
+                </div>
+                <div class="mh-room-avatar mh-room-avatar--more">+5</div>
+              </div>
+              <span class="mh-room-count"><strong>9</strong> streaming</span>
+            </div>
+          </div>
+
+          <!-- Hero: Vinyl + Song Info side by side -->
+          <div class="mh-hero-row">
+            <!-- Spinning Vinyl -->
+            <div class="mh-vinyl-wrap">
+              <div class="mh-vinyl" id="vinylDisc">
+                <div class="mh-vinyl-groove mh-vinyl-groove--1"></div>
+                <div class="mh-vinyl-groove mh-vinyl-groove--2"></div>
+                <div class="mh-vinyl-groove mh-vinyl-groove--3"></div>
+                <div class="mh-vinyl-label">
+                  <div class="mh-vinyl-label-inner"></div>
+                </div>
+              </div>
+              <div class="mh-vinyl-glow"></div>
+              <!-- Headphones badge -->
+              <div class="mh-vinyl-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Song Info -->
+            <div class="mh-song-info">
+              <div class="mh-song-title" id="nowPlayingTitle">Pink Venom</div>
+              <div class="mh-song-artist" id="nowPlayingArtist">BLACKPINK</div>
+              <div class="mh-synced-stream">
+                <div class="mh-synced-eq">
+                  <div class="mh-eq-bar" style="--eq-speed:0.5s;--eq-min:3px;--eq-max:14px;"></div>
+                  <div class="mh-eq-bar" style="--eq-speed:0.35s;--eq-min:5px;--eq-max:18px;"></div>
+                  <div class="mh-eq-bar" style="--eq-speed:0.6s;--eq-min:2px;--eq-max:10px;"></div>
+                  <div class="mh-eq-bar" style="--eq-speed:0.4s;--eq-min:4px;--eq-max:16px;"></div>
+                </div>
+                <span>Synced Stream</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="mh-room-divider"></div>
+
+          <!-- Top Streamers Leaderboard -->
+          <div class="mh-room-leaders">
+            <div class="mh-room-leaders-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Top Streamers</span>
+            </div>
+            <div class="mh-room-leaders-list">
+              <!-- 1st Place -->
+              <div class="mh-leader mh-leader--1st">
+                <div class="mh-leader-rank">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M12 2L9.19 8.63L2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/>
+                  </svg>
+                </div>
+                <div class="mh-leader-avatar" style="background: linear-gradient(135deg, #ffc107, #ff9800);">
+                  <span>D</span>
+                </div>
+                <div class="mh-leader-info">
+                  <div class="mh-leader-name">Dinara</div>
+                  <div class="mh-leader-score">2,847 mins streamed</div>
+                </div>
+                <div class="mh-leader-badge mh-leader-badge--gold">
+                  <span>#1</span>
+                </div>
+              </div>
+
+              <!-- 2nd Place -->
+              <div class="mh-leader mh-leader--2nd">
+                <div class="mh-leader-rank mh-leader-rank--silver">
+                  <span>2</span>
+                </div>
+                <div class="mh-leader-avatar" style="background: linear-gradient(135deg, #25D366, #1da851);">
+                  <span>S</span>
+                </div>
+                <div class="mh-leader-info">
+                  <div class="mh-leader-name">Sachini</div>
+                  <div class="mh-leader-score">2,134 mins streamed</div>
+                </div>
+                <div class="mh-leader-badge mh-leader-badge--silver">
+                  <span>#2</span>
+                </div>
+              </div>
+
+              <!-- 3rd Place -->
+              <div class="mh-leader mh-leader--3rd">
+                <div class="mh-leader-rank mh-leader-rank--bronze">
+                  <span>3</span>
+                </div>
+                <div class="mh-leader-avatar" style="background: linear-gradient(135deg, #FA5BFF, #c44fd4);">
+                  <span>K</span>
+                </div>
+                <div class="mh-leader-info">
+                  <div class="mh-leader-name">Kaveesha</div>
+                  <div class="mh-leader-score">1,892 mins streamed</div>
+                </div>
+                <div class="mh-leader-badge mh-leader-badge--bronze">
+                  <span>#3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Buttons -->
+          <div class="mh-room-bottom">
+            <button class="mh-room-join-btn" id="joinStreamBtn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>
+              Join Party
+            </button>
+            <button class="mh-room-users-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
-  </nav>
 
-  <div class="members-container">
-    <div class="members-card">
-      <div class="construction-icon">
-        🚧
+    <!-- Other Event Rooms (Grid) -->
+    <div class="mh-section-label">Explore Rooms</div>
+    <div class="mh-rooms-grid">
+
+      <!-- Quiz Night -->
+      <div class="mh-room-card mh-room-card--quiz">
+        <div class="mh-room-card-glow"></div>
+        <div class="mh-room-card-icon">&#128161;</div>
+        <div class="mh-room-card-title">Quiz Night</div>
+        <div class="mh-room-card-desc">Test your BLACKPINK knowledge against other BLINKs.</div>
+        <div class="mh-room-card-footer">
+          <div style="display:flex;align-items:center;">
+            <div class="mh-room-card-users">
+              <div class="mh-room-card-avatar" style="background:#3a1a3a;">N</div>
+              <div class="mh-room-card-avatar" style="background:#1a2a3a;">M</div>
+              <div class="mh-room-card-avatar" style="background:#2a3a1a;">T</div>
+            </div>
+            <span class="mh-room-card-count">12 in room</span>
+          </div>
+          <div class="mh-room-card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
       </div>
-      <h1>🖤 Welcome to BPSL Members Area 💗</h1>
-      <p>We're working hard to bring you exclusive member content!</p>
-      <p>Stay tuned for updates...</p>
 
-      <div id="welcomeMessage" class="auth-info" style="margin-top: 30px;">
-        <p id="userWelcome">Loading...</p>
+      <!-- Blink Chat -->
+      <div class="mh-room-card mh-room-card--chat">
+        <div class="mh-room-card-glow"></div>
+        <div class="mh-room-card-icon">&#128172;</div>
+        <div class="mh-room-card-title">Blink Chat</div>
+        <div class="mh-room-card-desc">Hang out, share memes and talk with fellow BLINKs.</div>
+        <div class="mh-room-card-footer">
+          <div style="display:flex;align-items:center;">
+            <div class="mh-room-card-users">
+              <div class="mh-room-card-avatar" style="background:#1a3a2a;">A</div>
+              <div class="mh-room-card-avatar" style="background:#3a2a1a;">J</div>
+            </div>
+            <span class="mh-room-card-count">24 online</span>
+          </div>
+          <div class="mh-room-card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
       </div>
 
-      <button class="btn auth-btn auth-btn-primary" id="logoutBtn" style="max-width: 300px; margin: 20px auto;">
-        Logout
+      <!-- Voting Booth -->
+      <div class="mh-room-card mh-room-card--votes">
+        <div class="mh-room-card-glow"></div>
+        <div class="mh-room-card-icon">&#9733;</div>
+        <div class="mh-room-card-title">Voting Booth</div>
+        <div class="mh-room-card-desc">Vote on polls, fan awards and community decisions.</div>
+        <div class="mh-room-card-footer">
+          <div style="display:flex;align-items:center;">
+            <div class="mh-room-card-users">
+              <div class="mh-room-card-avatar" style="background:#3a1a2a;">P</div>
+              <div class="mh-room-card-avatar" style="background:#1a2a2a;">L</div>
+              <div class="mh-room-card-avatar" style="background:#2a1a3a;">H</div>
+            </div>
+            <span class="mh-room-card-count">8 voting</span>
+          </div>
+          <div class="mh-room-card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Karaoke Room -->
+      <div class="mh-room-card mh-room-card--karaoke">
+        <div class="mh-room-card-glow"></div>
+        <div class="mh-room-card-icon">&#127908;</div>
+        <div class="mh-room-card-title">Karaoke Room</div>
+        <div class="mh-room-card-desc">Sing along to your favorite BP tracks with others.</div>
+        <div class="mh-room-card-footer">
+          <div style="display:flex;align-items:center;">
+            <div class="mh-room-card-users">
+              <div class="mh-room-card-avatar" style="background:#3a3a1a;">F</div>
+              <div class="mh-room-card-avatar" style="background:#1a1a3a;">Z</div>
+            </div>
+            <span class="mh-room-card-count">6 singing</span>
+          </div>
+          <div class="mh-room-card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Logout -->
+    <div class="mh-logout-section">
+      <button class="mh-logout-btn" id="logoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Sign out
       </button>
     </div>
+
   </div>
 
   <!-- Firebase SDK -->
@@ -86,43 +364,9 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/support.js"></script>
 
-  <!-- Members Page Protection and Logic -->
-  <script>
-    // Protect this page - redirect to login if not authenticated
-    checkAuthState().then(async (user) => {
-      if (!user) {
-        // Not logged in - redirect to login page
-        window.location.href = 'login.html';
-        return;
-      }
-
-      // Get user data and display welcome message
-      try {
-        const userData = await getCurrentUserData();
-        if (userData && userData.username) {
-          document.getElementById('userWelcome').textContent = `Welcome back, ${userData.username}! 🎉`;
-        } else {
-          document.getElementById('userWelcome').textContent = 'Welcome, BLINK! 🎉';
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        document.getElementById('userWelcome').textContent = 'Welcome, BLINK! 🎉';
-      }
-    });
-
-    // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try {
-        await logoutUser();
-        window.location.href = 'index.html';
-      } catch (error) {
-        console.error('Logout error:', error);
-        alert('Failed to logout. Please try again.');
-      }
-    });
-  </script>
+  <!-- Members Home Logic -->
+  <script src="js/members-home.js"></script>
 
 </body>
 

@@ -7,6 +7,7 @@
 let currentPhone = '';
 let currentStage = 'login';
 let otpCheckInterval = null;
+let detectedUsername = ''; // Store username when account is detected
 
 // DOM Elements
 const messageContainer = document.getElementById('messageContainer');
@@ -144,6 +145,37 @@ phoneForm.addEventListener('submit', async (e) => {
     if (!verificationResult.isActive) {
       showMessage(verificationResult.message || 'Your membership is not currently active. Please contact BPSL admin.', 'error');
       setButtonLoading(phoneSubmitBtn, false);
+      return;
+    }
+
+    // Check if user already has an account (username and password set up)
+    const accountCheck = await checkUserHasAccount(currentPhone);
+    if (accountCheck.hasAccount) {
+      // User has an existing account - show login stage with username pre-filled
+      detectedUsername = accountCheck.username;
+      showMessage('Account found! Please login with your credentials.', 'success');
+      setTimeout(() => {
+        // Pre-fill the username in login form and make it readonly
+        const loginUsernameField = document.getElementById('loginUsername');
+        loginUsernameField.value = detectedUsername;
+        loginUsernameField.readOnly = true;
+        loginUsernameField.style.backgroundColor = '#e8f5e9';
+        loginUsernameField.style.border = '2px solid #4CAF50';
+        loginUsernameField.style.color = '#2e7d32';
+        loginUsernameField.style.fontWeight = '600';
+        loginUsernameField.style.cursor = 'not-allowed';
+
+        // Show helper text
+        const helperText = document.getElementById('loginUsernameHelper');
+        if (helperText) {
+          helperText.style.display = 'block';
+        }
+
+        // Focus on password field
+        document.getElementById('loginPassword').focus();
+
+        showStage('login');
+      }, 1500);
       return;
     }
 
@@ -355,14 +387,47 @@ loginForm.addEventListener('submit', async (e) => {
 // Toggle between signup and login
 showLoginLink.addEventListener('click', (e) => {
   e.preventDefault();
+
+  // Reset username field readonly state when manually switching to login
+  const loginUsernameField = document.getElementById('loginUsername');
+  loginUsernameField.readOnly = false;
+  loginUsernameField.style.backgroundColor = '';
+  loginUsernameField.style.border = '';
+  loginUsernameField.style.color = '';
+  loginUsernameField.style.fontWeight = '';
+  loginUsernameField.style.cursor = '';
+
+  // Hide helper text
+  const helperText = document.getElementById('loginUsernameHelper');
+  if (helperText) {
+    helperText.style.display = 'none';
+  }
+
   showStage('login');
 });
 
 showSignupLink.addEventListener('click', (e) => {
   e.preventDefault();
   currentPhone = '';
+  detectedUsername = '';
   document.getElementById('phoneNumber').value = '';
-  document.getElementById('loginUsername').value = '';
+
+  // Reset login form fields and readonly state
+  const loginUsernameField = document.getElementById('loginUsername');
+  loginUsernameField.value = '';
+  loginUsernameField.readOnly = false;
+  loginUsernameField.style.backgroundColor = '';
+  loginUsernameField.style.border = '';
+  loginUsernameField.style.color = '';
+  loginUsernameField.style.fontWeight = '';
+  loginUsernameField.style.cursor = '';
+
+  // Hide helper text
+  const helperText = document.getElementById('loginUsernameHelper');
+  if (helperText) {
+    helperText.style.display = 'none';
+  }
+
   document.getElementById('loginPassword').value = '';
   showStage(1);
 });

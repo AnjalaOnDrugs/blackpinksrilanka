@@ -243,6 +243,35 @@ async function checkOTPExists(phoneNumber) {
 }
 
 /**
+ * Check if user has an existing account (username and password set up)
+ *
+ * @param {string} phoneNumber - Normalized phone number
+ * @returns {Promise<Object>} {hasAccount: boolean, username: string|null}
+ */
+async function checkUserHasAccount(phoneNumber) {
+  try {
+    const userRef = db.collection('users').doc(phoneNumber);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return { hasAccount: false, username: null };
+    }
+
+    const userData = userDoc.data();
+    
+    // Check if user has completed registration (has username)
+    if (userData.username && userData.authStage === 3) {
+      return { hasAccount: true, username: userData.username };
+    }
+
+    return { hasAccount: false, username: null };
+  } catch (error) {
+    console.error('Account check error:', error);
+    return { hasAccount: false, username: null };
+  }
+}
+
+/**
  * Check if user can request a new OTP (rate limiting)
  *
  * @param {string} phoneNumber - Normalized phone number
