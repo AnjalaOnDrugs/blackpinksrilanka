@@ -1,0 +1,12 @@
+{
+  "name": "blackpinksrilanka",
+  "version": "1.0.0",
+  "description": "BLACKPINK Sri Lanka Fan Club Website",
+  "scripts": {
+    "build": "node scripts/generate-config.js",
+    "predev": "npm run build"
+  },
+  "keywords": ["blackpink", "fan-club", "sri-lanka"],
+  "author": "BLACKPINK Sri Lanka",
+  "license": "MIT"
+}

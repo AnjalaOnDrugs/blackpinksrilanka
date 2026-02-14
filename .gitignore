@@ -18,7 +18,9 @@ npm-debug.log*
 node_modules/
 dist/
 .env
+.env.local
+.env.production
 google-sheets-integration.gs
 
-# Sensitive config (if needed in future)
-# firebase-config.js
+# Auto-generated config (generated from .env during build)
+js/firebase-config.js
