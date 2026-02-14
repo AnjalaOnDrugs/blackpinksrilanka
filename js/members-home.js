@@ -110,24 +110,12 @@ var songs = [
   { title: 'toxic till the end', artist: 'Rosé' }
 ];
 
-var bgGradients = [
-  'linear-gradient(135deg, #2a0a1a, #0a0a2a)',
-  'linear-gradient(135deg, #1a0520, #0a1a0a)',
-  'linear-gradient(135deg, #0a0a2a, #2a1a0a)',
-  'linear-gradient(135deg, #1a0a20, #0a2a1a)',
-  'linear-gradient(135deg, #200a1a, #0a1a2a)',
-  'linear-gradient(135deg, #1a1a0a, #0a0a2a)',
-  'linear-gradient(135deg, #2a0520, #0a2a2a)'
-];
-
 var currentSong = 0;
 
 function rotateSong() {
   currentSong = (currentSong + 1) % songs.length;
   var titleEl = document.getElementById('nowPlayingTitle');
   var artistEl = document.getElementById('nowPlayingArtist');
-  var bgEl = document.getElementById('roomBgImg');
-
   // Fade out
   titleEl.style.opacity = '0';
   artistEl.style.opacity = '0';
@@ -135,7 +123,6 @@ function rotateSong() {
   setTimeout(function () {
     titleEl.textContent = songs[currentSong].title;
     artistEl.textContent = songs[currentSong].artist;
-    bgEl.style.backgroundImage = bgGradients[currentSong % bgGradients.length];
     titleEl.style.opacity = '1';
     artistEl.style.opacity = '1';
   }, 400);

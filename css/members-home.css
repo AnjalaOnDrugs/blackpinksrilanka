@@ -474,26 +474,31 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    #1a1a1a 0deg,
-    #2a2a2a 30deg,
-    #1a1a1a 60deg,
-    #222 90deg,
-    #1a1a1a 120deg,
-    #2a2a2a 150deg,
-    #1a1a1a 180deg,
-    #222 210deg,
-    #1a1a1a 240deg,
-    #2a2a2a 270deg,
-    #1a1a1a 300deg,
-    #222 330deg,
-    #1a1a1a 360deg
-  );
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(0,0,0,0.35) 0deg,
+      rgba(40,40,40,0.25) 30deg,
+      rgba(0,0,0,0.35) 60deg,
+      rgba(30,30,30,0.28) 90deg,
+      rgba(0,0,0,0.35) 120deg,
+      rgba(40,40,40,0.25) 150deg,
+      rgba(0,0,0,0.35) 180deg,
+      rgba(30,30,30,0.28) 210deg,
+      rgba(0,0,0,0.35) 240deg,
+      rgba(40,40,40,0.25) 270deg,
+      rgba(0,0,0,0.35) 300deg,
+      rgba(30,30,30,0.28) 330deg,
+      rgba(0,0,0,0.35) 360deg
+    ),
+    url('https://img.youtube.com/vi/-f0MQzVMuUE/hqdefault.jpg');
+  background-size: cover, cover;
+  background-position: center, center;
   border: 6px solid #111;
   animation: mhVinylSpin 3s linear infinite;
   position: relative;
   box-shadow: 0 0 30px rgba(247, 166, 185, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
 
 @keyframes mhVinylSpin {
@@ -503,7 +508,7 @@
 .mh-vinyl-groove {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .mh-vinyl-groove--1 {
