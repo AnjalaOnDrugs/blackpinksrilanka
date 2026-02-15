@@ -28,6 +28,9 @@
   <!-- Event Overlay (full-screen mini event animations) -->
   <div class="room-event-overlay" id="eventOverlay"></div>
 
+  <!-- Persistent twinning mini cards -->
+  <div class="room-twin-cards" id="twinCards"></div>
+
   <!-- Last.fm Link Modal -->
   <div class="room-modal-backdrop" id="lastfmModal" style="display:none;">
     <div class="room-modal">
@@ -215,10 +218,12 @@
     </button>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (Auth only - Firestore removed, replaced by Convex) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Convex Browser SDK -->
+  <script src="https://unpkg.com/convex@1.3.1/dist/browser.bundle.js"></script>
 
   <!-- Agora RTM SDK -->
   <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@1.5.1/index.js"></script>
@@ -226,6 +231,7 @@
   <!-- Configuration and Auth -->
   <script src="js/firebase-config.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/convex-client.js"></script>
   <script src="js/auth.js"></script>
 
   <!-- Room Scripts (order matters) -->

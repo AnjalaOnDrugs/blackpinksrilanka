@@ -27,9 +27,13 @@ const CONFIG = {
   // Last.fm API
   lastfmApiKey: "04d8f2a4df95b60f32595119d2b8fec5",
 
+  // Convex Backend
+  // TODO: Replace with your actual Convex deployment URL after running `npx convex dev`
+  convexUrl: "https://lovely-heron-474.convex.cloud",
+
   // Room settings
   roomPollInterval: 2000,     // Last.fm polling interval per user (ms)
-  heartbeatInterval: 30000,   // Firestore presence heartbeat (ms)
+  heartbeatInterval: 30000,   // Presence heartbeat interval (ms)
   chatBubbleLifetime: 8000,   // How long chat bubbles stay visible (ms)
   maxChatBubbles: 30          // Max simultaneous bubbles on screen
 };

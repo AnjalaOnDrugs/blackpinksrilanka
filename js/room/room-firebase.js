@@ -1,105 +1,102 @@
 /**
- * Room Firebase Service
- * Handles Firestore operations for room data, participants, and events
+ * Room Data Service (Convex Backend)
+ * Replaces Firestore with Convex for room data, participants, and events.
+ * Maintains the same ROOM.Firebase API surface so other modules work unchanged.
  */
 
 window.ROOM = window.ROOM || {};
 
 ROOM.Firebase = {
-  roomRef: null,
-  participantsRef: null,
-  eventsRef: null,
   participantsCache: [],
+  rawParticipantsCache: [],
+  cleanupInterval: null,
   unsubscribers: [],
   roomId: null,
+  _initTimestamp: null,
 
   init: function (roomId) {
     this.roomId = roomId;
-    this.roomRef = db.collection('rooms').doc(roomId);
-    this.participantsRef = this.roomRef.collection('participants');
-    this.eventsRef = this.roomRef.collection('events');
-    this.messagesRef = this.roomRef.collection('messages');
+    this._initTimestamp = Date.now();
+
+    // Initialize Convex client
+    ConvexService.init(CONFIG.convexUrl);
 
     // Ensure room document exists
-    this.roomRef.set({
-      name: 'Streaming Party',
-      type: 'streaming',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    ConvexService.mutation('rooms:ensureRoom', { roomId: roomId });
 
-    // Listen to participants (drives leaderboard + activity)
     var self = this;
-    var unsub1 = this.participantsRef.orderBy('totalMinutes', 'desc')
-      .onSnapshot(function (snapshot) {
-        self.participantsCache = snapshot.docs.map(function (d) {
-          return { id: d.id, data: d.data() };
-        });
 
-        // Update online count
-        var onlineCount = self.participantsCache.filter(function (p) {
-          return p.data.isOnline;
-        }).length;
-        var countEl = document.getElementById('onlineCount');
-        if (countEl) countEl.textContent = onlineCount + ' online';
-
-        // Update energy meter
-        if (ROOM.Events && ROOM.Events.updateEnergy) {
-          ROOM.Events.updateEnergy(onlineCount);
-        }
-
-        // Notify leaderboard and activity
-        if (ROOM.Leaderboard && ROOM.Leaderboard.update) {
-          ROOM.Leaderboard.update(self.participantsCache);
-        }
-        if (ROOM.Activity && ROOM.Activity.update) {
-          ROOM.Activity.update(self.participantsCache);
-        }
-      });
-
-    // Listen to events (drives mini event animations)
-    var now = firebase.firestore.Timestamp.now();
-    var unsub2 = this.eventsRef
-      .where('createdAt', '>', now)
-      .orderBy('createdAt', 'asc')
-      .onSnapshot(function (snapshot) {
-        snapshot.docChanges().forEach(function (change) {
-          if (change.type === 'added') {
-            var eventData = change.doc.data();
-            if (ROOM.Events && ROOM.Events.handleEvent) {
-              ROOM.Events.handleEvent(eventData);
-            }
-          }
-        });
-      });
-
-    // Listen to room document for most-played changes
-    var unsub3 = this.roomRef.onSnapshot(function (doc) {
-      var data = doc.data();
-      if (data && data.currentMostPlayed) {
-        ROOM.Atmosphere && ROOM.Atmosphere.updateMostPlayed &&
-          ROOM.Atmosphere.updateMostPlayed(data.currentMostPlayed);
+    // 1. Subscribe to participants (drives leaderboard + activity)
+    var unsub1 = ConvexService.watch(
+      'participants:listByRoom',
+      { roomId: roomId },
+      function (participants) {
+        self.rawParticipantsCache = participants || [];
+        self.refreshUI();
       }
-    });
+    );
 
-    // Listen to chat messages (Firebase fallback)
-    var chatNow = firebase.firestore.Timestamp.now();
-    var unsub4 = this.messagesRef
-      .where('createdAt', '>', chatNow)
-      .orderBy('createdAt', 'asc')
-      .limit(50)
-      .onSnapshot(function (snapshot) {
-        snapshot.docChanges().forEach(function (change) {
-          if (change.type === 'added') {
-            var msgData = change.doc.data();
-            // Skip own messages (already displayed locally)
-            if (msgData.userId !== ROOM.currentUser.phoneNumber) {
-              if (ROOM.Chat && ROOM.Chat.displayMessage) {
-                ROOM.Chat.displayMessage(msgData);
+    // Start periodic cleanup (every 5s) to check for stale users who closed browser
+    this.cleanupInterval = setInterval(function () {
+      self.refreshUI();
+    }, 5000);
+
+    // 2. Subscribe to events (drives mini event animations)
+    var eventSince = this._initTimestamp;
+    var unsub2 = ConvexService.watch(
+      'events:listRecent',
+      { roomId: roomId, since: eventSince },
+      function (events) {
+        if (!events) return;
+        events.forEach(function (evt) {
+          // Only handle events created after init (don't replay old events)
+          if (evt.createdAt > self._initTimestamp) {
+            // Don't replay events older than 10 seconds
+            var now = Date.now();
+            if (now - evt.createdAt < 10000) {
+              if (ROOM.Events && ROOM.Events.handleEvent) {
+                ROOM.Events.handleEvent({
+                  type: evt.type,
+                  data: evt.data,
+                  createdAt: { seconds: evt.createdAt / 1000 }
+                });
               }
             }
           }
         });
-      });
+      }
+    );
+
+    // 3. Subscribe to room document for most-played changes
+    var unsub3 = ConvexService.watch(
+      'rooms:getRoom',
+      { roomId: roomId },
+      function (roomData) {
+        if (roomData && roomData.currentMostPlayed) {
+          ROOM.Atmosphere && ROOM.Atmosphere.updateMostPlayed &&
+            ROOM.Atmosphere.updateMostPlayed(roomData.currentMostPlayed);
+        }
+      }
+    );
+
+    // 4. Subscribe to chat messages (Convex fallback when Agora unavailable)
+    var msgSince = this._initTimestamp;
+    var unsub4 = ConvexService.watch(
+      'messages:listRecent',
+      { roomId: roomId, since: msgSince },
+      function (messages) {
+        if (!messages) return;
+        messages.forEach(function (msg) {
+          // Only display messages from other users created after init
+          if (msg.createdAt > self._initTimestamp &&
+            msg.userId !== ROOM.currentUser.phoneNumber) {
+            if (ROOM.Chat && ROOM.Chat.displayMessage) {
+              ROOM.Chat.displayMessage(msg);
+            }
+          }
+        });
+      }
+    );
 
     this.unsubscribers.push(unsub1, unsub2, unsub3, unsub4);
   },
@@ -122,89 +119,87 @@ ROOM.Firebase = {
     ];
     var randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-    return this.participantsRef.doc(userData.phoneNumber).set({
+    return ConvexService.mutation('participants:joinRoom', {
+      roomId: this.roomId,
+      phoneNumber: userData.phoneNumber,
       username: userData.username,
-      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-      isOnline: true,
-      lastfmUsername: userData.lastfmUsername || null,
-      totalMinutes: 0,
-      currentRank: 0,
-      previousRank: 0,
-      milestones: [],
-      currentTrack: null,
-      avatarColor: randomColor,
-      streakMinutes: 0
-    }, { merge: true }).then(function () {
-      // Fire join event
-      return self.eventsRef.add({
-        type: 'join',
-        data: { username: userData.username },
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      lastfmUsername: userData.lastfmUsername || undefined,
+      avatarColor: randomColor
+    }).then(function () {
+      return self.fireEvent('join', { username: userData.username });
     });
   },
 
   leaveRoom: function (phoneNumber) {
-    return this.participantsRef.doc(phoneNumber).update({
-      isOnline: false,
-      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-      streakMinutes: 0
+    return ConvexService.mutation('participants:leaveRoom', {
+      roomId: this.roomId,
+      phoneNumber: phoneNumber
     });
   },
 
   heartbeat: function (phoneNumber) {
-    return this.participantsRef.doc(phoneNumber).update({
-      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    return ConvexService.mutation('participants:heartbeat', {
+      roomId: this.roomId,
+      phoneNumber: phoneNumber
     });
   },
 
   updateParticipantTrack: function (phoneNumber, trackData) {
-    return this.participantsRef.doc(phoneNumber).update({
-      currentTrack: trackData
+    return ConvexService.mutation('participants:updateTrack', {
+      roomId: this.roomId,
+      phoneNumber: phoneNumber,
+      trackData: trackData
     });
   },
 
   updateParticipantMinutes: function (phoneNumber, totalMinutes) {
-    return this.participantsRef.doc(phoneNumber).update({
+    return ConvexService.mutation('participants:updateMinutes', {
+      roomId: this.roomId,
+      phoneNumber: phoneNumber,
       totalMinutes: totalMinutes
     });
   },
 
   updateLastfmUsername: function (phoneNumber, lastfmUsername) {
     // Update in room participants
-    this.participantsRef.doc(phoneNumber).update({
+    ConvexService.mutation('participants:updateLastfmUsername', {
+      roomId: this.roomId,
+      phoneNumber: phoneNumber,
       lastfmUsername: lastfmUsername
     });
     // Also update in users collection for persistence
-    return db.collection('users').doc(phoneNumber).update({
+    return ConvexService.mutation('users:updateLastfmUsername', {
+      phoneNumber: phoneNumber,
       lastfmUsername: lastfmUsername
     });
   },
 
   fireEvent: function (type, data) {
-    return this.eventsRef.add({
+    return ConvexService.mutation('events:fireEvent', {
+      roomId: this.roomId,
       type: type,
-      data: data,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      data: data
     });
   },
 
   updateMostPlayed: function (trackData) {
-    return this.roomRef.update({
-      currentMostPlayed: trackData
+    return ConvexService.mutation('rooms:updateMostPlayed', {
+      roomId: this.roomId,
+      trackData: trackData
     });
   },
 
   addMilestone: function (phoneNumber, milestone) {
-    return this.participantsRef.doc(phoneNumber).update({
-      milestones: firebase.firestore.FieldValue.arrayUnion(milestone)
+    return ConvexService.mutation('participants:addMilestone', {
+      roomId: this.roomId,
+      phoneNumber: phoneNumber,
+      milestone: milestone
     });
   },
 
   sendChatMessage: function (msgData) {
-    // Firebase fallback for chat
-    return this.messagesRef.add({
+    return ConvexService.mutation('messages:send', {
+      roomId: this.roomId,
       type: msgData.type,
       userId: ROOM.currentUser.phoneNumber,
       username: msgData.username,
@@ -212,15 +207,67 @@ ROOM.Firebase = {
       emoji: msgData.emoji || null,
       emojiName: msgData.emojiName || null,
       color: msgData.color,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       timestamp: msgData.timestamp
     });
   },
 
   destroy: function () {
+    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
     this.unsubscribers.forEach(function (unsub) {
       if (typeof unsub === 'function') unsub();
     });
     this.unsubscribers = [];
+    ConvexService.destroy();
+  },
+
+  refreshUI: function () {
+    var self = this;
+    var now = Date.now();
+
+    // Process raw participants to handle timeouts
+    this.participantsCache = (this.rawParticipantsCache || []).map(function (p) {
+      // Clone participant data to avoid mutating raw cache directly
+      var processed = Object.assign({}, p); // Shallow clone participant object
+      processed.data = Object.assign({}, p.data); // Shallow clone data object
+
+      // Check for stale heartbeat (allow 45s grace period, heartbeat is 30s)
+      if (processed.data.isOnline) {
+        var timeSinceLastSeen = now - (processed.data.lastSeen || 0);
+        if (timeSinceLastSeen > 45000) {
+          processed.data.isOnline = false;
+        }
+      }
+      return processed;
+    });
+
+    // Update online count
+    var onlineCount = this.participantsCache.filter(function (p) {
+      return p.data.isOnline;
+    }).length;
+    var countEl = document.getElementById('onlineCount');
+    if (countEl) countEl.textContent = onlineCount + ' online';
+
+    // Update energy meter
+    if (ROOM.Events && ROOM.Events.updateEnergy) {
+      ROOM.Events.updateEnergy(onlineCount);
+    }
+
+    // Notify leaderboard and activity
+    if (ROOM.Leaderboard && ROOM.Leaderboard.update) {
+      ROOM.Leaderboard.update(this.participantsCache);
+    }
+    if (ROOM.Activity && ROOM.Activity.update) {
+      ROOM.Activity.update(this.participantsCache);
+    }
+
+    // Real-time same-song (twinning) detection on every participant change
+    if (ROOM.LastFM && ROOM.LastFM.detectSameSong) {
+      ROOM.LastFM.detectSameSong();
+    }
+
+    // Recalculate most played on every participant change
+    if (ROOM.LastFM && ROOM.LastFM.calculateMostPlayed) {
+      ROOM.LastFM.calculateMostPlayed();
+    }
   }
 };

@@ -10,7 +10,10 @@
       "Bash(git add:*)",
       "Bash(git rm:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nSecurity: Remove firebase-config.js from version control\n\n- Removed js/firebase-config.js from git tracking\n- File is already in .gitignore to prevent future commits\n- Firebase API key rotated for security\n- Config now sourced from environment variables only\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm install:*)",
+      "Bash(npx convex init)",
+      "WebFetch(domain:docs.convex.dev)"
     ]
   }
 }

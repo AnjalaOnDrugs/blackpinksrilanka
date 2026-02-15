@@ -93,18 +93,41 @@
 }
 
 @keyframes roomGlow1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, 30px) scale(1.1); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(40px, 30px) scale(1.1);
+  }
 }
 
 @keyframes roomGlow2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-30px, -40px) scale(1.15); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-30px, -40px) scale(1.15);
+  }
 }
 
 @keyframes roomGlow3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.03; }
-  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.05; }
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.03;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.05;
+  }
 }
 
 /* ========== PARTICLES ========== */
@@ -124,10 +147,23 @@
 }
 
 @keyframes roomParticleDrift {
-  0% { opacity: 0; transform: translateY(100vh) scale(0.5); }
-  20% { opacity: var(--p-opacity, 0.3); }
-  80% { opacity: var(--p-opacity, 0.3); }
-  100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(100vh) scale(0.5);
+  }
+
+  20% {
+    opacity: var(--p-opacity, 0.3);
+  }
+
+  80% {
+    opacity: var(--p-opacity, 0.3);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-10vh) scale(1);
+  }
 }
 
 /* ========== LOADING SCREEN ========== */
@@ -182,9 +218,20 @@
 }
 
 @keyframes roomLoadingDots {
-  0%, 20% { opacity: 0.2; }
-  50% { opacity: 1; }
-  80%, 100% { opacity: 0.2; }
+
+  0%,
+  20% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  80%,
+  100% {
+    opacity: 0.2;
+  }
 }
 
 /* ========== LAST.FM MODAL ========== */
@@ -388,8 +435,17 @@
 }
 
 @keyframes roomLivePulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(37, 211, 102, 0); }
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+  }
+
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 6px rgba(37, 211, 102, 0);
+  }
 }
 
 .room-topbar-subtitle {
@@ -567,10 +623,21 @@
   font-size: 13px;
 }
 
-.room-leader-rank--gold { color: #ffc107; }
-.room-leader-rank--silver { color: #aaa; }
-.room-leader-rank--bronze { color: #cd7f32; }
-.room-leader-rank--default { color: #555; }
+.room-leader-rank--gold {
+  color: #ffc107;
+}
+
+.room-leader-rank--silver {
+  color: #aaa;
+}
+
+.room-leader-rank--bronze {
+  color: #cd7f32;
+}
+
+.room-leader-rank--default {
+  color: #555;
+}
 
 .room-leader-rank svg {
   color: #ffc107;
@@ -603,8 +670,13 @@
 }
 
 @keyframes roomFlameFlicker {
-  from { transform: scale(1); }
-  to { transform: scale(1.2) rotate(5deg); }
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.2) rotate(5deg);
+  }
 }
 
 .room-leader-info {
@@ -727,13 +799,27 @@
 }
 
 @keyframes roomLeaderMoveUp {
-  0% { transform: translateY(20px); opacity: 0.5; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(20px);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes roomLeaderMoveDown {
-  0% { transform: translateY(-20px); opacity: 0.5; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(-20px);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Overtake glow on the leader card */
@@ -742,8 +828,13 @@
 }
 
 @keyframes roomOvertakeGlow {
-  0% { box-shadow: 0 0 30px rgba(255, 193, 7, 0.5); }
-  100% { box-shadow: none; }
+  0% {
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+  }
+
+  100% {
+    box-shadow: none;
+  }
 }
 
 /* ========== CENTER STAGE ========== */
@@ -767,31 +858,31 @@
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    rgba(0,0,0,0.35) 0deg,
-    rgba(40,40,40,0.25) 30deg,
-    rgba(0,0,0,0.35) 60deg,
-    rgba(30,30,30,0.28) 90deg,
-    rgba(0,0,0,0.35) 120deg,
-    rgba(40,40,40,0.25) 150deg,
-    rgba(0,0,0,0.35) 180deg,
-    rgba(30,30,30,0.28) 210deg,
-    rgba(0,0,0,0.35) 240deg,
-    rgba(40,40,40,0.25) 270deg,
-    rgba(0,0,0,0.35) 300deg,
-    rgba(30,30,30,0.28) 330deg,
-    rgba(0,0,0,0.35) 360deg
-  );
+  background: conic-gradient(from 0deg,
+      rgba(0, 0, 0, 0.35) 0deg,
+      rgba(40, 40, 40, 0.25) 30deg,
+      rgba(0, 0, 0, 0.35) 60deg,
+      rgba(30, 30, 30, 0.28) 90deg,
+      rgba(0, 0, 0, 0.35) 120deg,
+      rgba(40, 40, 40, 0.25) 150deg,
+      rgba(0, 0, 0, 0.35) 180deg,
+      rgba(30, 30, 30, 0.28) 210deg,
+      rgba(0, 0, 0, 0.35) 240deg,
+      rgba(40, 40, 40, 0.25) 270deg,
+      rgba(0, 0, 0, 0.35) 300deg,
+      rgba(30, 30, 30, 0.28) 330deg,
+      rgba(0, 0, 0, 0.35) 360deg);
   border: 4px solid #111;
   animation: roomVinylSpin 3s linear infinite;
   position: relative;
-  box-shadow: 0 0 20px rgba(247, 166, 185, 0.15), inset 0 0 15px rgba(0,0,0,0.5);
+  box-shadow: 0 0 20px rgba(247, 166, 185, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
 @keyframes roomVinylSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .room-vinyl-groove {
@@ -800,9 +891,17 @@
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.room-vinyl-groove--1 { inset: 8px; }
-.room-vinyl-groove--2 { inset: 16px; }
-.room-vinyl-groove--3 { inset: 24px; }
+.room-vinyl-groove--1 {
+  inset: 8px;
+}
+
+.room-vinyl-groove--2 {
+  inset: 16px;
+}
+
+.room-vinyl-groove--3 {
+  inset: 24px;
+}
 
 .room-vinyl-label {
   position: absolute;
@@ -836,13 +935,22 @@
 }
 
 @keyframes roomVinylGlowPulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
 }
 
 /* Extra glow when same-song event */
 .room-vinyl--vibing {
-  box-shadow: 0 0 40px rgba(247, 166, 185, 0.5), inset 0 0 15px rgba(0,0,0,0.5);
+  box-shadow: 0 0 40px rgba(247, 166, 185, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 .room-now-playing-info {
@@ -902,8 +1010,13 @@
 }
 
 @keyframes roomEqBounce {
-  from { height: var(--eq-min, 4px); }
-  to { height: var(--eq-max, 16px); }
+  from {
+    height: var(--eq-min, 4px);
+  }
+
+  to {
+    height: var(--eq-max, 16px);
+  }
 }
 
 /* ========== TOAST CONTAINER ========== */
@@ -975,13 +1088,27 @@
 }
 
 @keyframes roomToastIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.9); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes roomToastOut {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
 }
 
 /* ========== CHAT LOG (collapsible) ========== */
@@ -1013,7 +1140,7 @@
 }
 
 .room-chat-log-messages {
-  max-height: 150px;
+  max-height: 45vh;
   overflow-y: auto;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.02);
@@ -1179,11 +1306,29 @@
 }
 
 @keyframes roomChatFloat {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.7); }
-  8%   { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1); }
-  30%  { opacity: 0.95; }
-  60%  { opacity: 0.6; transform: translateX(calc(-50% + var(--sway, 0px))) translateY(-40vh); }
-  100% { opacity: 0; transform: translateX(calc(-50% - var(--sway, 0px))) translateY(-65vh) scale(0.85); }
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0) scale(0.7);
+  }
+
+  8% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-20px) scale(1);
+  }
+
+  30% {
+    opacity: 0.95;
+  }
+
+  60% {
+    opacity: 0.6;
+    transform: translateX(calc(-50% + var(--sway, 0px))) translateY(-40vh);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% - var(--sway, 0px))) translateY(-65vh) scale(0.85);
+  }
 }
 
 .room-chat-bubble-avatar {
@@ -1235,9 +1380,20 @@
 }
 
 @keyframes roomReactionBurst {
-  0% { opacity: 1; transform: translateY(0) translateX(0) scale(0.5) rotate(0deg); }
-  30% { opacity: 1; transform: translateY(-100px) translateX(var(--burst-x, 0px)) scale(1.2) rotate(15deg); }
-  100% { opacity: 0; transform: translateY(-300px) translateX(var(--burst-x, 0px)) scale(0.6) rotate(30deg); }
+  0% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) scale(0.5) rotate(0deg);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-100px) translateX(var(--burst-x, 0px)) scale(1.2) rotate(15deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-300px) translateX(var(--burst-x, 0px)) scale(0.6) rotate(30deg);
+  }
 }
 
 /* ========== ACTIVITY PANEL ========== */
@@ -1282,8 +1438,13 @@
 }
 
 @keyframes roomSessionPulse {
-  0% { box-shadow: 0 0 20px rgba(37, 211, 102, 0.3); }
-  100% { box-shadow: none; }
+  0% {
+    box-shadow: 0 0 20px rgba(37, 211, 102, 0.3);
+  }
+
+  100% {
+    box-shadow: none;
+  }
 }
 
 .room-activity-avatar {
@@ -1415,13 +1576,27 @@
 }
 
 @keyframes roomBannerIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.8); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-30px) scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 @keyframes roomBannerOut {
-  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-  to { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px) scale(0.9);
+  }
 }
 
 /* Confetti particles */
@@ -1440,6 +1615,7 @@
     opacity: 1;
     transform: translate(var(--cf-x, 0px), -20px) rotate(0deg);
   }
+
   100% {
     opacity: 0;
     transform: translate(calc(var(--cf-x, 0px) + var(--cf-drift, 0px)), 100vh) rotate(var(--cf-rot, 720deg));
@@ -1460,8 +1636,17 @@
 }
 
 @keyframes roomMilestoneRing {
-  0% { width: 0; height: 0; opacity: 1; }
-  100% { width: 300px; height: 300px; opacity: 0; }
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
 }
 
 .room-milestone-number {
@@ -1479,11 +1664,690 @@
 }
 
 @keyframes roomMilestoneNumber {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-  30% { transform: translate(-50%, -50%) scale(1); }
-  70% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, -50%) translateY(-30px) scale(0.9); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  30% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-30px) scale(0.9);
+  }
+}
+
+/* ========== TWINNING EVENT ==========*/
+
+/* Screen shake */
+.room-screen-shake {
+  animation: roomScreenShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes roomScreenShake {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  10% {
+    transform: translate(-4px, 2px);
+  }
+
+  20% {
+    transform: translate(4px, -2px);
+  }
+
+  30% {
+    transform: translate(-3px, 3px);
+  }
+
+  40% {
+    transform: translate(3px, -3px);
+  }
+
+  50% {
+    transform: translate(-2px, 1px);
+  }
+
+  60% {
+    transform: translate(2px, -1px);
+  }
+
+  70% {
+    transform: translate(-1px, 2px);
+  }
+
+  80% {
+    transform: translate(1px, -1px);
+  }
+
+  90% {
+    transform: translate(-1px, 0);
+  }
+}
+
+/* Twinning banner container */
+.room-twin-banner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  pointer-events: none;
+  animation: roomTwinBannerIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.room-twin-banner--exit {
+  animation: roomTwinBannerOut 0.6s ease-in forwards !important;
+}
+
+@keyframes roomTwinBannerIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(-5deg);
+    filter: blur(10px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05) rotate(1deg);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes roomTwinBannerOut {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8) translateY(-40px);
+    filter: blur(8px);
+  }
+}
+
+/* Glowing backdrop behind banner */
+.room-twin-glow {
+  position: absolute;
+  inset: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+      rgba(247, 166, 185, 0.25) 0%,
+      rgba(250, 91, 255, 0.12) 40%,
+      transparent 70%);
+  animation: roomTwinGlowPulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes roomTwinGlowPulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Banner content card */
+.room-twin-content {
+  background: linear-gradient(135deg,
+      rgba(247, 166, 185, 0.12) 0%,
+      rgba(250, 91, 255, 0.08) 50%,
+      rgba(247, 166, 185, 0.12) 100%);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(247, 166, 185, 0.3);
+  border-radius: 28px;
+  padding: 28px 48px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  min-width: 320px;
+  max-width: 520px;
+  box-shadow:
+    0 0 60px rgba(247, 166, 185, 0.2),
+    0 0 120px rgba(250, 91, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Animated gradient border shimmer */
+.room-twin-content::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 28px;
+  background: linear-gradient(var(--border-angle, 0deg),
+      rgba(247, 166, 185, 0.5),
+      rgba(250, 91, 255, 0.3),
+      rgba(255, 193, 7, 0.3),
+      rgba(247, 166, 185, 0.5));
+  z-index: -1;
+  animation: roomTwinBorderSpin 3s linear infinite;
+}
+
+@keyframes roomTwinBorderSpin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+.room-twin-content::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 27px;
+  background: linear-gradient(135deg,
+      rgba(15, 10, 20, 0.92) 0%,
+      rgba(20, 10, 25, 0.88) 100%);
+  z-index: -1;
+}
+
+/* Floating musical notes around the banner */
+.room-twin-notes {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.room-twin-note {
+  position: absolute;
+  font-size: 22px;
+  animation: roomTwinNoteFloat 3s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.room-twin-note--1 {
+  top: -10px;
+  left: 15%;
+  animation-delay: 0s;
+  color: #f7a6b9;
+}
+
+.room-twin-note--2 {
+  top: 20%;
+  right: -15px;
+  animation-delay: 0.5s;
+  color: #FA5BFF;
+}
+
+.room-twin-note--3 {
+  bottom: -8px;
+  left: 30%;
+  animation-delay: 1s;
+  color: #ffc107;
+}
+
+.room-twin-note--4 {
+  top: 40%;
+  left: -18px;
+  animation-delay: 1.5s;
+  color: #f7a6b9;
+}
+
+@keyframes roomTwinNoteFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.5;
+  }
+
+  25% {
+    transform: translateY(-8px) rotate(10deg);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translateY(-4px) rotate(-5deg);
+    opacity: 0.6;
+  }
+
+  75% {
+    transform: translateY(-10px) rotate(8deg);
+    opacity: 0.9;
+  }
+}
+
+/* Streak multiplier badge */
+.room-twin-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 20px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 140, 0, 0.15));
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  margin-bottom: 12px;
+  animation: roomTwinStreakPulse 1s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+.room-twin-streak-x {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  color: #ffc107;
+  text-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
+  line-height: 1;
+}
+
+.room-twin-streak-label {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  color: rgba(255, 193, 7, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+@keyframes roomTwinStreakPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.15);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(255, 193, 7, 0.3);
+    transform: scale(1.04);
+  }
+}
+
+/* "TWINNING" label */
+.room-twin-label {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  color: #f7a6b9;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 2;
+  animation: roomTwinLabelGlow 2s ease-in-out infinite;
+}
+
+@keyframes roomTwinLabelGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 10px rgba(247, 166, 185, 0.3);
+  }
+
+  50% {
+    text-shadow: 0 0 25px rgba(247, 166, 185, 0.6), 0 0 50px rgba(250, 91, 255, 0.2);
+  }
+}
+
+/* Names display */
+.room-twin-names {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 2;
+  animation: roomTwinNamesFadeIn 0.6s ease-out 0.3s both;
+}
+
+.room-twin-name {
+  color: #f7a6b9;
+  text-shadow: 0 0 15px rgba(247, 166, 185, 0.4);
+}
+
+.room-twin-and {
+  font-weight: 500;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.room-twin-comma {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes roomTwinNamesFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Song info */
+.room-twin-song {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+  animation: roomTwinNamesFadeIn 0.6s ease-out 0.5s both;
+}
+
+.room-twin-song-prefix {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.room-twin-song-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.room-twin-song-artist {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(250, 91, 255, 0.8);
+}
+
+/* EQ visualizer bars */
+.room-twin-eq {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 36px;
+  position: relative;
+  z-index: 2;
+  animation: roomTwinNamesFadeIn 0.5s ease-out 0.7s both;
+}
+
+.room-twin-eq-bar {
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(to top, #f7a6b9, #FA5BFF);
+  animation: roomTwinEqBounce var(--teq-speed, 0.4s) ease-in-out infinite alternate;
+}
+
+@keyframes roomTwinEqBounce {
+  from {
+    height: 4px;
+    opacity: 0.5;
+  }
+
+  to {
+    height: var(--teq-max, 24px);
+    opacity: 1;
+  }
+}
+
+/* Musical note particles that fly across the screen */
+.room-twin-particle {
+  position: absolute;
+  bottom: -20px;
+  opacity: 0;
+  animation: roomTwinParticleRise var(--tp-speed, 3s) ease-out forwards;
+  animation-delay: var(--tp-delay, 0s);
+  pointer-events: none;
+  z-index: 51;
+  filter: drop-shadow(0 0 6px rgba(247, 166, 185, 0.4));
+}
+
+@keyframes roomTwinParticleRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) rotate(0deg) scale(0.5);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  60% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-110vh) translateX(var(--tp-drift, 0px)) rotate(var(--tp-rot, 360deg)) scale(0.3);
+  }
+}
+
+/* Toast streak badge */
+.room-toast-streak {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25), rgba(255, 140, 0, 0.2));
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  color: #ffc107;
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: roomTwinStreakPulse 1.5s ease-in-out infinite;
+}
+
+/* Mobile responsive adjustments for twinning */
+@media (max-width: 768px) {
+  .room-twin-content {
+    min-width: 260px;
+    max-width: 90vw;
+    padding: 22px 24px 20px;
+    border-radius: 22px;
+  }
+
+  .room-twin-names {
+    font-size: 18px;
+  }
+
+  .room-twin-song-title {
+    font-size: 16px;
+  }
+
+  .room-twin-streak-x {
+    font-size: 22px;
+  }
+
+  .room-twin-label {
+    font-size: 12px;
+    letter-spacing: 4px;
+  }
+
+  .room-twin-eq {
+    height: 28px;
+  }
+}
+
+/* ========== PERSISTENT TWINNING MINI CARDS ========== */
+
+.room-twin-cards {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.room-twin-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: linear-gradient(135deg,
+      rgba(247, 166, 185, 0.1) 0%,
+      rgba(250, 91, 255, 0.06) 100%);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(247, 166, 185, 0.25);
+  border-radius: 16px;
+  pointer-events: auto;
+  animation: roomTwinCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-shadow:
+    0 0 20px rgba(247, 166, 185, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  max-width: 90vw;
+}
+
+@keyframes roomTwinCardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mini EQ bars in card */
+.room-twin-card-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.room-twin-card-eq .room-twin-eq-bar {
+  width: 3px;
+  border-radius: 3px;
+}
+
+/* Card info */
+.room-twin-card-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.room-twin-card-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.room-twin-card-badge {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  color: #ffc107;
+  text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.room-twin-card-label {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  color: rgba(255, 193, 7, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.room-twin-card-song {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-twin-card-names {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  color: #f7a6b9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Subtle glow pulse on the card */
+.room-twin-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 16px;
+  background: linear-gradient(135deg,
+      rgba(247, 166, 185, 0.3),
+      rgba(250, 91, 255, 0.2),
+      rgba(247, 166, 185, 0.3));
+  z-index: -1;
+  opacity: 0;
+  animation: roomTwinCardGlow 3s ease-in-out infinite;
+}
+
+@keyframes roomTwinCardGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.5; }
+}
+
+/* Mobile: keep at top */
+@media (max-width: 768px) {
+  .room-twin-cards {
+    top: 12px;
+    max-width: 95vw;
+  }
+
+  .room-twin-card {
+    padding: 6px 12px 6px 10px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .room-twin-card-song {
+    font-size: 12px;
+  }
+
+  .room-twin-card-names {
+    font-size: 10px;
+  }
 }
 
 /* ========== MOBILE BOTTOM NAV ========== */

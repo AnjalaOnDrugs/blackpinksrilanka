@@ -1,6 +1,7 @@
 /**
  * Phone Verification and OTP Module
- * Handles phone number verification, OTP generation, and WhatsApp messaging
+ * Handles phone number verification, OTP generation, and WhatsApp messaging.
+ * Uses Convex for user data instead of Firestore.
  */
 
 /**
@@ -92,7 +93,6 @@ async function sendWhatsAppOTP(phoneNumber, otpCode) {
     const message = `[BPSL community] Your login code is ${otpCode}`;
 
     // Route through Google Apps Script to avoid CORS
-    // Credentials are stored server-side in the Apps Script, not sent from browser
     const response = await fetch(CONFIG.googleSheetsUrl, {
       method: 'POST',
       body: JSON.stringify({
@@ -115,44 +115,28 @@ async function sendWhatsAppOTP(phoneNumber, otpCode) {
 }
 
 /**
- * Create or update Firestore user document with OTP
+ * Create or update user with OTP in Convex
  *
  * @param {string} phoneNumber - Normalized phone number
  * @param {string} otpCode - 6-digit OTP code
  * @param {number} stage - Auth stage (1=phone, 2=otp, 3=complete)
  * @returns {Promise<void>}
  */
-async function createFirestoreUser(phoneNumber, otpCode, stage = 1) {
+async function createFirestoreUser(phoneNumber, otpCode, stage) {
   try {
-    const userRef = db.collection('users').doc(phoneNumber);
-    const userDoc = await userRef.get();
-
-    if (userDoc.exists) {
-      // Update existing document
-      await userRef.update({
-        otpCode: otpCode,
-        otpGeneratedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        otpAttempts: 0,  // Reset attempts
-        authStage: stage
-      });
-    } else {
-      // Create new document
-      await userRef.set({
-        phoneNumber: phoneNumber,
-        otpCode: otpCode,
-        otpGeneratedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        otpAttempts: 0,
-        authStage: stage
-      });
-    }
+    await ConvexService.mutation('users:upsertWithOTP', {
+      phoneNumber: phoneNumber,
+      otpCode: otpCode,
+      authStage: stage || 1
+    });
   } catch (error) {
-    console.error('Firestore error:', error);
+    console.error('Convex error:', error);
     throw new Error('Failed to save verification data. Please try again.');
   }
 }
 
 /**
- * Verify OTP code
+ * Verify OTP code via Convex
  *
  * @param {string} phoneNumber - Normalized phone number
  * @param {string} enteredOTP - OTP code entered by user
@@ -160,59 +144,11 @@ async function createFirestoreUser(phoneNumber, otpCode, stage = 1) {
  */
 async function verifyOTP(phoneNumber, enteredOTP) {
   try {
-    const userRef = db.collection('users').doc(phoneNumber);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return {
-        valid: false,
-        attemptsRemaining: 0,
-        message: 'Session expired. Please start over.'
-      };
-    }
-
-    const userData = userDoc.data();
-    const storedOTP = userData.otpCode;
-    const attempts = userData.otpAttempts || 0;
-
-    // Check if max attempts reached
-    if (attempts >= CONFIG.otpMaxAttempts) {
-      return {
-        valid: false,
-        attemptsRemaining: 0,
-        message: 'Maximum attempts exceeded. Please request a new code.'
-      };
-    }
-
-    // Verify OTP
-    if (enteredOTP === storedOTP) {
-      // Correct OTP - advance to next stage
-      await userRef.update({
-        authStage: 2
-      });
-
-      return {
-        valid: true,
-        attemptsRemaining: CONFIG.otpMaxAttempts - attempts,
-        message: 'OTP verified successfully'
-      };
-    } else {
-      // Incorrect OTP - increment attempts
-      const newAttempts = attempts + 1;
-      await userRef.update({
-        otpAttempts: newAttempts
-      });
-
-      const remaining = CONFIG.otpMaxAttempts - newAttempts;
-
-      return {
-        valid: false,
-        attemptsRemaining: remaining,
-        message: remaining > 0
-          ? `Invalid verification code. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`
-          : 'Maximum attempts exceeded. Please request a new code.'
-      };
-    }
+    return await ConvexService.mutation('users:verifyOTP', {
+      phoneNumber: phoneNumber,
+      enteredOTP: enteredOTP,
+      maxAttempts: CONFIG.otpMaxAttempts
+    });
   } catch (error) {
     console.error('OTP verification error:', error);
     throw new Error('Failed to verify OTP. Please try again.');
@@ -227,15 +163,9 @@ async function verifyOTP(phoneNumber, enteredOTP) {
  */
 async function checkOTPExists(phoneNumber) {
   try {
-    const userRef = db.collection('users').doc(phoneNumber);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return false;
-    }
-
-    const userData = userDoc.data();
-    return !!userData.otpCode;
+    const user = await ConvexService.query('users:getByPhone', { phoneNumber: phoneNumber });
+    if (!user) return false;
+    return !!user.otpCode;
   } catch (error) {
     console.error('OTP exists check error:', error);
     return false;
@@ -250,18 +180,15 @@ async function checkOTPExists(phoneNumber) {
  */
 async function checkUserHasAccount(phoneNumber) {
   try {
-    const userRef = db.collection('users').doc(phoneNumber);
-    const userDoc = await userRef.get();
+    const user = await ConvexService.query('users:getByPhone', { phoneNumber: phoneNumber });
 
-    if (!userDoc.exists) {
+    if (!user) {
       return { hasAccount: false, username: null };
     }
 
-    const userData = userDoc.data();
-    
     // Check if user has completed registration (has username)
-    if (userData.username && userData.authStage === 3) {
-      return { hasAccount: true, username: userData.username };
+    if (user.username && user.authStage === 3) {
+      return { hasAccount: true, username: user.username };
     }
 
     return { hasAccount: false, username: null };
@@ -279,23 +206,20 @@ async function checkUserHasAccount(phoneNumber) {
  */
 async function checkOTPRateLimit(phoneNumber) {
   try {
-    const userRef = db.collection('users').doc(phoneNumber);
-    const userDoc = await userRef.get();
+    const user = await ConvexService.query('users:getByPhone', { phoneNumber: phoneNumber });
 
-    if (!userDoc.exists) {
+    if (!user) {
       return { allowed: true, waitTime: 0 };
     }
 
-    const userData = userDoc.data();
-    const lastGenerated = userData.otpGeneratedAt;
+    const lastGenerated = user.otpGeneratedAt;
 
     if (!lastGenerated) {
       return { allowed: true, waitTime: 0 };
     }
 
-    const now = new Date();
-    const lastGeneratedDate = lastGenerated.toDate();
-    const timeDiff = now - lastGeneratedDate;
+    const now = Date.now();
+    const timeDiff = now - lastGenerated;
 
     if (timeDiff < CONFIG.otpRateLimit) {
       const waitTime = Math.ceil((CONFIG.otpRateLimit - timeDiff) / 1000); // seconds
@@ -321,23 +245,20 @@ async function checkOTPRateLimit(phoneNumber) {
  */
 async function shouldShowRegenerateButton(phoneNumber) {
   try {
-    const userRef = db.collection('users').doc(phoneNumber);
-    const userDoc = await userRef.get();
+    const user = await ConvexService.query('users:getByPhone', { phoneNumber: phoneNumber });
 
-    if (!userDoc.exists) {
+    if (!user) {
       return false;
     }
 
-    const userData = userDoc.data();
-    const lastGenerated = userData.otpGeneratedAt;
+    const lastGenerated = user.otpGeneratedAt;
 
     if (!lastGenerated) {
       return false;
     }
 
-    const now = new Date();
-    const lastGeneratedDate = lastGenerated.toDate();
-    const timeDiff = now - lastGeneratedDate;
+    const now = Date.now();
+    const timeDiff = now - lastGenerated;
 
     return timeDiff >= CONFIG.otpDisplayTime; // 10 minutes
   } catch (error) {

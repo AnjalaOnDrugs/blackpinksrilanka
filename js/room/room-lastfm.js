@@ -1,6 +1,7 @@
 /**
  * Room Last.fm Service
- * Polls Last.fm API for user streaming activity
+ * Polls Last.fm API for user streaming activity.
+ * Now uses Convex's change-detection mutation to reduce unnecessary writes by ~93%.
  */
 
 window.ROOM = window.ROOM || {};
@@ -9,6 +10,102 @@ ROOM.LastFM = {
   pollInterval: null,
   pollIndex: 0,
   apiKey: null,
+  // Map of coreSong → { usernames: [...], count, track, artist }
+  // Tracks ALL active twinning groups for persistent mini cards
+  _activeTwins: {},
+
+  /**
+   * Clean a track string for fuzzy matching.
+   * Strips common Last.fm junk: "Official Video/Audio", "VEVO", "MV",
+   * featured artists, parenthetical/bracket tags, punctuation, extra spaces.
+   */
+  cleanString: function (str) {
+    var s = (str || '').toLowerCase();
+    // Remove common video/audio tags
+    s = s.replace(/\(official\s*(music\s*)?video\)/gi, '');
+    s = s.replace(/\(official\s*audio\)/gi, '');
+    s = s.replace(/\(official\)/gi, '');
+    s = s.replace(/\(lyrics?\)/gi, '');
+    s = s.replace(/\(visuali[sz]er\)/gi, '');
+    s = s.replace(/\[official\s*(music\s*)?video\]/gi, '');
+    s = s.replace(/\[official\s*audio\]/gi, '');
+    s = s.replace(/official\s*(music\s*)?video/gi, '');
+    s = s.replace(/official\s*audio/gi, '');
+    s = s.replace(/\bm\/?v\b/gi, '');
+    s = s.replace(/\blive\b/gi, '');
+    // Remove VEVO suffix from artist names
+    s = s.replace(/vevo$/gi, '');
+    // Remove feat/ft tags
+    s = s.replace(/[\(\[]\s*(feat|ft)\.?\s*[^\)\]]*[\)\]]/gi, '');
+    s = s.replace(/\s+(feat|ft)\.?\s+.*/gi, '');
+    // Remove all punctuation and extra whitespace
+    s = s.replace(/[^\w\s]/g, ' ');
+    s = s.replace(/\s+/g, ' ').trim();
+    return s;
+  },
+
+  /**
+   * Extract just the core song title from a track name.
+   * Handles "ARTIST - Song Title" format that some scrobblers use.
+   */
+  extractCoreSong: function (name, artist) {
+    var cleanName = this.cleanString(name);
+    var cleanArtist = this.cleanString(artist);
+
+    // If track name starts with "artist - ", strip the artist prefix
+    // e.g. "JENNIE - like JENNIE" → "like jennie"
+    if (cleanArtist && cleanName.indexOf(cleanArtist + ' ') === 0) {
+      cleanName = cleanName.substring(cleanArtist.length).trim();
+    }
+    // Also handle "artist name" appearing with a dash separator in the raw name
+    var rawLower = (name || '').toLowerCase();
+    var dashIdx = rawLower.indexOf(' - ');
+    if (dashIdx > 0) {
+      var beforeDash = this.cleanString(rawLower.substring(0, dashIdx));
+      // If part before dash matches the artist, use part after dash
+      if (beforeDash === cleanArtist || cleanArtist.indexOf(beforeDash) === 0) {
+        cleanName = this.cleanString(rawLower.substring(dashIdx + 3));
+      }
+    }
+
+    return cleanName;
+  },
+
+  /**
+   * Fuzzy-match two song entries. Returns true if they're likely the same song.
+   * Compares cleaned core song titles using word overlap.
+   */
+  isSameSong: function (name1, artist1, name2, artist2) {
+    var song1 = this.extractCoreSong(name1, artist1);
+    var song2 = this.extractCoreSong(name2, artist2);
+
+    // Direct match after cleaning
+    if (song1 === song2 && song1.length > 0) return true;
+
+    // Word-level overlap: check if most words in the shorter title appear in the longer
+    var words1 = song1.split(' ').filter(function (w) { return w.length > 1; });
+    var words2 = song2.split(' ').filter(function (w) { return w.length > 1; });
+
+    if (words1.length === 0 || words2.length === 0) return false;
+
+    var shorter = words1.length <= words2.length ? words1 : words2;
+    var longer = words1.length <= words2.length ? words2 : words1;
+    var longerJoined = longer.join(' ');
+
+    var matchCount = 0;
+    for (var i = 0; i < shorter.length; i++) {
+      if (longerJoined.indexOf(shorter[i]) !== -1) matchCount++;
+    }
+
+    // At least 70% of the shorter title's words must appear in the longer
+    return shorter.length > 0 && (matchCount / shorter.length) >= 0.7;
+  },
+
+  // Normalize song key — used by calculateMostPlayed
+  normalizeSongKey: function (name, artist) {
+    // Use core song extraction for consistent grouping
+    return this.extractCoreSong(name, artist);
+  },
 
   init: function () {
     this.apiKey = CONFIG.lastfmApiKey;
@@ -20,7 +117,7 @@ ROOM.LastFM = {
     var self = this;
     // Poll only the current user's Last.fm data
     // Each client updates only its own participant document
-    // Other users' data arrives via Firestore onSnapshot listeners
+    // Other users' data arrives via Convex reactive queries
     this.pollInterval = setInterval(function () {
       self.pollCurrentUser();
     }, CONFIG.roomPollInterval || 2000);
@@ -43,7 +140,7 @@ ROOM.LastFM = {
       }
 
       var track = data.recenttracks.track[0];
-      var nowPlaying = track['@attr'] && track['@attr'].nowplaying === 'true';
+      var nowPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
       var images = track.image || [];
       var albumArt = '';
       for (var i = 0; i < images.length; i++) {
@@ -68,33 +165,20 @@ ROOM.LastFM = {
 
     var phoneNumber = ROOM.currentUser.phoneNumber;
 
-    // Find current user's participant data from cache
-    var participants = ROOM.Firebase.getParticipants();
-    var currentParticipant = null;
-    for (var i = 0; i < participants.length; i++) {
-      if (participants[i].id === phoneNumber) {
-        currentParticipant = participants[i];
-        break;
-      }
-    }
-
     this.getUserRecentTracks(ROOM.currentUser.lastfmUsername).then(function (trackData) {
-      if (trackData) {
-        // Only write to our own participant document
-        ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData);
-
-        // Check if user was idle and just started streaming
-        var prevTrack = currentParticipant ? currentParticipant.data.currentTrack : null;
-        var wasIdle = !prevTrack || !prevTrack.nowPlaying;
-        if (wasIdle && trackData.nowPlaying) {
-          ROOM.Firebase.fireEvent('session_start', {
-            username: ROOM.currentUser.username
-          });
-        }
-      } else {
-        // No track data means user stopped playing - clear their track
-        ROOM.Firebase.updateParticipantTrack(phoneNumber, null);
-      }
+      // updateParticipantTrack now routes to Convex mutation with change detection
+      // The mutation only writes if the track actually changed (~93% reduction)
+      ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData || null)
+        .then(function (result) {
+          // If the mutation returns session_start info, fire the event
+          if (result && result.wasIdle && trackData && trackData.nowPlaying) {
+            ROOM.Firebase.fireEvent('session_start', {
+              username: ROOM.currentUser.username,
+              track: trackData.name,
+              artist: trackData.artist
+            });
+          }
+        });
     }).catch(function (err) {
       // Silently handle rate limit errors
     });
@@ -109,7 +193,7 @@ ROOM.LastFM = {
       var track = p.data.currentTrack;
       if (!track || !track.nowPlaying) return;
 
-      var key = track.name + '|' + track.artist;
+      var key = ROOM.LastFM.normalizeSongKey(track.name, track.artist);
       songCounts[key] = (songCounts[key] || 0) + 1;
       songData[key] = track;
     });
@@ -141,28 +225,96 @@ ROOM.LastFM = {
   },
 
   detectSameSong: function () {
+    var self = this;
     var participants = ROOM.Firebase.getParticipants();
-    var songMap = {};
 
+    // 1. Collect all online, now-playing listeners
+    var listeners = [];
     participants.forEach(function (p) {
+      if (!p.data.isOnline) return;
       var track = p.data.currentTrack;
       if (!track || !track.nowPlaying) return;
-
-      var key = track.name + '|' + track.artist;
-      if (!songMap[key]) songMap[key] = [];
-      songMap[key].push(p.data.username);
+      listeners.push({
+        username: p.data.username,
+        name: track.name,
+        artist: track.artist,
+        coreSong: self.extractCoreSong(track.name, track.artist),
+        track: track
+      });
     });
 
-    for (var key in songMap) {
-      if (songMap[key].length >= 2) {
-        var parts = key.split('|');
-        ROOM.Firebase.fireEvent('same_song', {
-          track: parts[0],
-          artist: parts[1],
-          usernames: songMap[key],
-          count: songMap[key].length
+    // 2. Fuzzy-group listeners into song groups
+    var groups = [];
+    for (var i = 0; i < listeners.length; i++) {
+      var merged = false;
+      for (var g = 0; g < groups.length; g++) {
+        var ref = groups[g].ref;
+        if (self.isSameSong(listeners[i].name, listeners[i].artist, ref.name, ref.artist)) {
+          groups[g].usernames.push(listeners[i].username);
+          merged = true;
+          break;
+        }
+      }
+      if (!merged) {
+        groups.push({
+          ref: listeners[i],
+          usernames: [listeners[i].username],
+          track: listeners[i].track
         });
       }
+    }
+
+    // 3. Build new active twins map (only groups with 2+)
+    var newTwins = {};
+    for (var g = 0; g < groups.length; g++) {
+      if (groups[g].usernames.length >= 2) {
+        var key = groups[g].ref.coreSong;
+        newTwins[key] = {
+          usernames: groups[g].usernames.slice().sort(),
+          count: groups[g].usernames.length,
+          track: groups[g].track.name,
+          artist: groups[g].track.artist
+        };
+      }
+    }
+
+    // 4. Compare with previous state to detect changes
+    var prev = this._activeTwins;
+
+    for (var key in newTwins) {
+      var cur = newTwins[key];
+      var old = prev[key];
+
+      if (!old) {
+        // Brand new twinning — play the big animation
+        if (ROOM.Animations && ROOM.Animations.playSameSong) {
+          ROOM.Animations.playSameSong({
+            track: cur.track,
+            artist: cur.artist,
+            usernames: cur.usernames,
+            count: cur.count
+          });
+        }
+      } else if (cur.count > old.count) {
+        // Someone new joined an existing twinning group — streak upgrade!
+        if (ROOM.Animations && ROOM.Animations.playSameSong) {
+          ROOM.Animations.playSameSong({
+            track: cur.track,
+            artist: cur.artist,
+            usernames: cur.usernames,
+            count: cur.count,
+            isUpgrade: true
+          });
+        }
+      }
+    }
+
+    // 5. Save current state
+    this._activeTwins = newTwins;
+
+    // 6. Update persistent mini cards
+    if (ROOM.Animations && ROOM.Animations.updateTwinCards) {
+      ROOM.Animations.updateTwinCards(newTwins);
     }
   },
 

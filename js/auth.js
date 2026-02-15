@@ -1,12 +1,14 @@
 /**
  * Firebase Authentication Module
- * Handles Firebase initialization and authentication operations
+ * Keeps Firebase Auth for authentication, uses Convex for user data reads/writes.
  */
 
-// Initialize Firebase
+// Initialize Firebase (Auth only - Firestore no longer used for room data)
 firebase.initializeApp(ENV.firebase);
 const auth = firebase.auth();
-const db = firebase.firestore();
+
+// Initialize Convex for user data operations
+ConvexService.init(CONFIG.convexUrl);
 
 /**
  * Check if user is currently authenticated
@@ -37,11 +39,10 @@ async function signUpWithPhone(phoneNumber, username, password) {
     // Create Firebase Auth account
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 
-    // Update Firestore record with username
-    await db.collection('users').doc(phoneNumber).update({
-      username: username,
-      registeredAt: firebase.firestore.FieldValue.serverTimestamp(),
-      authStage: 3  // Complete
+    // Update Convex user record with username
+    await ConvexService.mutation('users:completeRegistration', {
+      phoneNumber: phoneNumber,
+      username: username
     });
 
     return userCredential;
@@ -53,7 +54,7 @@ async function signUpWithPhone(phoneNumber, username, password) {
 
 /**
  * Login existing user with username and password
- * Looks up phone number by username, then authenticates
+ * Looks up phone number by username via Convex, then authenticates via Firebase Auth
  *
  * @param {string} username - User's username
  * @param {string} password - User's password
@@ -61,17 +62,14 @@ async function signUpWithPhone(phoneNumber, username, password) {
  */
 async function loginWithUsername(username, password) {
   try {
-    // Look up phone number by username in Firestore
-    const usersRef = db.collection('users');
-    const querySnapshot = await usersRef.where('username', '==', username).limit(1).get();
+    // Look up phone number by username in Convex
+    const userDoc = await ConvexService.query('users:getByUsername', { username: username });
 
-    if (querySnapshot.empty) {
+    if (!userDoc) {
       throw new Error('Account not found');
     }
 
-    // Get phone number (document ID)
-    const userDoc = querySnapshot.docs[0];
-    const phoneNumber = userDoc.id;
+    const phoneNumber = userDoc.phoneNumber;
 
     // Verify active member status before login
     const verificationResult = await checkPhoneInSheet(phoneNumber);
@@ -105,8 +103,8 @@ async function logoutUser() {
 }
 
 /**
- * Get current user's Firestore data
- * @returns {Promise<Object|null>} User data from Firestore
+ * Get current user's data from Convex
+ * @returns {Promise<Object|null>} User data
  */
 async function getCurrentUserData() {
   try {
@@ -116,13 +114,17 @@ async function getCurrentUserData() {
     // Extract phone number from email (phone@bpsl.local -> phone)
     const phoneNumber = user.email.replace('@bpsl.local', '');
 
-    const userDoc = await db.collection('users').doc(phoneNumber).get();
+    const userDoc = await ConvexService.query('users:getByPhone', { phoneNumber: phoneNumber });
 
-    if (!userDoc.exists) return null;
+    if (!userDoc) return null;
 
     return {
       phoneNumber: phoneNumber,
-      ...userDoc.data()
+      username: userDoc.username,
+      lastfmUsername: userDoc.lastfmUsername,
+      avatarColor: userDoc.avatarColor,
+      authStage: userDoc.authStage,
+      registeredAt: userDoc.registeredAt
     };
   } catch (error) {
     console.error('Error getting user data:', error);
