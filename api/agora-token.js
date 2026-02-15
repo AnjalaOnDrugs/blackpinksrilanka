@@ -1,7 +1,7 @@
 /**
  * Agora RTM Token Server - Vercel Serverless Function
  * 
- * Generates Agora RTM tokens using the official agora-token package.
+ * Generates Agora RTM tokens using the agora-access-token package.
  * Deploy on Vercel as a serverless function at /api/agora-token
  * 
  * Environment variables required:
@@ -9,7 +9,7 @@
  *   AGORA_APP_CERTIFICATE - Your Agora App Certificate (Primary Certificate)
  */
 
-const { RtmTokenBuilder } = require('agora-token');
+const { RtmTokenBuilder, RtmRole } = require('agora-access-token');
 
 module.exports = (req, res) => {
     // Set CORS headers
@@ -52,16 +52,18 @@ module.exports = (req, res) => {
     }
 
     try {
-        // Token expiration: 24 hours (in seconds)
+        // Token expiration: 24 hours from now (Unix timestamp in seconds)
         const expirationTimeInSeconds = 86400;
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
-        // Build RTM token using the official Agora SDK
-        // agora-token v2.x API: buildToken(appId, appCertificate, userId, expire)
+        // Build RTM token using AccessToken v1 format (compatible with RTM SDK 1.x)
         const token = RtmTokenBuilder.buildToken(
             appId,
             appCertificate,
             String(userId),
-            expirationTimeInSeconds
+            RtmRole.Rtm_User,
+            privilegeExpiredTs
         );
 
         console.log(`Token generated for userId: ${userId}, channel: ${channelName || 'N/A'}`);
@@ -81,3 +83,4 @@ module.exports = (req, res) => {
         });
     }
 };
+

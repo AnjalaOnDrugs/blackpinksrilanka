@@ -14,7 +14,8 @@
   "author": "BLACKPINK Sri Lanka",
   "license": "MIT",
   "dependencies": {
-    "agora-token": "^2.0.5",
+    "agora-access-token": "^2.0.4",
+    "agora-token": "^2.0.3",
     "convex": "^1.31.7",
     "firebase-admin": "^13.6.1"
   }
