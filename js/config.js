@@ -22,7 +22,7 @@ const CONFIG = {
 
   // Agora RTM (Chat)
   agoraAppId: "cd95c07eac04413aa4b458bdab65136d",
-  agoraTokenServerUrl: "https://script.google.com/macros/s/AKfycbyGEJ4zY85fgqem94NidctBQIXGlOTMDZqxdkZAlgn7afXexW-iVHmqDRMdiLEsT3nljg/exec", // TODO: Add your Google Apps Script Web App URL here after deployment
+  agoraTokenServerUrl: "/api/agora-token",
 
   // Last.fm API
   lastfmApiKey: "04d8f2a4df95b60f32595119d2b8fec5",

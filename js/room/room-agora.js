@@ -52,61 +52,31 @@ ROOM.Agora = {
   },
 
   fetchToken: function (userId, roomId) {
-    // Use JSONP to avoid CORS issues with Google Apps Script
-    return new Promise(function (resolve, reject) {
-      var callbackName = 'agoraTokenCallback_' + Date.now();
-      var url = CONFIG.agoraTokenServerUrl +
-                '?userId=' + encodeURIComponent(userId) +
-                '&channelName=' + encodeURIComponent(roomId) +
-                '&callback=' + callbackName;
+    var url = CONFIG.agoraTokenServerUrl +
+      '?userId=' + encodeURIComponent(userId) +
+      '&channelName=' + encodeURIComponent(roomId);
 
-      // Create callback function
-      window[callbackName] = function (data) {
-        // Cleanup
-        delete window[callbackName];
-        document.body.removeChild(script);
-
-        // Log the response for debugging
+    return fetch(url)
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error('Token server returned HTTP ' + response.status);
+        }
+        return response.json();
+      })
+      .then(function (data) {
         console.log('Token server response:', data);
 
-        // Check for errors
-        if (data.error) {
-          reject(new Error('Token server error: ' + data.error));
-          return;
+        if (data.error || !data.success) {
+          throw new Error('Token server error: ' + (data.error || 'Unknown error'));
         }
 
-        // Check for success and token
-        if (!data.success || !data.token) {
-          reject(new Error('No token in response: ' + JSON.stringify(data)));
-          return;
+        if (!data.token) {
+          throw new Error('No token in response');
         }
 
         console.log('Token received successfully');
-        resolve(data.token);
-      };
-
-      // Create script tag for JSONP
-      var script = document.createElement('script');
-      script.src = url;
-      script.onerror = function () {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        reject(new Error('Failed to load token from server'));
-      };
-
-      // Add timeout
-      setTimeout(function () {
-        if (window[callbackName]) {
-          delete window[callbackName];
-          if (script.parentNode) {
-            document.body.removeChild(script);
-          }
-          reject(new Error('Token request timeout'));
-        }
-      }, 10000); // 10 second timeout
-
-      document.body.appendChild(script);
-    });
+        return data.token;
+      });
   },
 
   loginAndJoin: function (token, userId, roomId) {
@@ -161,10 +131,10 @@ ROOM.Agora = {
   destroy: function () {
     var self = this;
     if (this.channel) {
-      this.channel.leave().catch(function () {});
+      this.channel.leave().catch(function () { });
     }
     if (this.client) {
-      this.client.logout().catch(function () {});
+      this.client.logout().catch(function () { });
     }
     this.channel = null;
     this.client = null;
