@@ -26,6 +26,24 @@ checkAuthState().then(async (user) => {
   }
 });
 
+// ========== ROOM NAVIGATION ==========
+var joinStreamBtn = document.getElementById('joinStreamBtn');
+if (joinStreamBtn) {
+  joinStreamBtn.addEventListener('click', function () {
+    window.location.href = 'room.html?id=streaming';
+  });
+}
+
+// Also make the featured room card clickable
+var streamingRoom = document.getElementById('streamingRoom');
+if (streamingRoom) {
+  streamingRoom.addEventListener('click', function (e) {
+    // Don't navigate if clicking the users button
+    if (e.target.closest('.mh-room-users-btn')) return;
+    window.location.href = 'room.html?id=streaming';
+  });
+}
+
 // ========== LOGOUT ==========
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   try {

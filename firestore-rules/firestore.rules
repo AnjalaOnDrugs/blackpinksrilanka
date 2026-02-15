@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to get phone number from email
+    function getPhoneNumber() {
+      return request.auth.token.email.replace('@bpsl.local', '');
+    }
+
+    // Users collection (indexed by phone number)
+    match /users/{phoneNumber} {
+      // Users can read and write their own data
+      // Since userId is phone number, we need to check if email matches
+      allow read, write: if request.auth != null && getPhoneNumber() == phoneNumber;
+    }
+
+    // Rooms collection
+    match /rooms/{roomId} {
+      // Anyone authenticated can read room data
+      allow read: if request.auth != null;
+
+      // Only allow writing to specific fields
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentMostPlayed']);
+
+      // Allow creating rooms
+      allow create: if request.auth != null;
+
+      // Participants subcollection (indexed by phone number)
+      match /participants/{participantId} {
+        // Anyone in the room can read participants
+        allow read: if request.auth != null;
+
+        // Users can only write their own participant data
+        allow write: if request.auth != null && getPhoneNumber() == participantId;
+      }
+
+      // Events subcollection
+      match /events/{eventId} {
+        // Anyone in the room can read events
+        allow read: if request.auth != null;
+
+        // Anyone authenticated can create events
+        allow create: if request.auth != null;
+
+        // No updates or deletes
+        allow update, delete: if false;
+      }
+
+      // Messages subcollection (for chat)
+      match /messages/{messageId} {
+        // Anyone in the room can read messages
+        allow read: if request.auth != null;
+
+        // Authenticated users can create messages
+        allow create: if request.auth != null
+          && request.resource.data.userId == getPhoneNumber()
+          && request.resource.data.username is string
+          && request.resource.data.type in ['message', 'reaction']
+          && request.resource.data.timestamp is number;
+
+        // No updates or deletes (messages are immutable)
+        allow update, delete: if false;
+      }
+    }
+  }
+}

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Agora Token Server</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .container {
+      background: #2a2a2a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #f7a6b9;
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 14px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #f7a6b9, #e8758a);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #e8758a, #f7a6b9);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      border-left: 4px solid #f7a6b9;
+      display: none;
+    }
+    .result.success {
+      border-left-color: #4caf50;
+    }
+    .result.error {
+      border-left-color: #ff6b7a;
+    }
+    .result h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+    .result pre {
+      background: #0a0a0a;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .info {
+      margin-top: 30px;
+      padding: 15px;
+      background: #2a3f5f;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .info strong {
+      color: #64B5F6;
+    }
+    .token-preview {
+      max-height: 200px;
+      overflow-y: auto;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔑 Agora Token Server Tester</h1>
+    <p>Test your deployed Google Apps Script token server before integrating it.</p>
+
+    <label for="tokenServerUrl">Token Server URL</label>
+    <input
+      type="text"
+      id="tokenServerUrl"
+      placeholder="https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec"
+      value=""
+    >
+
+    <label for="userId">User ID (Phone Number)</label>
+    <input
+      type="text"
+      id="userId"
+      placeholder="94771234567"
+      value="94771234567"
+    >
+
+    <button id="testBtn" onclick="testToken()">Test Token Generation</button>
+
+    <div id="result" class="result">
+      <h3 id="resultTitle">Result</h3>
+      <pre id="resultContent"></pre>
+    </div>
+
+    <div class="info">
+      <strong>Instructions:</strong>
+      <ol style="margin: 10px 0; padding-left: 20px;">
+        <li>Deploy the <code>agora-token-server.gs</code> script to Google Apps Script</li>
+        <li>Copy the Web App URL</li>
+        <li>Paste it in the "Token Server URL" field above</li>
+        <li>Click "Test Token Generation"</li>
+      </ol>
+      <strong>Expected Response:</strong>
+      <pre style="margin-top: 10px;">{
+  "token": "007eJxT...very-long-string...",
+  "userId": "94771234567",
+  "expiresIn": 86400
+}</pre>
+    </div>
+  </div>
+
+  <script>
+    async function testToken() {
+      const btn = document.getElementById('testBtn');
+      const result = document.getElementById('result');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultContent = document.getElementById('resultContent');
+
+      const tokenServerUrl = document.getElementById('tokenServerUrl').value.trim();
+      const userId = document.getElementById('userId').value.trim();
+
+      // Validation
+      if (!tokenServerUrl) {
+        showError('Please enter the Token Server URL');
+        return;
+      }
+
+      if (!userId) {
+        showError('Please enter a User ID');
+        return;
+      }
+
+      // Disable button
+      btn.disabled = true;
+      btn.textContent = 'Testing...';
+
+      try {
+        // Make request
+        const url = `${tokenServerUrl}?userId=${encodeURIComponent(userId)}`;
+        console.log('Requesting:', url);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        console.log('Response:', data);
+
+        if (!response.ok) {
+          throw new Error(data.error || `Server returned ${response.status}`);
+        }
+
+        // Check response structure
+        if (!data.token) {
+          throw new Error('Response missing "token" field');
+        }
+
+        // Success!
+        result.style.display = 'block';
+        result.className = 'result success';
+        resultTitle.textContent = '✅ Success! Token Generated';
+        resultContent.innerHTML = JSON.stringify(data, null, 2) +
+          '\n\n<div class="token-preview">' +
+          '<strong>Token Preview:</strong>\n' +
+          data.token.substring(0, 50) + '...' +
+          '\n<strong>Token Length:</strong> ' + data.token.length + ' characters' +
+          '\n<strong>Expires In:</strong> ' + (data.expiresIn / 3600) + ' hours' +
+          '</div>';
+
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        // Re-enable button
+        btn.disabled = false;
+        btn.textContent = 'Test Token Generation';
+      }
+    }
+
+    function showError(message) {
+      const result = document.getElementById('result');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultContent = document.getElementById('resultContent');
+
+      result.style.display = 'block';
+      result.className = 'result error';
+      resultTitle.textContent = '❌ Error';
+      resultContent.textContent = message;
+    }
+
+    // Load URL from localStorage if available
+    window.addEventListener('load', function() {
+      const saved = localStorage.getItem('tokenServerUrl');
+      if (saved) {
+        document.getElementById('tokenServerUrl').value = saved;
+      }
+    });
+
+    // Save URL to localStorage when changed
+    document.getElementById('tokenServerUrl').addEventListener('change', function(e) {
+      localStorage.setItem('tokenServerUrl', e.target.value);
+    });
+  </script>
+</body>
+</html>
