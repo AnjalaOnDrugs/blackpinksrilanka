@@ -9,7 +9,7 @@
  *   AGORA_APP_CERTIFICATE - Your Agora App Certificate (Primary Certificate)
  */
 
-const { RtmTokenBuilder, RtmRole } = require('agora-token');
+const { RtmTokenBuilder } = require('agora-token');
 
 module.exports = (req, res) => {
     // Set CORS headers
@@ -56,12 +56,12 @@ module.exports = (req, res) => {
         const expirationTimeInSeconds = 86400;
 
         // Build RTM token using the official Agora SDK
+        // agora-token v2.x API: buildToken(appId, appCertificate, userId, expire)
         const token = RtmTokenBuilder.buildToken(
             appId,
             appCertificate,
-            String(userId),         // Account/user ID (must be string)
-            RtmRole.Rtm_User,      // Role
-            expirationTimeInSeconds // Privilege expiration
+            String(userId),
+            expirationTimeInSeconds
         );
 
         console.log(`Token generated for userId: ${userId}, channel: ${channelName || 'N/A'}`);
