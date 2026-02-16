@@ -12,7 +12,6 @@ ROOM.LastFM = {
   apiKey: null,
   // Client-side caches to skip redundant Convex mutations
   _lastTrackKey: null,
-  _lastMostPlayedKey: null,
   // Map of coreSong → { usernames: [...], count, track, artist }
   // Tracks ALL active twinning groups for persistent mini cards
   _activeTwins: {},
@@ -172,11 +171,27 @@ ROOM.LastFM = {
     return shorter.length > 0 && (matchCount / shorter.length) >= 0.7;
   },
 
-  // Normalize song key — used by calculateMostPlayed
-  normalizeSongKey: function (name, artist) {
-    // Use core song extraction for consistent grouping
-    return this.extractCoreSong(name, artist);
+  /**
+   * Detect platform from track name.
+   * If the raw name contains "Music Video", "Official Video", "Official Audio",
+   * "MV", or "M/V" → YouTube. Otherwise → Spotify.
+   */
+  detectPlatform: function (trackName) {
+    var n = (trackName || '').toLowerCase();
+    if (
+      /\b(music\s*video|official\s*video|official\s*audio)\b/i.test(n) ||
+      /[\(\[]\s*(music\s*video|official\s*video|official\s*audio|m\/?v)\s*[\)\]]/i.test(n) ||
+      /\b(m\/v|mv)\b/i.test(n)
+    ) {
+      return 'youtube';
+    }
+    return 'spotify';
   },
+
+  // Stream counting state
+  _streamCheckInterval: null,
+  _currentStreamTrack: null, // { name, artist } of track being timed
+  _lastStreamCountResult: null, // Last result from tryCountStream
 
   // Track which offline users this client is responsible for polling
   _offlinePollAssignments: {},
@@ -204,6 +219,11 @@ ROOM.LastFM = {
     this._offlinePollInterval = setInterval(function () {
       self.pollOfflineTrackedUsers();
     }, CONFIG.offlinePollInterval || 10000);
+
+    // Stream counting: check every 5 seconds if the 30s threshold is met
+    this._streamCheckInterval = setInterval(function () {
+      self._checkStreamCount();
+    }, 5000);
   },
 
   getUserRecentTracks: function (lastfmUsername) {
@@ -278,6 +298,9 @@ ROOM.LastFM = {
     if (newKey === this._lastTrackKey) return;
     this._lastTrackKey = newKey;
 
+    var self = this;
+    var isCurrentUser = ROOM.currentUser && phoneNumber === ROOM.currentUser.phoneNumber;
+
     return ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData)
       .then(function (result) {
         if (result && result.wasIdle && trackData && trackData.nowPlaying) {
@@ -286,6 +309,17 @@ ROOM.LastFM = {
             track: trackData.name,
             artist: trackData.artist
           });
+        }
+
+        // Stream counting: only for current user
+        if (isCurrentUser) {
+          if (trackData && trackData.nowPlaying) {
+            // Start or continue a listening session
+            self._startStreamSession(trackData);
+          } else {
+            // Stopped playing or went idle — end session
+            self._stopStreamSession();
+          }
         }
       });
   },
@@ -352,51 +386,6 @@ ROOM.LastFM = {
         // Silently handle errors
       });
     });
-  },
-
-  calculateMostPlayed: function () {
-    var participants = ROOM.Firebase.getParticipants();
-    var songCounts = {};
-    var songData = {};
-
-    participants.forEach(function (p) {
-      var track = p.data.currentTrack;
-      if (!track || !track.nowPlaying) return;
-
-      var key = ROOM.LastFM.normalizeSongKey(track.name, track.artist);
-      songCounts[key] = (songCounts[key] || 0) + 1;
-      songData[key] = track;
-    });
-
-    var mostPlayed = null;
-    var maxCount = 0;
-    for (var key in songCounts) {
-      if (songCounts[key] > maxCount) {
-        maxCount = songCounts[key];
-        mostPlayed = songData[key];
-      }
-    }
-
-    if (mostPlayed) {
-      // Only update Convex if most-played actually changed
-      var mpKey = mostPlayed.name + '|' + mostPlayed.artist;
-      if (mpKey !== this._lastMostPlayedKey) {
-        this._lastMostPlayedKey = mpKey;
-        ROOM.Firebase.updateMostPlayed({
-          track: mostPlayed.name,
-          artist: mostPlayed.artist,
-          albumArt: mostPlayed.albumArt || ''
-        });
-      }
-
-      // Update the now playing display (always, for UI freshness)
-      var titleEl = document.getElementById('roomSongTitle');
-      var artistEl = document.getElementById('roomSongArtist');
-      if (titleEl) titleEl.textContent = mostPlayed.name;
-      if (artistEl) artistEl.textContent = mostPlayed.artist;
-    }
-
-    return { mostPlayed: mostPlayed, songCounts: songCounts };
   },
 
   detectSameSong: function () {
@@ -500,6 +489,84 @@ ROOM.LastFM = {
     }
   },
 
+  /**
+   * Start a listening session for stream counting.
+   * Called when user starts playing a new validated track.
+   */
+  _startStreamSession: function (trackData) {
+    if (!ROOM.currentUser || !trackData || !trackData.nowPlaying) return;
+
+    var trackId = trackData.name + '|' + trackData.artist;
+
+    // If same track is already being tracked, skip
+    if (this._currentStreamTrack === trackId) return;
+
+    this._currentStreamTrack = trackId;
+    this._lastStreamCountResult = null;
+
+    ConvexService.mutation('streams:startListening', {
+      roomId: ROOM.Firebase.roomId,
+      phoneNumber: ROOM.currentUser.phoneNumber,
+      trackName: trackData.name,
+      trackArtist: trackData.artist
+    }).catch(function () {
+      // Silently handle errors
+    });
+  },
+
+  /**
+   * Stop the listening session (user stopped playing or went idle).
+   */
+  _stopStreamSession: function () {
+    if (!ROOM.currentUser) return;
+
+    this._currentStreamTrack = null;
+    this._lastStreamCountResult = null;
+
+    ConvexService.mutation('streams:stopListening', {
+      roomId: ROOM.Firebase.roomId,
+      phoneNumber: ROOM.currentUser.phoneNumber
+    }).catch(function () {
+      // Silently handle errors
+    });
+  },
+
+  /**
+   * Periodically check if the current listening session qualifies as a stream.
+   * Server validates: 30s minimum, cooldown, daily cap.
+   */
+  _checkStreamCount: function () {
+    if (!ROOM.currentUser || !this._currentStreamTrack) return;
+
+    var self = this;
+
+    ConvexService.mutation('streams:tryCountStream', {
+      roomId: ROOM.Firebase.roomId,
+      phoneNumber: ROOM.currentUser.phoneNumber
+    }).then(function (result) {
+      if (!result) return;
+
+      self._lastStreamCountResult = result;
+
+      if (result.counted) {
+        console.log('[Stream] Counted stream for:', result.trackName, '—', result.trackArtist,
+          '(listened', result.listenDuration + 's)');
+
+        // Fire a stream_counted event for UI feedback
+        if (ROOM.Firebase && ROOM.Firebase.fireEvent) {
+          ROOM.Firebase.fireEvent('stream_counted', {
+            username: ROOM.currentUser.username,
+            track: result.trackName,
+            artist: result.trackArtist,
+            duration: result.listenDuration
+          });
+        }
+      }
+    }).catch(function () {
+      // Silently handle errors
+    });
+  },
+
   destroy: function () {
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
@@ -508,6 +575,10 @@ ROOM.LastFM = {
     if (this._offlinePollInterval) {
       clearInterval(this._offlinePollInterval);
       this._offlinePollInterval = null;
+    }
+    if (this._streamCheckInterval) {
+      clearInterval(this._streamCheckInterval);
+      this._streamCheckInterval = null;
     }
   }
 };

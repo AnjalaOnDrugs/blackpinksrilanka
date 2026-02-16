@@ -33,27 +33,3 @@ export const getRoom = query({
       .first();
   },
 });
-
-// Update most played track for room
-export const updateMostPlayed = mutation({
-  args: {
-    roomId: v.string(),
-    trackData: v.object({
-      track: v.string(),
-      artist: v.string(),
-      albumArt: v.optional(v.string()),
-    }),
-  },
-  handler: async (ctx, args) => {
-    const room = await ctx.db
-      .query("rooms")
-      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
-      .first();
-
-    if (room) {
-      await ctx.db.patch(room._id, {
-        currentMostPlayed: args.trackData,
-      });
-    }
-  },
-});

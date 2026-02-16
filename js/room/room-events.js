@@ -7,22 +7,13 @@ window.ROOM = window.ROOM || {};
 
 ROOM.Events = {
   sameSongCooldown: {},
-  lastEnergyThreshold: 0,
-  energyThresholds: [3, 5, 8, 10, 15, 20],
   sameSongInterval: null,
-  mostPlayedInterval: null,
 
   init: function () {
-    var self = this;
-
     // Periodic fallback — refreshUI already triggers these on participant changes
     // with a 2s debounce, so these just catch edge cases
     this.sameSongInterval = setInterval(function () {
       ROOM.LastFM && ROOM.LastFM.detectSameSong && ROOM.LastFM.detectSameSong();
-    }, 30000);
-
-    this.mostPlayedInterval = setInterval(function () {
-      ROOM.LastFM && ROOM.LastFM.calculateMostPlayed && ROOM.LastFM.calculateMostPlayed();
     }, 30000);
   },
 
@@ -57,6 +48,12 @@ ROOM.Events = {
         break;
       case 'energy':
         ROOM.Animations.playEnergy(eventData.data);
+        break;
+      case 'stream_counted':
+        ROOM.Animations.playStreamCounted(eventData.data);
+        break;
+      case 'stream_milestone':
+        ROOM.Animations.playStreamMilestone(eventData.data);
         break;
     }
   },
@@ -97,46 +94,25 @@ ROOM.Events = {
     }
   },
 
-  updateEnergy: function (onlineCount) {
-    // Update energy meter
-    var fill = document.getElementById('energyFill');
+  /**
+   * Update the stream energy bar in the stats card.
+   * Fills based on totalStreams % 100 (resets after every 100).
+   */
+  updateStreamEnergy: function (totalStreams) {
+    var progress = totalStreams % 100;
+    var percentage = progress; // 0-99 maps to 0-99%
+    var fill = document.getElementById('statsEnergyFill');
+    var countEl = document.getElementById('statsEnergyCount');
+
     if (fill) {
-      var maxEnergy = 20;
-      var percentage = Math.min((onlineCount / maxEnergy) * 100, 100);
       fill.style.width = percentage + '%';
     }
-
-    // Check energy thresholds
-    for (var i = 0; i < this.energyThresholds.length; i++) {
-      var threshold = this.energyThresholds[i];
-      if (onlineCount >= threshold && this.lastEnergyThreshold < threshold) {
-        this.lastEnergyThreshold = threshold;
-
-        // Only the first user to cross fires the event
-        if (ROOM.currentUser) {
-          ROOM.Firebase.fireEvent('energy', {
-            count: onlineCount,
-            threshold: threshold
-          });
-        }
-        break;
-      }
-    }
-
-    if (onlineCount < this.lastEnergyThreshold) {
-      // Reset when users drop below
-      for (var j = this.energyThresholds.length - 1; j >= 0; j--) {
-        if (onlineCount >= this.energyThresholds[j]) {
-          this.lastEnergyThreshold = this.energyThresholds[j];
-          break;
-        }
-        if (j === 0) this.lastEnergyThreshold = 0;
-      }
+    if (countEl) {
+      countEl.textContent = progress;
     }
   },
 
   destroy: function () {
     if (this.sameSongInterval) clearInterval(this.sameSongInterval);
-    if (this.mostPlayedInterval) clearInterval(this.mostPlayedInterval);
   }
 };

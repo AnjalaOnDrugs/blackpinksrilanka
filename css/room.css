@@ -462,43 +462,7 @@
   gap: 10px;
 }
 
-/* Energy Meter */
-.room-energy-meter {
-  width: 80px;
-  height: 28px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.room-energy-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 0%;
-  background: linear-gradient(90deg, rgba(247, 166, 185, 0.3), rgba(255, 193, 7, 0.4));
-  border-radius: 14px;
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.room-energy-icon {
-  position: relative;
-  z-index: 1;
-  color: #ffc107;
-  display: flex;
-  align-items: center;
-}
-
-.room-energy-icon svg {
-  width: 14px;
-  height: 14px;
-}
+/* Energy Meter — removed from header, now in stats card */
 
 /* Check-in (offline tracking) */
 .room-checkin {
@@ -917,12 +881,12 @@
   }
 }
 
-/* ========== CENTER STAGE ========== */
-.room-now-playing {
+/* ========== CENTER STAGE — STATS CARD ========== */
+.room-stats-card {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 24px;
+  padding: 20px 24px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 20px;
@@ -932,6 +896,21 @@
 .room-vinyl-wrap {
   position: relative;
   flex-shrink: 0;
+}
+
+.room-vinyl-wrap--small .room-vinyl {
+  width: 72px;
+  height: 72px;
+}
+
+.room-vinyl-wrap--small .room-vinyl-label {
+  width: 22px;
+  height: 22px;
+}
+
+.room-vinyl-wrap--small .room-vinyl-label-inner {
+  width: 6px;
+  height: 6px;
 }
 
 .room-vinyl {
@@ -1033,53 +1012,133 @@
   box-shadow: 0 0 40px rgba(247, 166, 185, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
-.room-now-playing-info {
+/* Stats info area */
+.room-stats-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.room-now-playing-label {
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  color: #f7a6b9;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 6px;
+.room-stats-counts {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.room-now-playing-title {
+.room-stats-platform {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.room-stats-platform--yt {
+  color: #FF0000;
+}
+
+.room-stats-platform--sp {
+  color: #1DB954;
+}
+
+.room-stats-platform-count {
   font-family: 'Outfit', sans-serif;
   font-size: 22px;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: opacity 0.4s ease;
-}
-
-.room-now-playing-artist {
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
   font-weight: 700;
-  color: #f7a6b9;
-  opacity: 0.9;
-  margin-top: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: opacity 0.4s ease;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-.room-now-playing-eq {
+.room-stats-platform-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.room-stats-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+/* Energy bar within stats card */
+.room-stats-energy {
   display: flex;
-  align-items: flex-end;
-  gap: 2px;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.room-stats-energy-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+.room-stats-energy-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #f7a6b9, #ffc107, #FA5BFF);
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.room-stats-energy-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.room-stats-energy-label svg {
+  color: #ffc107;
+}
+
+/* Energy bar celebration pulse */
+.room-stats-energy--celebrate .room-stats-energy-fill {
+  animation: statsEnergyPulse 0.8s ease-in-out 3;
+  box-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
+}
+
+@keyframes statsEnergyPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Platform badges in activity cards */
+.room-activity-platform {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.room-activity-platform svg {
+  width: 14px;
   height: 14px;
-  margin-top: 10px;
+}
+
+.room-activity-platform--yt {
+  color: #FF0000;
+}
+
+.room-activity-platform--sp {
+  color: #1DB954;
 }
 
 .room-eq-bar {
@@ -1165,6 +1224,74 @@
 .room-toast--energy {
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.12), rgba(247, 166, 185, 0.08));
   border-color: rgba(255, 193, 7, 0.2);
+}
+
+.room-toast--stream {
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.12), rgba(100, 181, 246, 0.08));
+  border-color: rgba(37, 211, 102, 0.2);
+}
+
+.room-toast-duration {
+  opacity: 0.6;
+  font-size: 11px;
+}
+
+/* ========== STREAM COUNTER ========== */
+.room-stream-counter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.08), rgba(100, 181, 246, 0.06));
+  border: 1px solid rgba(37, 211, 102, 0.15);
+  border-radius: 12px;
+  margin: 0 16px 12px;
+  transition: all 0.3s ease;
+}
+
+.room-stream-counter--pulse {
+  border-color: rgba(37, 211, 102, 0.5);
+  box-shadow: 0 0 16px rgba(37, 211, 102, 0.2);
+  animation: streamCounterPulse 0.6s ease;
+}
+
+@keyframes streamCounterPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.room-stream-counter-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(37, 211, 102, 0.15);
+  color: #25D366;
+  flex-shrink: 0;
+}
+
+.room-stream-counter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.room-stream-counter-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.room-stream-counter-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 @keyframes roomToastIn {
@@ -2526,34 +2653,39 @@
     display: none;
   }
 
-  .room-now-playing {
-    gap: 14px;
-    padding: 16px;
+  .room-stats-card {
+    gap: 12px;
+    padding: 14px 16px;
     border-radius: 16px;
   }
 
-  .room-vinyl {
-    width: 64px;
-    height: 64px;
+  .room-vinyl-wrap--small .room-vinyl {
+    width: 56px;
+    height: 56px;
     border-width: 3px;
   }
 
-  .room-vinyl-label {
-    width: 20px;
-    height: 20px;
+  .room-vinyl-wrap--small .room-vinyl-label {
+    width: 18px;
+    height: 18px;
   }
 
-  .room-vinyl-label-inner {
-    width: 6px;
-    height: 6px;
+  .room-vinyl-wrap--small .room-vinyl-label-inner {
+    width: 5px;
+    height: 5px;
   }
 
-  .room-now-playing-title {
+  .room-stats-platform-count {
     font-size: 18px;
   }
 
-  .room-now-playing-artist {
-    font-size: 12px;
+  .room-stats-platform-label {
+    font-size: 9px;
+  }
+
+  .room-stats-platform svg {
+    width: 14px;
+    height: 14px;
   }
 
   .room-chat-bubble {
@@ -2579,10 +2711,6 @@
     font-size: 14px;
   }
 
-  .room-energy-meter {
-    width: 60px;
-    height: 24px;
-  }
 }
 
 @media (min-width: 769px) and (max-width: 1100px) {

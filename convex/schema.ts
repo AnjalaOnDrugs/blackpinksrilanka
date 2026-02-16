@@ -70,6 +70,44 @@ export default defineSchema({
   }).index("by_room", ["roomId"])
     .index("by_room_time", ["roomId", "createdAt"]),
 
+  // Stream counts: tracks validated streams per user per track
+  // Platform-specific rules: YouTube (30s/60s, caps, interleave) vs Spotify (30s, interleave after 10)
+  streamCounts: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    trackName: v.string(),
+    trackArtist: v.string(),
+    // Normalized key for matching (lowercase, stripped of tags)
+    trackKey: v.string(),
+    // "youtube" or "spotify" — detected from track name markers
+    platform: v.optional(v.string()),
+    // Timestamp when this stream was counted
+    countedAt: v.number(),
+    // How long they actually listened (in seconds) before we counted it
+    listenDuration: v.number(),
+  }).index("by_room", ["roomId"])
+    .index("by_room_phone", ["roomId", "phoneNumber"])
+    .index("by_room_track", ["roomId", "trackKey"])
+    .index("by_room_phone_track", ["roomId", "phoneNumber", "trackKey"]),
+
+  // Active listening sessions: tracks when a user started listening to a song
+  // Used to validate the minimum listen time before counting a stream
+  listeningSessions: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    trackName: v.string(),
+    trackArtist: v.string(),
+    trackKey: v.string(),
+    // "youtube" or "spotify"
+    platform: v.optional(v.string()),
+    // Last N track keys played by this user (for interleave validation)
+    recentTrackKeys: v.optional(v.array(v.string())),
+    // When the user started listening to this track
+    startedAt: v.number(),
+    // Whether this session has already been counted as a stream
+    counted: v.boolean(),
+  }).index("by_room_phone", ["roomId", "phoneNumber"]),
+
   rooms: defineTable({
     roomId: v.string(),
     name: v.string(),

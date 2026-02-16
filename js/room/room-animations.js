@@ -299,21 +299,103 @@ ROOM.Animations = {
     this.spawnConfetti(25);
   },
 
-  // ========== ENERGY THRESHOLD ANIMATION ==========
-  playEnergy: function (data) {
-    // Energy meter pulse
-    var meter = document.getElementById('energyMeter');
-    if (meter) {
-      meter.style.boxShadow = '0 0 20px rgba(255, 193, 7, 0.4)';
+  // ========== STREAM COUNTED ANIMATION ==========
+  playStreamCounted: function (data) {
+    // Pulse the stream counter
+    var counter = document.getElementById('streamCounter');
+    if (counter) {
+      counter.classList.add('room-stream-counter--pulse');
       setTimeout(function () {
-        meter.style.boxShadow = 'none';
-      }, 2000);
+        counter.classList.remove('room-stream-counter--pulse');
+      }, 1000);
     }
 
+    // Show a subtle toast
+    this.showToast('stream', '▶',
+      '<strong>' + this.esc(data.username) + '</strong> +1 stream — ' +
+      '<strong>' + this.esc(data.track) + '</strong>' +
+      (data.artist ? ' by ' + this.esc(data.artist) : '') +
+      ' <span class="room-toast-duration">(' + data.duration + 's)</span>');
+  },
+
+  // ========== ENERGY THRESHOLD ANIMATION ==========
+  playEnergy: function (data) {
     this.showToast('energy', '⚡',
       'Room energy at <strong>' + data.count + '</strong> listeners!');
 
     this.spawnConfetti(15);
+  },
+
+  // ========== STREAM MILESTONE CELEBRATION ==========
+  playStreamMilestone: function (data) {
+    var self = this;
+    var totalStreams = data.totalStreams || 0;
+
+    // Big celebration banner
+    var banner = document.createElement('div');
+    banner.className = 'room-twin-banner';
+    banner.innerHTML =
+      '<div class="room-twin-glow"></div>' +
+      '<div class="room-twin-content">' +
+        '<div class="room-twin-notes">' +
+          '<span class="room-twin-note room-twin-note--1">🎉</span>' +
+          '<span class="room-twin-note room-twin-note--2">🔥</span>' +
+          '<span class="room-twin-note room-twin-note--3">🎉</span>' +
+          '<span class="room-twin-note room-twin-note--4">🔥</span>' +
+        '</div>' +
+        '<div class="room-twin-streak">' +
+          '<span class="room-twin-streak-x">' + totalStreams.toLocaleString() + '</span>' +
+          '<span class="room-twin-streak-label">STREAMS</span>' +
+        '</div>' +
+        '<div class="room-twin-label">🎊 MILESTONE REACHED 🎊</div>' +
+        '<div class="room-twin-song">' +
+          '<span class="room-twin-song-title">Keep streaming! Next milestone at ' +
+            (totalStreams + 100).toLocaleString() + '</span>' +
+        '</div>' +
+        '<div class="room-twin-eq">' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.3s;--teq-max:24px;"></div>' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.45s;--teq-max:32px;"></div>' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.25s;--teq-max:20px;"></div>' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.5s;--teq-max:28px;"></div>' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.35s;--teq-max:36px;"></div>' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.4s;--teq-max:22px;"></div>' +
+          '<div class="room-twin-eq-bar" style="--teq-speed:0.28s;--teq-max:30px;"></div>' +
+        '</div>' +
+      '</div>';
+
+    this.overlay.appendChild(banner);
+
+    // Screen shake
+    document.body.classList.add('room-screen-shake');
+    setTimeout(function () {
+      document.body.classList.remove('room-screen-shake');
+    }, 600);
+
+    // Large confetti burst
+    this.spawnConfetti(80);
+
+    // Pulse the energy bar
+    var energyEl = document.getElementById('statsEnergy');
+    if (energyEl) {
+      energyEl.classList.add('room-stats-energy--celebrate');
+      setTimeout(function () {
+        energyEl.classList.remove('room-stats-energy--celebrate');
+      }, 3000);
+    }
+
+    // Remove banner after animation
+    setTimeout(function () {
+      if (banner.parentNode) {
+        banner.classList.add('room-twin-banner--exit');
+        setTimeout(function () {
+          if (banner.parentNode) banner.remove();
+        }, 600);
+      }
+    }, 5500);
+
+    // Toast notification
+    this.showToast('milestone', '🎊',
+      '<strong>' + totalStreams.toLocaleString() + ' streams!</strong> Milestone reached! 🎉');
   },
 
   // ========== CONFETTI ==========

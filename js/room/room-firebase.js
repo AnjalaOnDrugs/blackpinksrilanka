@@ -68,14 +68,22 @@ ROOM.Firebase = {
       }
     );
 
-    // 3. Subscribe to room document for most-played changes
+    // 3. Subscribe to stream counts by platform (drives stats card)
     var unsub3 = ConvexService.watch(
-      'rooms:getRoom',
+      'streams:getRoomStreamsByPlatform',
       { roomId: roomId },
-      function (roomData) {
-        if (roomData && roomData.currentMostPlayed) {
-          ROOM.Atmosphere && ROOM.Atmosphere.updateMostPlayed &&
-            ROOM.Atmosphere.updateMostPlayed(roomData.currentMostPlayed);
+      function (data) {
+        if (!data) return;
+        var ytEl = document.getElementById('ytStreamCount');
+        var spEl = document.getElementById('spStreamCount');
+        var totalEl = document.getElementById('streamCountNumber');
+        if (ytEl) ytEl.textContent = (data.youtube || 0).toLocaleString();
+        if (spEl) spEl.textContent = (data.spotify || 0).toLocaleString();
+        if (totalEl) totalEl.textContent = (data.total || 0).toLocaleString();
+
+        // Update energy bar (fills per 100 streams)
+        if (ROOM.Events && ROOM.Events.updateStreamEnergy) {
+          ROOM.Events.updateStreamEnergy(data.total || 0);
         }
       }
     );
@@ -183,13 +191,6 @@ ROOM.Firebase = {
     });
   },
 
-  updateMostPlayed: function (trackData) {
-    return ConvexService.mutation('rooms:updateMostPlayed', {
-      roomId: this.roomId,
-      trackData: trackData
-    });
-  },
-
   addMilestone: function (phoneNumber, milestone) {
     return ConvexService.mutation('participants:addMilestone', {
       roomId: this.roomId,
@@ -248,11 +249,6 @@ ROOM.Firebase = {
     var countEl = document.getElementById('onlineCount');
     if (countEl) countEl.textContent = onlineCount + ' online';
 
-    // Update energy meter
-    if (ROOM.Events && ROOM.Events.updateEnergy) {
-      ROOM.Events.updateEnergy(onlineCount);
-    }
-
     // Notify leaderboard and activity
     if (ROOM.Leaderboard && ROOM.Leaderboard.update) {
       ROOM.Leaderboard.update(this.participantsCache);
@@ -261,15 +257,11 @@ ROOM.Firebase = {
       ROOM.Activity.update(this.participantsCache);
     }
 
-    // Debounce twinning + most-played (they don't need to run on every heartbeat)
+    // Debounce twinning detection (doesn't need to run on every heartbeat)
     clearTimeout(this._lastfmDebounceTimer);
-    var firebase = this;
     this._lastfmDebounceTimer = setTimeout(function () {
       if (ROOM.LastFM && ROOM.LastFM.detectSameSong) {
         ROOM.LastFM.detectSameSong();
-      }
-      if (ROOM.LastFM && ROOM.LastFM.calculateMostPlayed) {
-        ROOM.LastFM.calculateMostPlayed();
       }
     }, 2000);
   }
