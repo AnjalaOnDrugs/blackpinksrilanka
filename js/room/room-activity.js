@@ -15,11 +15,17 @@ ROOM.Activity = {
   update: function (participants) {
     if (!this.listEl) return;
 
-    // Sort: online users first, then by most recently active
+    var now = Date.now();
+    var checkInExpiry = CONFIG.checkInInterval || 3600000;
+    function presencePriority(p) {
+      if (p.data.isOnline) return 0;
+      if (p.data.offlineTracking && p.data.lastCheckIn && (now - p.data.lastCheckIn) < checkInExpiry) return 1;
+      return 2;
+    }
+    // Sort: online first, then offline-tracked, then idle
     var sorted = participants.slice().sort(function (a, b) {
-      // Online first
-      if (a.data.isOnline && !b.data.isOnline) return -1;
-      if (!a.data.isOnline && b.data.isOnline) return 1;
+      var pa = presencePriority(a), pb = presencePriority(b);
+      if (pa !== pb) return pa - pb;
       // Then by currently playing
       var aPlaying = a.data.currentTrack && a.data.currentTrack.nowPlaying;
       var bPlaying = b.data.currentTrack && b.data.currentTrack.nowPlaying;
@@ -44,7 +50,11 @@ ROOM.Activity = {
     var color = d.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
     var initial = d.username ? d.username.charAt(0).toUpperCase() : '?';
     var isOnline = d.isOnline;
-    var statusClass = isOnline ? 'room-activity-status--online' : 'room-activity-status--idle';
+    var isOfflineTracked = !isOnline && d.offlineTracking && d.lastCheckIn &&
+      (Date.now() - d.lastCheckIn) < (CONFIG.checkInInterval || 3600000);
+    var statusClass = isOnline ? 'room-activity-status--online'
+      : isOfflineTracked ? 'room-activity-status--tracked'
+      : 'room-activity-status--idle';
 
     var trackHtml = '';
     var albumArtHtml = '';

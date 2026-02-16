@@ -28,6 +28,8 @@ export const listByRoom = query({
         currentTrack: p.currentTrack ?? null,
         avatarColor: p.avatarColor,
         streakMinutes: p.streakMinutes,
+        offlineTracking: p.offlineTracking ?? false,
+        lastCheckIn: p.lastCheckIn ?? null,
       },
     }));
   },
@@ -96,10 +98,13 @@ export const leaveRoom = mutation({
       .first();
 
     if (participant) {
+      // If offline tracking is enabled (checked in), keep tracking but mark offline
+      // If not, behave as before — stop tracking entirely
+      const keepTracking = participant.offlineTracking === true;
       await ctx.db.patch(participant._id, {
         isOnline: false,
         lastSeen: Date.now(),
-        streakMinutes: 0,
+        streakMinutes: keepTracking ? participant.streakMinutes : 0,
       });
     }
   },
@@ -228,6 +233,54 @@ export const updateLastfmUsername = mutation({
     if (participant) {
       await ctx.db.patch(participant._id, {
         lastfmUsername: args.lastfmUsername,
+      });
+    }
+  },
+});
+
+// Check in for offline tracking (resets the hourly timer)
+export const checkIn = mutation({
+  args: {
+    roomId: v.string(),
+    phoneNumber: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const participant = await ctx.db
+      .query("participants")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
+    if (participant) {
+      await ctx.db.patch(participant._id, {
+        offlineTracking: true,
+        lastCheckIn: Date.now(),
+        lastSeen: Date.now(),
+      });
+    }
+
+    return { success: !!participant };
+  },
+});
+
+// Disable offline tracking (check-in expired or user opted out)
+export const disableOfflineTracking = mutation({
+  args: {
+    roomId: v.string(),
+    phoneNumber: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const participant = await ctx.db
+      .query("participants")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
+    if (participant) {
+      await ctx.db.patch(participant._id, {
+        offlineTracking: false,
       });
     }
   },

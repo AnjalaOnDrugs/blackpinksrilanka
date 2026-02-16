@@ -178,6 +178,10 @@ ROOM.LastFM = {
     return this.extractCoreSong(name, artist);
   },
 
+  // Track which offline users this client is responsible for polling
+  _offlinePollAssignments: {},
+  _offlinePollInterval: null,
+
   init: function () {
     this.apiKey = CONFIG.lastfmApiKey;
     if (!this.apiKey || this.apiKey === 'YOUR_LASTFM_API_KEY') {
@@ -195,6 +199,11 @@ ROOM.LastFM = {
 
     // Initial poll for current user
     this.pollCurrentUser();
+
+    // Poll offline-tracked users every 10s (slower to avoid rate limits)
+    this._offlinePollInterval = setInterval(function () {
+      self.pollOfflineTrackedUsers();
+    }, CONFIG.offlinePollInterval || 10000);
   },
 
   getUserRecentTracks: function (lastfmUsername) {
@@ -281,6 +290,70 @@ ROOM.LastFM = {
       });
   },
 
+  /**
+   * Poll Last.fm for offline users who have offlineTracking enabled
+   * and a valid (non-expired) check-in. Only one online client should
+   * update each offline user — we use a simple deterministic assignment:
+   * the first online user (sorted by phoneNumber) takes responsibility.
+   */
+  pollOfflineTrackedUsers: function () {
+    if (!ROOM.currentUser || !this.apiKey) return;
+
+    var participants = ROOM.Firebase.getParticipants();
+    var now = Date.now();
+    var checkInExpiry = CONFIG.checkInInterval || 3600000; // 1 hour
+
+    // Find the first online user (sorted) to be the "poller" — prevents duplicates
+    var onlineUsers = participants
+      .filter(function (p) { return p.data.isOnline; })
+      .map(function (p) { return p.id; })
+      .sort();
+
+    // Only the first online user polls for offline users
+    if (onlineUsers.length === 0 || onlineUsers[0] !== ROOM.currentUser.phoneNumber) return;
+
+    var self = this;
+
+    // Find offline users with valid check-in and a Last.fm username
+    participants.forEach(function (p) {
+      if (p.data.isOnline) return; // Skip online users
+      if (!p.data.offlineTracking) return; // Not opted in
+      if (!p.data.lastCheckIn) return;
+      if (!p.data.lastfmUsername) return;
+
+      // Check if check-in has expired
+      var timeSinceCheckIn = now - p.data.lastCheckIn;
+      if (timeSinceCheckIn > checkInExpiry) {
+        // Check-in expired — disable offline tracking
+        ConvexService.mutation('participants:disableOfflineTracking', {
+          roomId: ROOM.Firebase.roomId,
+          phoneNumber: p.id
+        });
+        return;
+      }
+
+      // Poll this offline user's Last.fm
+      self.getUserRecentTracks(p.data.lastfmUsername).then(function (trackData) {
+        if (!trackData) {
+          return ROOM.Firebase.updateParticipantTrack(p.id, null);
+        }
+
+        if (self.isLikelyNonMusic(trackData.name, trackData.artist)) {
+          return ROOM.Firebase.updateParticipantTrack(p.id, null);
+        }
+
+        return self.validateMusicTrack(trackData.name, trackData.artist).then(function (isMusic) {
+          if (!isMusic) {
+            return ROOM.Firebase.updateParticipantTrack(p.id, null);
+          }
+          return ROOM.Firebase.updateParticipantTrack(p.id, trackData);
+        });
+      }).catch(function () {
+        // Silently handle errors
+      });
+    });
+  },
+
   calculateMostPlayed: function () {
     var participants = ROOM.Firebase.getParticipants();
     var songCounts = {};
@@ -330,10 +403,17 @@ ROOM.LastFM = {
     var self = this;
     var participants = ROOM.Firebase.getParticipants();
 
-    // 1. Collect all online, now-playing listeners
+    // 1. Collect all eligible now-playing listeners (online OR offline-tracked with valid check-in)
     var listeners = [];
+    var now = Date.now();
+    var checkInExpiry = CONFIG.checkInInterval || 3600000;
     participants.forEach(function (p) {
-      if (!p.data.isOnline) return;
+      var isEligible = p.data.isOnline;
+      // Offline users with active check-in are also eligible
+      if (!isEligible && p.data.offlineTracking && p.data.lastCheckIn) {
+        isEligible = (now - p.data.lastCheckIn) < checkInExpiry;
+      }
+      if (!isEligible) return;
       var track = p.data.currentTrack;
       if (!track || !track.nowPlaying) return;
       listeners.push({
@@ -424,6 +504,10 @@ ROOM.LastFM = {
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
+    }
+    if (this._offlinePollInterval) {
+      clearInterval(this._offlinePollInterval);
+      this._offlinePollInterval = null;
     }
   }
 };

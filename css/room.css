@@ -498,6 +498,83 @@
   height: 14px;
 }
 
+/* Check-in (offline tracking) */
+.room-checkin {
+  display: flex;
+  align-items: center;
+}
+
+.room-checkin-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1.5px solid rgba(37, 211, 102, 0.4);
+  border-radius: 20px;
+  background: rgba(37, 211, 102, 0.08);
+  color: #25D366;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.room-checkin-btn:hover {
+  background: rgba(37, 211, 102, 0.18);
+  border-color: #25D366;
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.2);
+}
+
+.room-checkin-btn--pulse {
+  animation: checkinPulse 1.5s ease-in-out 2;
+}
+
+@keyframes checkinPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(37, 211, 102, 0.25); }
+}
+
+.room-checkin-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(37, 211, 102, 0.08);
+  border: 1.5px solid rgba(37, 211, 102, 0.25);
+}
+
+.room-checkin-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #25D366;
+  animation: checkinDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes checkinDotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.room-checkin-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #25D366;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.room-checkin-timer {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Outfit', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Profile */
 .room-topbar-profile {
   width: 34px;
@@ -1475,6 +1552,16 @@
 
 .room-activity-status--online {
   background: #25D366;
+}
+
+.room-activity-status--tracked {
+  background: #ffc107;
+  animation: trackedPulse 2s ease-in-out infinite;
+}
+
+@keyframes trackedPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3); }
 }
 
 .room-activity-status--idle {

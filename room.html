@@ -81,6 +81,20 @@
           <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </div>
       </div>
+      <!-- Check-in for offline tracking -->
+      <div class="room-checkin" id="checkInContainer">
+        <button class="room-checkin-btn" id="checkInBtn" title="Check in to keep tracking when you leave">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Check In</span>
+        </button>
+        <div class="room-checkin-status" id="checkInStatus" style="display:none;">
+          <span class="room-checkin-dot"></span>
+          <span class="room-checkin-label">Tracking</span>
+          <span class="room-checkin-timer" id="checkInTimer">60:00</span>
+        </div>
+      </div>
       <div class="room-topbar-profile" id="roomProfileBtn">
         <span id="roomProfileInitial">?</span>
       </div>

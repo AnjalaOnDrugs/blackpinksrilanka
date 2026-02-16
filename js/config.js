@@ -35,5 +35,9 @@ const CONFIG = {
   roomPollInterval: 2000,     // Last.fm polling interval per user (ms)
   heartbeatInterval: 30000,   // Presence heartbeat interval (ms)
   chatBubbleLifetime: 8000,   // How long chat bubbles stay visible (ms)
-  maxChatBubbles: 30          // Max simultaneous bubbles on screen
+  maxChatBubbles: 30,         // Max simultaneous bubbles on screen
+
+  // Offline tracking / check-in
+  checkInInterval: 3600000,   // 1 hour — how long a check-in lasts (ms)
+  offlinePollInterval: 10000  // 10s — how often online clients poll offline users' Last.fm
 };

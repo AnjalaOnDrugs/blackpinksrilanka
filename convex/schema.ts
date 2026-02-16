@@ -41,6 +41,8 @@ export default defineSchema({
     ),
     avatarColor: v.string(),
     streakMinutes: v.number(),
+    offlineTracking: v.optional(v.boolean()),
+    lastCheckIn: v.optional(v.number()),
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"])
     .index("by_room_minutes", ["roomId", "totalMinutes"]),

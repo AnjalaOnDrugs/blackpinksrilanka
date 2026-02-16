@@ -90,10 +90,14 @@ async function initRoom(roomId) {
     switchMobilePanel('panelStage');
   }
 
-  // 9. Heartbeat (every 30s)
+  // 9. Check-in system (offline tracking)
+  // Small delay to let participants cache populate from Convex
+  setTimeout(function () { initCheckIn(); }, 2000);
+
+  // 10. Heartbeat (every 30s)
   startHeartbeat();
 
-  // 10. Cleanup on page unload
+  // 11. Cleanup on page unload
   setupCleanup();
 }
 
@@ -202,6 +206,108 @@ function switchMobilePanel(panelId) {
   }
 }
 
+// ========== CHECK-IN SYSTEM ==========
+// Offline tracking: users check in every hour to keep being tracked when they leave the page.
+// If they don't check in within the interval, tracking stops (same as current offline behavior).
+
+var checkInTimerInterval = null;
+
+function initCheckIn() {
+  var btn = document.getElementById('checkInBtn');
+  var timerEl = document.getElementById('checkInTimer');
+  var container = document.getElementById('checkInContainer');
+  if (!btn || !container) return;
+
+  btn.addEventListener('click', function () {
+    performCheckIn();
+  });
+
+  // Check if user already has an active check-in (from a previous session)
+  var participants = ROOM.Firebase.getParticipants();
+  var me = participants.find(function (p) { return p.id === ROOM.currentUser.phoneNumber; });
+  if (me && me.data.offlineTracking && me.data.lastCheckIn) {
+    var elapsed = Date.now() - me.data.lastCheckIn;
+    var interval = CONFIG.checkInInterval || 3600000;
+    if (elapsed < interval) {
+      // Restore the timer from where it was
+      startCheckInCountdown(interval - elapsed);
+      return;
+    }
+  }
+
+  // Show the initial check-in prompt
+  showCheckInButton();
+}
+
+function performCheckIn() {
+  if (!ROOM.currentUser) return;
+
+  ConvexService.mutation('participants:checkIn', {
+    roomId: ROOM.Firebase.roomId,
+    phoneNumber: ROOM.currentUser.phoneNumber
+  }).then(function () {
+    startCheckInCountdown(CONFIG.checkInInterval || 3600000);
+
+    // Show a nice toast
+    if (ROOM.Animations && ROOM.Animations.showToast) {
+      ROOM.Animations.showToast('join', '✅', 'Checked in! Offline tracking is <strong>active</strong> for the next hour.');
+    }
+  });
+}
+
+function startCheckInCountdown(durationMs) {
+  var btn = document.getElementById('checkInBtn');
+  var timerEl = document.getElementById('checkInTimer');
+  var statusEl = document.getElementById('checkInStatus');
+  var container = document.getElementById('checkInContainer');
+
+  if (btn) btn.style.display = 'none';
+  if (statusEl) statusEl.style.display = '';
+  if (container) container.classList.add('room-checkin--active');
+
+  var endTime = Date.now() + durationMs;
+
+  if (checkInTimerInterval) clearInterval(checkInTimerInterval);
+
+  function updateTimer() {
+    var remaining = endTime - Date.now();
+    if (remaining <= 0) {
+      // Timer expired — show check-in button again
+      clearInterval(checkInTimerInterval);
+      checkInTimerInterval = null;
+      showCheckInButton();
+      return;
+    }
+
+    var mins = Math.floor(remaining / 60000);
+    var secs = Math.floor((remaining % 60000) / 1000);
+    if (timerEl) {
+      timerEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+  }
+
+  updateTimer();
+  checkInTimerInterval = setInterval(updateTimer, 1000);
+}
+
+function showCheckInButton() {
+  var btn = document.getElementById('checkInBtn');
+  var statusEl = document.getElementById('checkInStatus');
+  var container = document.getElementById('checkInContainer');
+
+  if (btn) btn.style.display = '';
+  if (statusEl) statusEl.style.display = 'none';
+  if (container) container.classList.remove('room-checkin--active');
+
+  // Pulse animation to draw attention
+  if (btn) {
+    btn.classList.add('room-checkin-btn--pulse');
+    setTimeout(function () {
+      btn.classList.remove('room-checkin-btn--pulse');
+    }, 3000);
+  }
+}
+
 // ========== HEARTBEAT ==========
 var heartbeatInterval = null;
 
@@ -224,6 +330,7 @@ function setupCleanup() {
     ROOM.Events.destroy();
     ROOM.Firebase.destroy();
     if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (checkInTimerInterval) clearInterval(checkInTimerInterval);
   });
 
   // Also handle visibility change (mobile tab switch)
