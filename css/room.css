@@ -19,7 +19,9 @@
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100vh;
+  height: 100dvh;
   background: #0a0a0a;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
@@ -604,6 +606,7 @@
   grid-template-columns: 280px 1fr 280px;
   gap: 16px;
   height: calc(100vh - 62px);
+  height: calc(100dvh - 62px);
   padding: 74px 16px 16px;
   position: relative;
   z-index: 1;
@@ -2285,16 +2288,12 @@
 /* ========== PERSISTENT TWINNING MINI CARDS ========== */
 
 .room-twin-cards {
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 150;
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
-  pointer-events: none;
+  flex-shrink: 0;
+  padding: 8px 8px 0;
 }
 
 .room-twin-card {
@@ -2309,14 +2308,14 @@
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(247, 166, 185, 0.25);
   border-radius: 16px;
-  pointer-events: auto;
   animation: roomTwinCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   box-shadow:
     0 0 20px rgba(247, 166, 185, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   white-space: nowrap;
-  max-width: 90vw;
+  max-width: 100%;
+  position: relative;
 }
 
 @keyframes roomTwinCardIn {
@@ -2415,11 +2414,9 @@
   50% { opacity: 0.5; }
 }
 
-/* Mobile: keep at top */
 @media (max-width: 768px) {
   .room-twin-cards {
-    top: 12px;
-    max-width: 95vw;
+    padding: 6px 4px 0;
   }
 
   .room-twin-card {
@@ -2488,13 +2485,16 @@
 @media (max-width: 768px) {
   .room-layout {
     grid-template-columns: 1fr;
-    padding: 66px 10px 120px;
+    padding: 66px 10px calc(120px + env(safe-area-inset-bottom, 0px));
     gap: 0;
+    height: calc(100vh - 62px);
+    height: calc(100dvh - 62px);
   }
 
   .room-panel {
     display: none !important;
     height: calc(100vh - 186px);
+    height: calc(100dvh - 186px);
   }
 
   .room-panel--mobile-active {
@@ -2511,7 +2511,7 @@
 
   .room-chat-input-bar {
     position: fixed;
-    bottom: 60px;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
     padding: 8px 12px;

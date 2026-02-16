@@ -5,7 +5,7 @@
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
   <meta charset="utf-8">
   <title>Streaming Party - BLACKPINK SRI LANKA</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="stylesheet" href="css/room.css">
 </head>
 
@@ -28,20 +28,23 @@
   <!-- Event Overlay (full-screen mini event animations) -->
   <div class="room-event-overlay" id="eventOverlay"></div>
 
-  <!-- Persistent twinning mini cards -->
-  <div class="room-twin-cards" id="twinCards"></div>
 
   <!-- Last.fm Link Modal -->
   <div class="room-modal-backdrop" id="lastfmModal" style="display:none;">
     <div class="room-modal">
       <div class="room-modal-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
         </svg>
       </div>
       <div class="room-modal-title">Link Your Last.fm</div>
-      <div class="room-modal-desc">Connect your Last.fm account to track your streaming and compete on the leaderboard.</div>
-      <input type="text" class="room-modal-input" id="lastfmUsernameInput" placeholder="Your Last.fm username" autocomplete="off">
+      <div class="room-modal-desc">Connect your Last.fm account to track your streaming and compete on the leaderboard.
+      </div>
+      <input type="text" class="room-modal-input" id="lastfmUsernameInput" placeholder="Your Last.fm username"
+        autocomplete="off">
       <div class="room-modal-hint">Using Pano Scrobbler? Your streams are already being tracked!</div>
       <div class="room-modal-actions">
         <button class="room-modal-btn room-modal-btn--secondary" id="lastfmSkipBtn">Skip for now</button>
@@ -62,14 +65,15 @@
   <div class="room-topbar" id="roomTopbar" style="display:none;">
     <div class="room-topbar-left">
       <a class="room-topbar-back" href="members.html" title="Back to rooms">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       </a>
       <div class="room-topbar-info">
         <div class="room-topbar-title">
           <span class="room-topbar-live-dot"></span>
-          Streaming Party
+          SP Online
         </div>
         <div class="room-topbar-subtitle" id="onlineCount">0 online</div>
       </div>
@@ -78,13 +82,16 @@
       <div class="room-energy-meter" id="energyMeter" title="Room energy">
         <div class="room-energy-fill" id="energyFill"></div>
         <div class="room-energy-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
         </div>
       </div>
       <!-- Check-in for offline tracking -->
       <div class="room-checkin" id="checkInContainer">
         <button class="room-checkin-btn" id="checkInBtn" title="Check in to keep tracking when you leave">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" width="14" height="14">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Check In</span>
@@ -107,8 +114,11 @@
     <!-- LEFT PANEL: Leaderboard -->
     <div class="room-panel room-panel--leaderboard room-panel--active" id="panelLeaderboard">
       <div class="room-panel-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" width="16" height="16">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+          </polygon>
         </svg>
         <span>Leaderboard</span>
       </div>
@@ -158,14 +168,18 @@
         </div>
       </div>
 
+      <!-- Persistent twinning mini cards -->
+      <div class="room-twin-cards" id="twinCards"></div>
+
       <!-- Toast Container (mini event notifications) -->
       <div class="room-toast-container" id="toastContainer"></div>
 
       <!-- Chat Log (collapsible, last 15 messages) -->
       <div class="room-chat-log" id="chatLog">
         <div class="room-chat-log-toggle" id="chatLogToggle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" width="14" height="14">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span>Chat</span>
         </div>
@@ -184,9 +198,12 @@
           <button class="room-reaction-btn" data-emoji="lightstick" title="Lightstick">&#128526;</button>
         </div>
         <div class="room-chat-input-wrap">
-          <input type="text" class="room-chat-input" id="chatInput" placeholder="Say something..." maxlength="200" autocomplete="off">
+          <input type="text" class="room-chat-input" id="chatInput" placeholder="Say something..." maxlength="200"
+            autocomplete="off">
           <button class="room-chat-send-btn" id="chatSendBtn">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
           </button>
         </div>
       </div>
@@ -195,9 +212,12 @@
     <!-- RIGHT PANEL: Live Activity -->
     <div class="room-panel room-panel--activity room-panel--active" id="panelActivity">
       <div class="room-panel-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#f7a6b9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f7a6b9" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" width="16" height="16">
           <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+          <path
+            d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
+          </path>
         </svg>
         <span>Live Activity</span>
       </div>
@@ -212,21 +232,28 @@
   <!-- Mobile Bottom Tab Bar -->
   <div class="room-bottom-nav" id="bottomNav" style="display:none;">
     <button class="room-bottom-tab room-bottom-tab--active" data-panel="panelStage">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" width="20" height="20">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
       <span>Chat</span>
     </button>
     <button class="room-bottom-tab" data-panel="panelLeaderboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" width="20" height="20">
+        <polygon
+          points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+        </polygon>
       </svg>
       <span>Ranks</span>
     </button>
     <button class="room-bottom-tab" data-panel="panelActivity">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" width="20" height="20">
         <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+        <path
+          d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
+        </path>
       </svg>
       <span>Activity</span>
     </button>
