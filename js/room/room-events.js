@@ -15,15 +15,15 @@ ROOM.Events = {
   init: function () {
     var self = this;
 
-    // Periodically detect same-song events
+    // Periodic fallback — refreshUI already triggers these on participant changes
+    // with a 2s debounce, so these just catch edge cases
     this.sameSongInterval = setInterval(function () {
       ROOM.LastFM && ROOM.LastFM.detectSameSong && ROOM.LastFM.detectSameSong();
     }, 30000);
 
-    // Periodically recalculate most played
     this.mostPlayedInterval = setInterval(function () {
       ROOM.LastFM && ROOM.LastFM.calculateMostPlayed && ROOM.LastFM.calculateMostPlayed();
-    }, 15000);
+    }, 30000);
   },
 
   handleEvent: function (eventData) {

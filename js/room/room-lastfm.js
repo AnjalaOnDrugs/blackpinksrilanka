@@ -10,6 +10,9 @@ ROOM.LastFM = {
   pollInterval: null,
   pollIndex: 0,
   apiKey: null,
+  // Client-side caches to skip redundant Convex mutations
+  _lastTrackKey: null,
+  _lastMostPlayedKey: null,
   // Map of coreSong → { usernames: [...], count, track, artist }
   // Tracks ALL active twinning groups for persistent mini cards
   _activeTwins: {},
@@ -21,24 +24,12 @@ ROOM.LastFM = {
    */
   cleanString: function (str) {
     var s = (str || '').toLowerCase();
-    // Remove common video/audio tags
-    s = s.replace(/\(official\s*(music\s*)?video\)/gi, '');
-    s = s.replace(/\(official\s*audio\)/gi, '');
-    s = s.replace(/\(official\)/gi, '');
-    s = s.replace(/\(lyrics?\)/gi, '');
-    s = s.replace(/\(visuali[sz]er\)/gi, '');
-    s = s.replace(/\[official\s*(music\s*)?video\]/gi, '');
-    s = s.replace(/\[official\s*audio\]/gi, '');
-    s = s.replace(/official\s*(music\s*)?video/gi, '');
-    s = s.replace(/official\s*audio/gi, '');
-    s = s.replace(/\bm\/?v\b/gi, '');
-    s = s.replace(/\blive\b/gi, '');
-    // Remove VEVO suffix from artist names
+    // Consolidated: remove bracketed tags (official video/audio, lyrics, feat, etc.)
+    s = s.replace(/[\(\[](?:official\s*(?:music\s*)?(?:video|audio)|lyrics?|visuali[sz]er|(?:feat|ft)\.?\s*[^\)\]]*)\s*[\)\]]/gi, '');
+    // Remove loose keywords
+    s = s.replace(/\b(?:official\s*(?:music\s*)?video|official\s*audio|m\/?v|live)\b/gi, '');
     s = s.replace(/vevo$/gi, '');
-    // Remove feat/ft tags
-    s = s.replace(/[\(\[]\s*(feat|ft)\.?\s*[^\)\]]*[\)\]]/gi, '');
-    s = s.replace(/\s+(feat|ft)\.?\s+.*/gi, '');
-    // Remove all punctuation and extra whitespace
+    s = s.replace(/\s+(?:feat|ft)\.?\s+.*/gi, '');
     s = s.replace(/[^\w\s]/g, ' ');
     s = s.replace(/\s+/g, ' ').trim();
     return s;
@@ -163,14 +154,20 @@ ROOM.LastFM = {
   pollCurrentUser: function () {
     if (!ROOM.currentUser || !ROOM.currentUser.lastfmUsername) return;
 
+    var self = this;
     var phoneNumber = ROOM.currentUser.phoneNumber;
 
     this.getUserRecentTracks(ROOM.currentUser.lastfmUsername).then(function (trackData) {
-      // updateParticipantTrack now routes to Convex mutation with change detection
-      // The mutation only writes if the track actually changed (~93% reduction)
+      // Client-side change detection: skip Convex mutation if track hasn't changed
+      var newKey = trackData
+        ? trackData.name + '|' + trackData.artist + '|' + trackData.nowPlaying
+        : null;
+
+      if (newKey === self._lastTrackKey) return;
+      self._lastTrackKey = newKey;
+
       ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData || null)
         .then(function (result) {
-          // If the mutation returns session_start info, fire the event
           if (result && result.wasIdle && trackData && trackData.nowPlaying) {
             ROOM.Firebase.fireEvent('session_start', {
               username: ROOM.currentUser.username,
@@ -208,13 +205,18 @@ ROOM.LastFM = {
     }
 
     if (mostPlayed) {
-      ROOM.Firebase.updateMostPlayed({
-        track: mostPlayed.name,
-        artist: mostPlayed.artist,
-        albumArt: mostPlayed.albumArt || ''
-      });
+      // Only update Convex if most-played actually changed
+      var mpKey = mostPlayed.name + '|' + mostPlayed.artist;
+      if (mpKey !== this._lastMostPlayedKey) {
+        this._lastMostPlayedKey = mpKey;
+        ROOM.Firebase.updateMostPlayed({
+          track: mostPlayed.name,
+          artist: mostPlayed.artist,
+          albumArt: mostPlayed.albumArt || ''
+        });
+      }
 
-      // Update the now playing display
+      // Update the now playing display (always, for UI freshness)
       var titleEl = document.getElementById('roomSongTitle');
       var artistEl = document.getElementById('roomSongArtist');
       if (titleEl) titleEl.textContent = mostPlayed.name;

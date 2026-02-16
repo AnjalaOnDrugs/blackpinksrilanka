@@ -13,6 +13,7 @@ ROOM.Firebase = {
   unsubscribers: [],
   roomId: null,
   _initTimestamp: null,
+  _lastfmDebounceTimer: null,
 
   init: function (roomId) {
     this.roomId = roomId;
@@ -260,14 +261,16 @@ ROOM.Firebase = {
       ROOM.Activity.update(this.participantsCache);
     }
 
-    // Real-time same-song (twinning) detection on every participant change
-    if (ROOM.LastFM && ROOM.LastFM.detectSameSong) {
-      ROOM.LastFM.detectSameSong();
-    }
-
-    // Recalculate most played on every participant change
-    if (ROOM.LastFM && ROOM.LastFM.calculateMostPlayed) {
-      ROOM.LastFM.calculateMostPlayed();
-    }
+    // Debounce twinning + most-played (they don't need to run on every heartbeat)
+    clearTimeout(this._lastfmDebounceTimer);
+    var firebase = this;
+    this._lastfmDebounceTimer = setTimeout(function () {
+      if (ROOM.LastFM && ROOM.LastFM.detectSameSong) {
+        ROOM.LastFM.detectSameSong();
+      }
+      if (ROOM.LastFM && ROOM.LastFM.calculateMostPlayed) {
+        ROOM.LastFM.calculateMostPlayed();
+      }
+    }, 2000);
   }
 };
