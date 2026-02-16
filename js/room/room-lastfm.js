@@ -16,6 +16,86 @@ ROOM.LastFM = {
   // Map of coreSong → { usernames: [...], count, track, artist }
   // Tracks ALL active twinning groups for persistent mini cards
   _activeTwins: {},
+  // Cache for Last.fm track.getInfo validation: "name|artist" → { isMusic: bool, expiry: timestamp }
+  _trackValidationCache: {},
+  _CACHE_TTL: 5 * 60 * 1000, // 5 minutes
+
+  /**
+   * Layer 1: Fast heuristic check — returns true if the track is likely NOT music.
+   * Catches ads, podcasts, system sounds, app notifications, etc.
+   */
+  isLikelyNonMusic: function (name, artist) {
+    var n = (name || '').toLowerCase();
+    var a = (artist || '').toLowerCase();
+    var combined = n + ' ' + a;
+
+    // Empty or garbage
+    if (!name || name.trim().length <= 2) return true;
+    if (!artist || artist.trim().length === 0) return true;
+
+    // Generic/placeholder artists
+    if (/^(unknown|various|unknown artist|various artists|unknown album)$/.test(a.trim())) return true;
+
+    // Very long titles are usually podcast episodes, not songs
+    if (name.length > 120) return true;
+
+    // Ad / sponsored content
+    if (/\b(advertisement|sponsored|commercial)\b/.test(combined)) return true;
+
+    // App sounds & notifications
+    if (/\b(notification|ringtone|alarm\s*sound|system\s*sound)\b/.test(combined)) return true;
+    if (/^(whatsapp|telegram|instagram|tiktok|facebook|snapchat|messenger|viber|signal)\b/.test(a.trim())) return true;
+
+    // YouTube noise
+    if (/\b(subscribe|like and subscribe|channel intro|end\s*screen)\b/.test(n)) return true;
+
+    // News / radio filler
+    if (/\b(breaking news|weather update|news update|traffic update)\b/.test(combined)) return true;
+
+    return false;
+  },
+
+  /**
+   * Layer 2: Validate track against Last.fm's database using track.getInfo.
+   * Returns a Promise<boolean> — true if the track is valid music.
+   * Results are cached for 5 minutes to avoid rate-limiting.
+   */
+  validateMusicTrack: function (name, artist) {
+    var cacheKey = (name + '|' + artist).toLowerCase();
+    var cached = this._trackValidationCache[cacheKey];
+
+    if (cached && Date.now() < cached.expiry) {
+      return Promise.resolve(cached.isMusic);
+    }
+
+    var self = this;
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo' +
+      '&track=' + encodeURIComponent(name) +
+      '&artist=' + encodeURIComponent(artist) +
+      '&api_key=' + this.apiKey +
+      '&format=json';
+
+    return fetch(url).then(function (resp) {
+      return resp.json();
+    }).then(function (data) {
+      // track.getInfo returns { track: { listeners, playcount, ... } } for real tracks
+      // Returns { error: ..., message: "Track not found" } for non-existent tracks
+      var isMusic = !!(data.track && parseInt(data.track.listeners || '0', 10) > 0);
+
+      self._trackValidationCache[cacheKey] = {
+        isMusic: isMusic,
+        expiry: Date.now() + self._CACHE_TTL
+      };
+
+      if (!isMusic) {
+        console.debug('[LastFM Filter] Rejected by track.getInfo:', name, '—', artist);
+      }
+      return isMusic;
+    }).catch(function () {
+      // On network/rate-limit errors, let the track through (graceful degradation)
+      return true;
+    });
+  },
 
   /**
    * Clean a track string for fuzzy matching.
@@ -158,27 +238,47 @@ ROOM.LastFM = {
     var phoneNumber = ROOM.currentUser.phoneNumber;
 
     this.getUserRecentTracks(ROOM.currentUser.lastfmUsername).then(function (trackData) {
-      // Client-side change detection: skip Convex mutation if track hasn't changed
-      var newKey = trackData
-        ? trackData.name + '|' + trackData.artist + '|' + trackData.nowPlaying
-        : null;
+      if (!trackData) {
+        return self._applyTrackUpdate(phoneNumber, null);
+      }
 
-      if (newKey === self._lastTrackKey) return;
-      self._lastTrackKey = newKey;
+      // Layer 1: Fast heuristic rejection
+      if (self.isLikelyNonMusic(trackData.name, trackData.artist)) {
+        console.debug('[LastFM Filter] Heuristic rejection:', trackData.name, '—', trackData.artist);
+        return self._applyTrackUpdate(phoneNumber, null);
+      }
 
-      ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData || null)
-        .then(function (result) {
-          if (result && result.wasIdle && trackData && trackData.nowPlaying) {
-            ROOM.Firebase.fireEvent('session_start', {
-              username: ROOM.currentUser.username,
-              track: trackData.name,
-              artist: trackData.artist
-            });
-          }
-        });
+      // Layer 2: Last.fm track.getInfo validation (async, cached)
+      return self.validateMusicTrack(trackData.name, trackData.artist).then(function (isMusic) {
+        if (!isMusic) {
+          return self._applyTrackUpdate(phoneNumber, null);
+        }
+        return self._applyTrackUpdate(phoneNumber, trackData);
+      });
     }).catch(function (err) {
       // Silently handle rate limit errors
     });
+  },
+
+  /** Internal: apply filtered track data with change detection + Convex update */
+  _applyTrackUpdate: function (phoneNumber, trackData) {
+    var newKey = trackData
+      ? trackData.name + '|' + trackData.artist + '|' + trackData.nowPlaying
+      : null;
+
+    if (newKey === this._lastTrackKey) return;
+    this._lastTrackKey = newKey;
+
+    return ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData)
+      .then(function (result) {
+        if (result && result.wasIdle && trackData && trackData.nowPlaying) {
+          ROOM.Firebase.fireEvent('session_start', {
+            username: ROOM.currentUser.username,
+            track: trackData.name,
+            artist: trackData.artist
+          });
+        }
+      });
   },
 
   calculateMostPlayed: function () {
