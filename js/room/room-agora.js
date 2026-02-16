@@ -1,6 +1,7 @@
 /**
  * Room Agora RTM Service
  * Handles real-time chat messaging via Agora RTM SDK
+ * Includes automatic reconnection with exponential backoff
  */
 
 window.ROOM = window.ROOM || {};
@@ -9,9 +10,23 @@ ROOM.Agora = {
   client: null,
   channel: null,
   userId: null,
+  roomId: null,
+  connected: false,
+  destroyed: false,
+
+  // Reconnection state
+  _reconnecting: false,
+  _reconnectAttempts: 0,
+  _maxReconnectAttempts: 10,
+  _baseReconnectDelay: 2000,   // 2 seconds
+  _maxReconnectDelay: 60000,   // 60 seconds
+  _reconnectTimer: null,
 
   init: function (userId, roomId) {
     this.userId = userId;
+    this.roomId = roomId;
+    this.destroyed = false;
+    this._reconnectAttempts = 0;
 
     if (typeof AgoraRTM === 'undefined') {
       console.warn('Agora RTM SDK not loaded. Using Firebase fallback for chat.');
@@ -24,7 +39,15 @@ ROOM.Agora = {
       return Promise.resolve();
     }
 
+    return this._connect();
+  },
+
+  _connect: function () {
     var self = this;
+    var appId = CONFIG.agoraAppId;
+
+    // Clean up any existing client before reconnecting
+    this._cleanup();
 
     try {
       this.client = AgoraRTM.createInstance(appId);
@@ -33,22 +56,125 @@ ROOM.Agora = {
       return Promise.resolve();
     }
 
+    // Listen for connection state changes
+    this.client.on('ConnectionStateChanged', function (newState, reason) {
+      console.log('Agora RTM state:', newState, 'reason:', reason);
+
+      if (newState === 'DISCONNECTED' || newState === 'ABORTED') {
+        self.connected = false;
+
+        if (self.destroyed) return;
+
+        // ABORTED means kicked off by remote login or token expired
+        if (reason === 'REMOTE_LOGIN') {
+          console.warn('Agora RTM: Kicked off by remote login. Reconnecting with new session...');
+          self._scheduleReconnect();
+        } else if (reason === 'TOKEN_EXPIRED') {
+          console.warn('Agora RTM: Token expired. Reconnecting with new token...');
+          self._scheduleReconnect();
+        } else if (reason !== 'LOGOUT') {
+          // Don't reconnect if we intentionally logged out
+          console.warn('Agora RTM: Disconnected (' + reason + '). Reconnecting...');
+          self._scheduleReconnect();
+        }
+      } else if (newState === 'CONNECTED') {
+        self.connected = true;
+        self._reconnectAttempts = 0;
+        self._reconnecting = false;
+      }
+    });
+
+    // Listen for token expiration warning
+    this.client.on('TokenExpired', function () {
+      console.warn('Agora RTM: Token about to expire. Renewing...');
+      self._renewToken();
+    });
+
     // Check if token server is configured
     var tokenServerUrl = CONFIG.agoraTokenServerUrl;
 
     if (!tokenServerUrl) {
-      // Try without token first (will fail if dynamic key enabled)
-      return this.loginAndJoin(null, userId, roomId);
+      return this.loginAndJoin(null, this.userId, this.roomId);
     }
 
     // Fetch token from server
-    return this.fetchToken(userId, roomId).then(function (token) {
-      return self.loginAndJoin(token, userId, roomId);
+    return this.fetchToken(this.userId, this.roomId).then(function (token) {
+      return self.loginAndJoin(token, self.userId, self.roomId);
     }).catch(function (err) {
       console.error('Failed to fetch Agora token:', err);
-      // Try without token as fallback
-      return self.loginAndJoin(null, userId, roomId);
+      return self.loginAndJoin(null, self.userId, self.roomId);
     });
+  },
+
+  _scheduleReconnect: function () {
+    var self = this;
+
+    if (this.destroyed || this._reconnecting) return;
+
+    if (this._reconnectAttempts >= this._maxReconnectAttempts) {
+      console.error('Agora RTM: Max reconnection attempts reached (' + this._maxReconnectAttempts + '). Giving up.');
+      console.warn('Falling back to Firebase for chat.');
+      return;
+    }
+
+    this._reconnecting = true;
+    this._reconnectAttempts++;
+
+    // Exponential backoff with jitter
+    var delay = Math.min(
+      this._baseReconnectDelay * Math.pow(2, this._reconnectAttempts - 1),
+      this._maxReconnectDelay
+    );
+    // Add random jitter (0-25% of delay)
+    delay += Math.random() * delay * 0.25;
+
+    console.log('Agora RTM: Reconnecting in ' + Math.round(delay / 1000) + 's (attempt ' + this._reconnectAttempts + '/' + this._maxReconnectAttempts + ')');
+
+    this._reconnectTimer = setTimeout(function () {
+      if (self.destroyed) return;
+      self._connect().catch(function (err) {
+        console.error('Agora RTM: Reconnection failed:', err);
+        self._reconnecting = false;
+        self._scheduleReconnect();
+      });
+    }, delay);
+  },
+
+  _renewToken: function () {
+    var self = this;
+
+    if (!CONFIG.agoraTokenServerUrl || !this.client) return;
+
+    this.fetchToken(this.userId, this.roomId).then(function (token) {
+      return self.client.renewToken(token);
+    }).then(function () {
+      console.log('Agora RTM: Token renewed successfully');
+    }).catch(function (err) {
+      console.error('Agora RTM: Token renewal failed:', err);
+      // Token renewal failed — full reconnect will happen when token actually expires
+    });
+  },
+
+  _cleanup: function () {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
+
+    if (this.channel) {
+      try { this.channel.leave().catch(function () { }); } catch (e) { }
+      this.channel = null;
+    }
+
+    if (this.client) {
+      try {
+        this.client.removeAllListeners();
+        this.client.logout().catch(function () { });
+      } catch (e) { }
+      this.client = null;
+    }
+
+    this.connected = false;
   },
 
   fetchToken: function (userId, roomId) {
@@ -112,15 +238,17 @@ ROOM.Agora = {
         // Join events are handled via Firestore for consistency
       });
 
+      self.connected = true;
       console.log('Agora RTM connected');
     }).catch(function (err) {
+      self.connected = false;
       console.error('Agora RTM connection error:', err);
       console.warn('Falling back to Firebase for chat. To fix: Disable "Primary Certificate" in Agora Console or implement token authentication.');
     });
   },
 
   sendMessage: function (data) {
-    if (!this.channel) return Promise.resolve();
+    if (!this.channel || !this.connected) return Promise.resolve();
     return this.channel.sendMessage({
       text: JSON.stringify(data)
     }).catch(function (err) {
@@ -129,14 +257,7 @@ ROOM.Agora = {
   },
 
   destroy: function () {
-    var self = this;
-    if (this.channel) {
-      this.channel.leave().catch(function () { });
-    }
-    if (this.client) {
-      this.client.logout().catch(function () { });
-    }
-    this.channel = null;
-    this.client = null;
+    this.destroyed = true;
+    this._cleanup();
   }
 };

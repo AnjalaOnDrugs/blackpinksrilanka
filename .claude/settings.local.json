@@ -13,7 +13,9 @@
       "Bash(dir:*)",
       "Bash(npm install:*)",
       "Bash(npx convex init)",
-      "WebFetch(domain:docs.convex.dev)"
+      "WebFetch(domain:docs.convex.dev)",
+      "Bash(node -e:*)",
+      "WebFetch(domain:agoraio.zendesk.com)"
     ]
   }
 }

@@ -1,9 +1,9 @@
 /**
  * Agora RTM Token Server - Vercel Serverless Function
- * 
+ *
  * Generates Agora RTM tokens using the agora-access-token package.
  * Deploy on Vercel as a serverless function at /api/agora-token
- * 
+ *
  * Environment variables required:
  *   AGORA_APP_ID - Your Agora App ID
  *   AGORA_APP_CERTIFICATE - Your Agora App Certificate (Primary Certificate)
@@ -30,6 +30,7 @@ module.exports = (req, res) => {
     // Get parameters from query string (GET) or body (POST)
     const userId = req.query.userId || (req.body && req.body.userId);
     const channelName = req.query.channelName || (req.body && req.body.channelName);
+    const debug = req.query.debug === 'true';
 
     // Validate userId
     if (!userId) {
@@ -47,7 +48,11 @@ module.exports = (req, res) => {
         console.error('Missing Agora credentials in environment variables');
         return res.status(500).json({
             success: false,
-            error: 'Server configuration error: Missing Agora credentials'
+            error: 'Server configuration error: Missing Agora credentials',
+            debug: debug ? {
+                hasAppId: !!appId,
+                hasAppCertificate: !!appCertificate,
+            } : undefined
         });
     }
 
@@ -68,12 +73,30 @@ module.exports = (req, res) => {
 
         console.log(`Token generated for userId: ${userId}, channel: ${channelName || 'N/A'}`);
 
-        return res.status(200).json({
+        const response = {
             success: true,
             token: token,
             userId: String(userId),
             expiresIn: expirationTimeInSeconds
-        });
+        };
+
+        // Include debug info (safe - no secrets leaked)
+        if (debug) {
+            response.debug = {
+                appIdLength: appId.length,
+                appIdPrefix: appId.substring(0, 6) + '...',
+                certLength: appCertificate.length,
+                certPrefix: appCertificate.substring(0, 6) + '...',
+                tokenPrefix: token.substring(0, 10),
+                tokenLength: token.length,
+                privilegeExpiredTs: privilegeExpiredTs,
+                currentTimestamp: currentTimestamp,
+                nodeVersion: process.version,
+                agoraPackageUsed: 'agora-access-token',
+            };
+        }
+
+        return res.status(200).json(response);
 
     } catch (error) {
         console.error('Token generation error:', error);
