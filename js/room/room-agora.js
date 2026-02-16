@@ -21,12 +21,14 @@ ROOM.Agora = {
   _baseReconnectDelay: 2000,   // 2 seconds
   _maxReconnectDelay: 60000,   // 60 seconds
   _reconnectTimer: null,
+  _kickedPromptShown: false,
 
   init: function (userId, roomId) {
     this.userId = userId;
     this.roomId = roomId;
     this.destroyed = false;
     this._reconnectAttempts = 0;
+    this._kickedPromptShown = false;
 
     if (typeof AgoraRTM === 'undefined') {
       console.warn('Agora RTM SDK not loaded. Using Firebase fallback for chat.');
@@ -65,15 +67,14 @@ ROOM.Agora = {
 
         if (self.destroyed) return;
 
-        // ABORTED means kicked off by remote login or token expired
         if (reason === 'REMOTE_LOGIN') {
-          console.warn('Agora RTM: Kicked off by remote login. Reconnecting with new session...');
-          self._scheduleReconnect();
+          // Kicked by another session — prompt user
+          self._showKickedPrompt();
         } else if (reason === 'TOKEN_EXPIRED') {
           console.warn('Agora RTM: Token expired. Reconnecting with new token...');
           self._scheduleReconnect();
         } else if (reason !== 'LOGOUT') {
-          // Don't reconnect if we intentionally logged out
+          // Network disconnect or other issue — auto reconnect
           console.warn('Agora RTM: Disconnected (' + reason + '). Reconnecting...');
           self._scheduleReconnect();
         }
@@ -104,6 +105,37 @@ ROOM.Agora = {
       console.error('Failed to fetch Agora token:', err);
       return self.loginAndJoin(null, self.userId, self.roomId);
     });
+  },
+
+  _showKickedPrompt: function () {
+    if (this._kickedPromptShown || this.destroyed) return;
+    this._kickedPromptShown = true;
+
+    var self = this;
+
+    // Use a small delay to ensure the UI is ready
+    setTimeout(function () {
+      var stayHere = confirm('You were logged in from another device.\n\nDo you want to log back in here?');
+
+      if (stayHere) {
+        console.log('Agora RTM: User chose to log back in here.');
+        self._kickedPromptShown = false;
+        self._reconnectAttempts = 0;
+        self._connect().catch(function (err) {
+          console.error('Agora RTM: Re-login failed:', err);
+        });
+      } else {
+        console.log('Agora RTM: User chose to leave the room.');
+        self.destroyed = true;
+        self._cleanup();
+
+        // Leave the room
+        if (ROOM.currentUser) {
+          ROOM.Firebase.leaveRoom(ROOM.currentUser.phoneNumber);
+        }
+        window.location.href = 'login.html';
+      }
+    }, 300);
   },
 
   _scheduleReconnect: function () {
@@ -151,7 +183,6 @@ ROOM.Agora = {
       console.log('Agora RTM: Token renewed successfully');
     }).catch(function (err) {
       console.error('Agora RTM: Token renewal failed:', err);
-      // Token renewal failed — full reconnect will happen when token actually expires
     });
   },
 
