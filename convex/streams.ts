@@ -4,12 +4,17 @@ import { v } from "convex/values";
 /**
  * Stream Counting System — Platform-Specific Rules
  *
- * YouTube (detected by "Music Video", "Official Video", "MV", "M/V", "Official Audio" in track name):
+ * Platform detection:
+ *   - Spotify: album art present on the scrobble
+ *   - YouTube: no album art + title contains MV/video markers
+ *   - Other: anything else
+ *
+ * YouTube:
  *   - Daily cap: 50 streams per user
  *   - First 5 streams: 30s listen time, 2-minute same-song cooldown
  *   - After 5 streams: 60s listen time, 15-minute cooldown, 2 different songs in between
  *
- * Spotify (everything else):
+ * Spotify:
  *   - Unlimited daily streams
  *   - 30s listen time always, 2-minute same-song cooldown always
  *   - After 10 total streams: must have at least 1 different song in between
@@ -96,8 +101,16 @@ function isMainEventSong(trackName: string, trackArtist: string): boolean {
   );
 }
 
-/** Detect platform from raw track name */
-function detectPlatform(trackName: string): "youtube" | "spotify" {
+/** Detect platform from album art + raw track name */
+function detectPlatform(
+  trackName: string,
+  albumArt?: string
+): "youtube" | "spotify" | "other" {
+  // Primary signal: scrobbles with album art are treated as Spotify.
+  if ((albumArt || "").trim().length > 0) {
+    return "spotify";
+  }
+
   const n = (trackName || "").toLowerCase();
   if (
     /\b(music\s*video|official\s*video|official\s*audio)\b/i.test(n) ||
@@ -106,7 +119,7 @@ function detectPlatform(trackName: string): "youtube" | "spotify" {
   ) {
     return "youtube";
   }
-  return "spotify";
+  return "other";
 }
 
 /**
@@ -136,7 +149,7 @@ function checkInterleave(
 
 /**
  * Start or update a listening session.
- * Auto-detects platform from track name.
+ * Auto-detects platform from album art + track name.
  * Carries forward recent track history for interleave validation.
  */
 export const startListening = mutation({
@@ -145,10 +158,11 @@ export const startListening = mutation({
     phoneNumber: v.string(),
     trackName: v.string(),
     trackArtist: v.string(),
+    trackAlbumArt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const trackKey = normalizeTrackKey(args.trackName, args.trackArtist);
-    const platform = detectPlatform(args.trackName);
+    const platform = detectPlatform(args.trackName, args.trackAlbumArt);
 
     // Find existing session for this user in this room
     const existing = await ctx.db
@@ -265,7 +279,7 @@ export const tryCountStream = mutation({
       };
     }
 
-    const platform = (session.platform as "youtube" | "spotify") || "spotify";
+    const platform = (session.platform as "youtube" | "spotify" | "other") || "other";
     const listenedMs = now - session.startedAt;
     const listenedSeconds = Math.floor(listenedMs / 1000);
 
@@ -284,7 +298,7 @@ export const tryCountStream = mutation({
     const todayPlatformCount = todayAllStreams.filter(
       (s) =>
         s.countedAt >= dayStartMs &&
-        (s.platform || "spotify") === platform &&
+        (s.platform || "other") === platform &&
         isMainEventSong(s.trackName, s.trackArtist)
     ).length;
 
@@ -471,6 +485,7 @@ export const getRoomStreamsByPlatform = query({
 
     let youtube = 0;
     let spotify = 0;
+    let other = 0;
     let totalBlackpink = 0;
     let totalOther = 0;
     for (const s of streams) {
@@ -482,17 +497,20 @@ export const getRoomStreamsByPlatform = query({
         totalOther++;
       }
       if (!isMainEventSong(s.trackName, s.trackArtist)) continue;
-      if ((s.platform || "spotify") === "youtube") {
+      if ((s.platform || "other") === "youtube") {
         youtube++;
-      } else {
+      } else if ((s.platform || "other") === "spotify") {
         spotify++;
+      } else {
+        other++;
       }
     }
 
     return {
       youtube,
       spotify,
-      total: youtube + spotify,
+      other,
+      total: youtube + spotify + other,
       totalBlackpink,
       totalOther,
       totalAll: streams.length,
@@ -532,7 +550,7 @@ export const getRoomStreamCounts = query({
           trackName: s.trackName,
           trackArtist: s.trackArtist,
           trackKey: s.trackKey,
-          platform: (s.platform as string) || "spotify",
+          platform: (s.platform as string) || "other",
           totalStreams: 0,
           uniqueListeners: new Set(),
         };
@@ -569,16 +587,48 @@ export const getUserStreamCounts = query({
         q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
       )
       .collect();
-    const streams = allStreams.filter((s) =>
+    const mainStreams = allStreams.filter((s) =>
       isMainEventSong(s.trackName, s.trackArtist)
     );
 
+    let mainYoutube = 0;
+    let mainSpotify = 0;
+    let mainOther = 0;
+    let totalBlackpink = 0;
+    let totalOther = 0;
+
+    for (const s of allStreams) {
+      const isBlackpink =
+        cleanForMatch(s.trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist);
+      if (isBlackpink) {
+        totalBlackpink++;
+      } else {
+        totalOther++;
+      }
+    }
+
+    for (const s of mainStreams) {
+      const p = (s.platform as string) || "other";
+      if (p === "youtube") {
+        mainYoutube++;
+      } else if (p === "spotify") {
+        mainSpotify++;
+      } else {
+        mainOther++;
+      }
+    }
+
     return {
-      totalStreams: streams.length,
-      streams: streams.map((s) => ({
+      totalStreams: mainStreams.length,
+      mainYoutube,
+      mainSpotify,
+      mainOther,
+      totalBlackpink,
+      totalOther,
+      streams: mainStreams.map((s) => ({
         trackName: s.trackName,
         trackArtist: s.trackArtist,
-        platform: (s.platform as string) || "spotify",
+        platform: (s.platform as string) || "other",
         countedAt: s.countedAt,
         listenDuration: s.listenDuration,
       })),

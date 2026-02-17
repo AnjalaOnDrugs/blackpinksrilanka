@@ -172,11 +172,14 @@ ROOM.LastFM = {
   },
 
   /**
-   * Detect platform from track name.
-   * If the raw name contains "Music Video", "Official Video", "Official Audio",
-   * "MV", or "M/V" → YouTube. Otherwise → Spotify.
+   * Detect platform from album art + track name.
+   * Album art => Spotify, MV/video markers => YouTube, otherwise => Other.
    */
-  detectPlatform: function (trackName) {
+  detectPlatform: function (trackName, albumArt) {
+    if ((albumArt || '').trim().length > 0) {
+      return 'spotify';
+    }
+
     var n = (trackName || '').toLowerCase();
     if (
       /\b(music\s*video|official\s*video|official\s*audio)\b/i.test(n) ||
@@ -185,7 +188,7 @@ ROOM.LastFM = {
     ) {
       return 'youtube';
     }
-    return 'spotify';
+    return 'other';
   },
 
   // Stream counting state
@@ -524,7 +527,8 @@ ROOM.LastFM = {
       roomId: ROOM.Firebase.roomId,
       phoneNumber: ROOM.currentUser.phoneNumber,
       trackName: trackData.name,
-      trackArtist: trackData.artist
+      trackArtist: trackData.artist,
+      trackAlbumArt: trackData.albumArt || undefined
     }).catch(function () {
       // Silently handle errors
     });

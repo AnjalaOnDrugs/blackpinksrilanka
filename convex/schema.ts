@@ -79,7 +79,7 @@ export default defineSchema({
     trackArtist: v.string(),
     // Normalized key for matching (lowercase, stripped of tags)
     trackKey: v.string(),
-    // "youtube" or "spotify" — detected from track name markers
+    // "youtube", "spotify", or "other" - detected from album art + title markers
     platform: v.optional(v.string()),
     // Timestamp when this stream was counted
     countedAt: v.number(),
@@ -98,7 +98,7 @@ export default defineSchema({
     trackName: v.string(),
     trackArtist: v.string(),
     trackKey: v.string(),
-    // "youtube" or "spotify"
+    // "youtube", "spotify", or "other"
     platform: v.optional(v.string()),
     // Last N track keys played by this user (for interleave validation)
     recentTrackKeys: v.optional(v.array(v.string())),
@@ -140,3 +140,4 @@ export default defineSchema({
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"]),
 });
+

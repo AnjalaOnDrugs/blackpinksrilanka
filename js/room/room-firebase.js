@@ -76,27 +76,39 @@ ROOM.Firebase = {
         if (!data) return;
         var ytEl = document.getElementById('ytStreamCount');
         var spEl = document.getElementById('spStreamCount');
-        var totalEl = document.getElementById('streamCountNumber');
         if (ytEl) ytEl.textContent = (data.youtube || 0).toLocaleString();
         if (spEl) spEl.textContent = (data.spotify || 0).toLocaleString();
-        if (totalEl) totalEl.textContent = (data.total || 0).toLocaleString();
-
-        // Populate breakdown panel
-        var bMainTotal = document.getElementById('breakdownMainTotal');
-        var bMainSp = document.getElementById('breakdownMainSpotify');
-        var bMainYt = document.getElementById('breakdownMainYoutube');
-        var bBp = document.getElementById('breakdownBlackpink');
-        var bOther = document.getElementById('breakdownOther');
-        if (bMainTotal) bMainTotal.textContent = (data.total || 0).toLocaleString();
-        if (bMainSp) bMainSp.textContent = (data.spotify || 0).toLocaleString();
-        if (bMainYt) bMainYt.textContent = (data.youtube || 0).toLocaleString();
-        if (bBp) bBp.textContent = (data.totalBlackpink || 0).toLocaleString();
-        if (bOther) bOther.textContent = (data.totalOther || 0).toLocaleString();
 
         // Update energy bar (fills per 100 streams)
         if (ROOM.Events && ROOM.Events.updateStreamEnergy) {
           ROOM.Events.updateStreamEnergy(data.total || 0);
         }
+      }
+    );
+
+    // 3b. Subscribe to current user's verified stream counts (drives verified card + breakdown)
+    var unsub3b = ConvexService.watch(
+      'streams:getUserStreamCounts',
+      { roomId: roomId, phoneNumber: ROOM.currentUser.phoneNumber },
+      function (data) {
+        if (!data) return;
+
+        var totalEl = document.getElementById('streamCountNumber');
+        if (totalEl) totalEl.textContent = (data.totalStreams || 0).toLocaleString();
+
+        var bMainTotal = document.getElementById('breakdownMainTotal');
+        var bMainSp = document.getElementById('breakdownMainSpotify');
+        var bMainYt = document.getElementById('breakdownMainYoutube');
+        var bMainOther = document.getElementById('breakdownMainOther');
+        var bBp = document.getElementById('breakdownBlackpink');
+        var bOther = document.getElementById('breakdownOther');
+
+        if (bMainTotal) bMainTotal.textContent = (data.totalStreams || 0).toLocaleString();
+        if (bMainSp) bMainSp.textContent = (data.mainSpotify || 0).toLocaleString();
+        if (bMainYt) bMainYt.textContent = (data.mainYoutube || 0).toLocaleString();
+        if (bMainOther) bMainOther.textContent = (data.mainOther || 0).toLocaleString();
+        if (bBp) bBp.textContent = (data.totalBlackpink || 0).toLocaleString();
+        if (bOther) bOther.textContent = (data.totalOther || 0).toLocaleString();
       }
     );
 
@@ -119,7 +131,7 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub4);
+    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4);
   },
 
   getParticipants: function () {
