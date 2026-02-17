@@ -14,6 +14,7 @@ import type * as participants from "../participants.js";
 import type * as rooms from "../rooms.js";
 import type * as streams from "../streams.js";
 import type * as users from "../users.js";
+import type * as voiceMessages from "../voiceMessages.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   rooms: typeof rooms;
   streams: typeof streams;
   users: typeof users;
+  voiceMessages: typeof voiceMessages;
 }>;
 
 /**

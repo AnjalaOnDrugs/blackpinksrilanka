@@ -121,4 +121,22 @@ export default defineSchema({
       })
     ),
   }).index("by_roomId", ["roomId"]),
+
+  // Voice messages from top 5 players
+  // Each user can have one active voice message at a time (replaced on new send)
+  voiceMessages: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    username: v.string(),
+    avatarColor: v.string(),
+    // Base64-encoded audio data (WebM/Opus)
+    audioData: v.string(),
+    // Duration in seconds
+    duration: v.number(),
+    // When the message was sent
+    createdAt: v.number(),
+    // Rank at time of sending (1-5)
+    rank: v.number(),
+  }).index("by_room", ["roomId"])
+    .index("by_room_phone", ["roomId", "phoneNumber"]),
 });

@@ -81,6 +81,18 @@ ROOM.Firebase = {
         if (spEl) spEl.textContent = (data.spotify || 0).toLocaleString();
         if (totalEl) totalEl.textContent = (data.total || 0).toLocaleString();
 
+        // Populate breakdown panel
+        var bMainTotal = document.getElementById('breakdownMainTotal');
+        var bMainSp = document.getElementById('breakdownMainSpotify');
+        var bMainYt = document.getElementById('breakdownMainYoutube');
+        var bBp = document.getElementById('breakdownBlackpink');
+        var bOther = document.getElementById('breakdownOther');
+        if (bMainTotal) bMainTotal.textContent = (data.total || 0).toLocaleString();
+        if (bMainSp) bMainSp.textContent = (data.spotify || 0).toLocaleString();
+        if (bMainYt) bMainYt.textContent = (data.youtube || 0).toLocaleString();
+        if (bBp) bBp.textContent = (data.totalBlackpink || 0).toLocaleString();
+        if (bOther) bOther.textContent = (data.totalOther || 0).toLocaleString();
+
         // Update energy bar (fills per 100 streams)
         if (ROOM.Events && ROOM.Events.updateStreamEnergy) {
           ROOM.Events.updateStreamEnergy(data.total || 0);

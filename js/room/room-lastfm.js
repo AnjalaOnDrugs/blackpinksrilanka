@@ -193,6 +193,20 @@ ROOM.LastFM = {
   _currentStreamTrack: null, // { name, artist } of track being timed
   _lastStreamCountResult: null, // Last result from tryCountStream
 
+  /**
+   * Check if the current user has an active check-in.
+   * Stream counting only works when checked in.
+   */
+  isCheckedIn: function () {
+    if (!ROOM.currentUser) return false;
+    var participants = ROOM.Firebase.getParticipants();
+    var me = participants.find(function (p) { return p.id === ROOM.currentUser.phoneNumber; });
+    if (!me || !me.data.offlineTracking || !me.data.lastCheckIn) return false;
+    var elapsed = Date.now() - me.data.lastCheckIn;
+    var interval = CONFIG.checkInInterval || 3600000;
+    return elapsed < interval;
+  },
+
   // Track which offline users this client is responsible for polling
   _offlinePollAssignments: {},
   _offlinePollInterval: null,
@@ -495,6 +509,8 @@ ROOM.LastFM = {
    */
   _startStreamSession: function (trackData) {
     if (!ROOM.currentUser || !trackData || !trackData.nowPlaying) return;
+    // Stream counting requires active check-in
+    if (!this.isCheckedIn()) return;
 
     var trackId = trackData.name + '|' + trackData.artist;
 
@@ -537,6 +553,8 @@ ROOM.LastFM = {
    */
   _checkStreamCount: function () {
     if (!ROOM.currentUser || !this._currentStreamTrack) return;
+    // Stream counting requires active check-in
+    if (!this.isCheckedIn()) return;
 
     var self = this;
 

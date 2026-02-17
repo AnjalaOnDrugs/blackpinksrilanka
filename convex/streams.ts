@@ -471,7 +471,16 @@ export const getRoomStreamsByPlatform = query({
 
     let youtube = 0;
     let spotify = 0;
+    let totalBlackpink = 0;
+    let totalOther = 0;
     for (const s of streams) {
+      const isBlackpink =
+        cleanForMatch(s.trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist);
+      if (isBlackpink) {
+        totalBlackpink++;
+      } else {
+        totalOther++;
+      }
       if (!isMainEventSong(s.trackName, s.trackArtist)) continue;
       if ((s.platform || "spotify") === "youtube") {
         youtube++;
@@ -480,7 +489,14 @@ export const getRoomStreamsByPlatform = query({
       }
     }
 
-    return { youtube, spotify, total: youtube + spotify };
+    return {
+      youtube,
+      spotify,
+      total: youtube + spotify,
+      totalBlackpink,
+      totalOther,
+      totalAll: streams.length,
+    };
   },
 });
 

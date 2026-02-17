@@ -71,6 +71,7 @@ async function initRoom(roomId) {
   ROOM.Leaderboard.init();
   ROOM.Activity.init();
   ROOM.Chat.init();
+  ROOM.Voice.init();
   ROOM.Events.init();
   ROOM.Animations.init();
   ROOM.Atmosphere.init();
@@ -90,7 +91,10 @@ async function initRoom(roomId) {
     switchMobilePanel('panelStage');
   }
 
-  // 9. Check-in system (offline tracking)
+  // 9. Stream counter expand/collapse toggle
+  setupStreamCounterToggle();
+
+  // 10. Check-in system (offline tracking)
   // Small delay to let participants cache populate from Convex
   setTimeout(function () { initCheckIn(); }, 2000);
 
@@ -237,6 +241,13 @@ function initCheckIn() {
 
   // Show the initial check-in prompt
   showCheckInButton();
+
+  // Show reminder toast to encourage check-in
+  setTimeout(function () {
+    if (ROOM.Animations && ROOM.Animations.showToast) {
+      ROOM.Animations.showToast('join', '📋', '<strong>Check in</strong> to start tracking your streams!');
+    }
+  }, 1500);
 }
 
 function performCheckIn() {
@@ -308,6 +319,19 @@ function showCheckInButton() {
   }
 }
 
+// ========== STREAM COUNTER TOGGLE ==========
+function setupStreamCounterToggle() {
+  var toggle = document.getElementById('streamCounterToggle');
+  var breakdown = document.getElementById('streamCounterBreakdown');
+  var chevron = document.getElementById('streamCounterChevron');
+  if (!toggle || !breakdown) return;
+
+  toggle.addEventListener('click', function () {
+    var isOpen = breakdown.classList.toggle('room-stream-counter-breakdown--open');
+    if (chevron) chevron.classList.toggle('room-stream-counter-chevron--open', isOpen);
+  });
+}
+
 // ========== HEARTBEAT ==========
 var heartbeatInterval = null;
 
@@ -326,6 +350,7 @@ function setupCleanup() {
       ROOM.Firebase.leaveRoom(ROOM.currentUser.phoneNumber);
     }
     ROOM.Agora.destroy();
+    ROOM.Voice.destroy();
     ROOM.LastFM.destroy();
     ROOM.Events.destroy();
     ROOM.Firebase.destroy();
@@ -339,6 +364,24 @@ function setupCleanup() {
       if (ROOM.currentUser) {
         // Use sendBeacon-style update for reliability
         ROOM.Firebase.heartbeat(ROOM.currentUser.phoneNumber);
+      }
+    } else if (document.visibilityState === 'visible') {
+      // When user returns, check if they need to check in
+      if (ROOM.currentUser && ROOM.LastFM && !ROOM.LastFM.isCheckedIn()) {
+        // Only show reminder if the check-in button is visible (not already checked in)
+        var btn = document.getElementById('checkInBtn');
+        if (btn && btn.style.display !== 'none') {
+          // Pulse the button to draw attention
+          btn.classList.add('room-checkin-btn--pulse');
+          setTimeout(function () {
+            btn.classList.remove('room-checkin-btn--pulse');
+          }, 4500);
+
+          // Show reminder toast
+          if (ROOM.Animations && ROOM.Animations.showToast) {
+            ROOM.Animations.showToast('join', '📋', '<strong>Check in</strong> to track your streams!');
+          }
+        }
       }
     }
   });
