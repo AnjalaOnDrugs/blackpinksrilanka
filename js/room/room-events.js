@@ -33,6 +33,8 @@ ROOM.Events = {
         break;
       case 'overtake':
         ROOM.Animations.playOvertake(eventData.data);
+        // Also show surpass notification in chat
+        ROOM.Animations.showSurpassNotification(eventData.data);
         break;
       case 'milestone':
         ROOM.Animations.playMilestone(eventData.data);

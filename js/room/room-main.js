@@ -259,9 +259,15 @@ function performCheckIn() {
   }).then(function () {
     startCheckInCountdown(CONFIG.checkInInterval || 3600000);
 
+    // Recalculate points (check-in = +2 points)
+    ConvexService.mutation('streams:recalculatePoints', {
+      roomId: ROOM.Firebase.roomId,
+      phoneNumber: ROOM.currentUser.phoneNumber
+    });
+
     // Show a nice toast
     if (ROOM.Animations && ROOM.Animations.showToast) {
-      ROOM.Animations.showToast('join', '✅', 'Checked in! Offline tracking is <strong>active</strong> for the next hour.');
+      ROOM.Animations.showToast('join', '✅', 'Checked in! +2 pts. Offline tracking is <strong>active</strong> for the next hour.');
     }
   });
 }

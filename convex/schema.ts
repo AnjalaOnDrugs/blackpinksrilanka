@@ -24,6 +24,7 @@ export default defineSchema({
     isOnline: v.boolean(),
     lastfmUsername: v.optional(v.string()),
     totalMinutes: v.number(),
+    totalPoints: v.optional(v.number()),
     currentRank: v.number(),
     previousRank: v.number(),
     milestones: v.array(v.number()),
@@ -81,6 +82,8 @@ export default defineSchema({
     trackKey: v.string(),
     // "youtube", "spotify", or "other" - detected from album art + title markers
     platform: v.optional(v.string()),
+    // Whether this is the main event song (e.g. "Kill This Love")
+    isMainSong: v.optional(v.boolean()),
     // Timestamp when this stream was counted
     countedAt: v.number(),
     // How long they actually listened (in seconds) before we counted it

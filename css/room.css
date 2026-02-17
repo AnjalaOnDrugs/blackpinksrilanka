@@ -173,7 +173,7 @@
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: #000000;
+  background: #060606;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -184,7 +184,7 @@
 .room-loading-video-wrap {
   width: min(360px, 80vw);
   max-width: 360px;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 0;
   border-radius: 18px;
   overflow: hidden;
   background: #000000;
@@ -1238,6 +1238,12 @@
   font-size: 11px;
 }
 
+.room-toast-points {
+  color: #25D366;
+  font-weight: 700;
+  font-size: 12px;
+}
+
 /* ========== STREAM COUNTER ========== */
 .room-stream-counter {
   display: flex;
@@ -1407,6 +1413,16 @@
   height: 1px;
   background: rgba(255, 255, 255, 0.05);
   margin: 6px 0;
+}
+
+.room-stream-breakdown-row--points {
+  padding-top: 2px;
+}
+
+.room-stream-breakdown-value--points {
+  color: #ffc107 !important;
+  font-weight: 700 !important;
+  font-family: 'Outfit', sans-serif;
 }
 
 /* ========== COLLECTIVE LABEL (Stats card) ========== */
@@ -3233,5 +3249,307 @@
   .room-layout {
     max-width: 1400px;
     margin: 0 auto;
+  }
+}
+
+/* ========== POINTS GAIN ANIMATION (Leaderboard) ========== */
+
+/* Shimmer effect when a user gains points */
+.room-leader--points-gain {
+  animation: roomPointsGainShimmer 1.5s ease-out;
+}
+
+@keyframes roomPointsGainShimmer {
+  0% {
+    background: rgba(247, 166, 185, 0.15);
+    box-shadow: 0 0 16px rgba(247, 166, 185, 0.3);
+  }
+  50% {
+    background: rgba(247, 166, 185, 0.08);
+    box-shadow: 0 0 8px rgba(247, 166, 185, 0.15);
+  }
+  100% {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: none;
+  }
+}
+
+/* Floating "+X pts" indicator */
+.room-leader-points-float {
+  position: absolute;
+  right: 12px;
+  top: -4px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #25D366;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(37, 211, 102, 0.4);
+  z-index: 5;
+}
+
+.room-leader-points-float--active {
+  animation: roomPointsFloatUp 1.8s ease-out forwards;
+}
+
+@keyframes roomPointsFloatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.1);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.7);
+  }
+}
+
+/* ========== SURPASS NOTIFICATION (Chat Panel) ========== */
+
+/* Normal surpass notification */
+.room-surpass-notif {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 60;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid rgba(255, 193, 7, 0.25);
+  border-radius: 14px;
+  padding: 10px 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: roomSurpassSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 90%;
+  width: max-content;
+}
+
+.room-surpass-notif-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.room-surpass-notif-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.room-surpass-notif--exit {
+  animation: roomSurpassFadeOut 0.5s ease-out forwards;
+}
+
+@keyframes roomSurpassSlideIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes roomSurpassFadeOut {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(0.9);
+  }
+}
+
+/* ========== TOP 3 SPECIAL SURPASS NOTIFICATION ========== */
+
+.room-surpass-notif--top3 {
+  background: linear-gradient(135deg, rgba(30, 20, 40, 0.95), rgba(40, 15, 30, 0.95));
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 18px;
+  padding: 16px 24px;
+  box-shadow:
+    0 0 40px rgba(255, 193, 7, 0.15),
+    0 0 80px rgba(247, 166, 185, 0.08),
+    inset 0 0 30px rgba(255, 193, 7, 0.05);
+  animation: roomSurpassTop3Enter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.room-surpass-notif--top3 .room-surpass-notif-content {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  white-space: normal;
+}
+
+.room-surpass-notif-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(ellipse at center, rgba(255, 193, 7, 0.12) 0%, transparent 70%);
+  animation: roomSurpassGlowPulse 2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.room-surpass-notif-crown {
+  font-size: 32px;
+  line-height: 1;
+  animation: roomSurpassCrownBounce 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.5));
+}
+
+.room-surpass-notif-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #ffc107;
+  text-shadow: 0 0 12px rgba(255, 193, 7, 0.4);
+}
+
+.room-surpass-notif-names {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: #fff;
+}
+
+.room-surpass-notif-names strong {
+  font-weight: 800;
+  color: #fff;
+}
+
+.room-surpass-notif-arrow {
+  color: #ffc107;
+  font-size: 18px;
+  font-weight: 800;
+  animation: roomSurpassArrowPulse 1s ease-in-out infinite alternate;
+}
+
+.room-surpass-notif-rank {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  background: linear-gradient(135deg, #ffc107, #ffab40);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.room-surpass-notif-overtaken {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+}
+
+/* Sparkle decorations */
+.room-surpass-notif-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.room-surpass-sparkle {
+  position: absolute;
+  font-size: 10px;
+  color: #ffc107;
+  opacity: 0;
+  animation: roomSurpassSparkle 2s ease-in-out infinite;
+}
+
+.room-surpass-sparkle--1 {
+  top: 8px;
+  left: 12px;
+  animation-delay: 0s;
+}
+.room-surpass-sparkle--2 {
+  top: 12px;
+  right: 16px;
+  animation-delay: 0.5s;
+}
+.room-surpass-sparkle--3 {
+  bottom: 10px;
+  left: 20px;
+  animation-delay: 1s;
+}
+.room-surpass-sparkle--4 {
+  bottom: 8px;
+  right: 12px;
+  animation-delay: 1.5s;
+}
+
+@keyframes roomSurpassTop3Enter {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.7);
+  }
+  60% {
+    transform: translate(-50%, -52%) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes roomSurpassGlowPulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes roomSurpassCrownBounce {
+  0% {
+    transform: scale(0) rotate(-20deg);
+  }
+  50% {
+    transform: scale(1.3) rotate(10deg);
+  }
+  70% {
+    transform: scale(0.9) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes roomSurpassArrowPulse {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes roomSurpassSparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
   }
 }

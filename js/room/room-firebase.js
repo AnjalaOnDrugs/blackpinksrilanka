@@ -109,6 +109,10 @@ ROOM.Firebase = {
         if (bMainOther) bMainOther.textContent = (data.mainOther || 0).toLocaleString();
         if (bBp) bBp.textContent = (data.totalBlackpink || 0).toLocaleString();
         if (bOther) bOther.textContent = (data.totalOther || 0).toLocaleString();
+
+        // Update points display
+        var ptsEl = document.getElementById('breakdownPoints');
+        if (ptsEl) ptsEl.textContent = (data.totalPoints || 0).toLocaleString();
       }
     );
 

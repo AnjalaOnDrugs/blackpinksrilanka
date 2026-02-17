@@ -1,12 +1,14 @@
 /**
  * Room Leaderboard
  * Renders and animates the leaderboard with FLIP technique for rank changes
+ * Now sorted by totalPoints (scoring system)
  */
 
 window.ROOM = window.ROOM || {};
 
 ROOM.Leaderboard = {
   previousRanks: {},
+  previousPoints: {},
   podiumEl: null,
   listEl: null,
   selfEl: null,
@@ -18,16 +20,21 @@ ROOM.Leaderboard = {
   },
 
   update: function (participants) {
-    // Sort by totalMinutes descending
+    // Sort by totalPoints descending (fallback to totalMinutes)
     var sorted = participants.slice().sort(function (a, b) {
+      var ptsA = a.data.totalPoints || 0;
+      var ptsB = b.data.totalPoints || 0;
+      if (ptsB !== ptsA) return ptsB - ptsA;
       return (b.data.totalMinutes || 0) - (a.data.totalMinutes || 0);
     });
 
-    // Detect overtakes
+    // Detect overtakes and points gains
     var self = this;
     sorted.forEach(function (p, i) {
       var newRank = i + 1;
       var oldRank = self.previousRanks[p.id];
+      var oldPoints = self.previousPoints[p.id] || 0;
+      var newPoints = p.data.totalPoints || 0;
 
       if (oldRank && newRank < oldRank) {
         // This user climbed
@@ -36,7 +43,14 @@ ROOM.Leaderboard = {
           ROOM.Events.checkOvertake(p, newRank, oldRank, overtakenUser);
       }
 
+      // Detect points gain for animation
+      if (newPoints > oldPoints && oldPoints > 0) {
+        var gained = newPoints - oldPoints;
+        self._animatePointsGain(p.id, gained);
+      }
+
       self.previousRanks[p.id] = newRank;
+      self.previousPoints[p.id] = newPoints;
     });
 
     // Check milestones
@@ -119,8 +133,8 @@ ROOM.Leaderboard = {
     var selfClass = isSelf ? ' room-leader--self' : '';
     var color = d.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
     var initial = d.username ? d.username.charAt(0).toUpperCase() : '?';
-    var minutes = d.totalMinutes || 0;
-    var score = this.formatMinutes(minutes);
+    var points = d.totalPoints || 0;
+    var score = this.formatPoints(points);
 
     return '<div class="room-leader ' + rankClass + compactClass + selfClass + '" data-id="' + participant.id + '">' +
       '<div class="room-leader-rank">' + rankContent + '</div>' +
@@ -130,10 +144,20 @@ ROOM.Leaderboard = {
       '</div>' +
       '<div class="room-leader-info">' +
         '<div class="room-leader-name">' + this.escapeHtml(d.username || 'Unknown') + '</div>' +
-        '<div class="room-leader-score">' + score + ' streamed</div>' +
+        '<div class="room-leader-score">' + score + '</div>' +
       '</div>' +
+      '<div class="room-leader-points-float" id="pointsFloat_' + participant.id + '"></div>' +
       badgeHtml +
     '</div>';
+  },
+
+  formatPoints: function (pts) {
+    if (pts >= 10000) {
+      return (pts / 1000).toFixed(1) + 'K pts';
+    } else if (pts >= 1000) {
+      return pts.toLocaleString() + ' pts';
+    }
+    return pts + ' pts';
   },
 
   formatMinutes: function (mins) {
@@ -145,6 +169,32 @@ ROOM.Leaderboard = {
       return h + 'h ' + m + 'm';
     }
     return mins.toLocaleString() + ' mins';
+  },
+
+  // Animate points gain on the leaderboard card
+  _animatePointsGain: function (participantId, gained) {
+    // Small delay to let the DOM render
+    setTimeout(function () {
+      var el = document.querySelector('.room-leader[data-id="' + participantId + '"]');
+      if (!el) return;
+
+      // Add shimmer animation to the card
+      el.classList.add('room-leader--points-gain');
+      setTimeout(function () {
+        el.classList.remove('room-leader--points-gain');
+      }, 1500);
+
+      // Float a "+X pts" badge above the card
+      var floatEl = document.getElementById('pointsFloat_' + participantId);
+      if (floatEl) {
+        floatEl.textContent = '+' + gained + ' pts';
+        floatEl.classList.add('room-leader-points-float--active');
+        setTimeout(function () {
+          floatEl.classList.remove('room-leader-points-float--active');
+          floatEl.textContent = '';
+        }, 1800);
+      }
+    }, 50);
   },
 
   // Apply overtake glow animation to a specific leader card

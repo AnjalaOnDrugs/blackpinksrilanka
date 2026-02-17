@@ -2,7 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
- * Stream Counting System — Platform-Specific Rules
+ * Stream Counting System — Platform-Specific Rules + Points System
  *
  * Platform detection:
  *   - Spotify: album art present on the scrobble
@@ -18,6 +18,13 @@ import { v } from "convex/values";
  *   - Unlimited daily streams
  *   - 30s listen time always, 2-minute same-song cooldown always
  *   - After 10 total streams: must have at least 1 different song in between
+ *
+ * Points System:
+ *   - 1 YT stream of main track = 5 points
+ *   - 1 YT stream of other tracks = 1 point
+ *   - 1 Spotify stream of main track = 2 points
+ *   - 1 Spotify stream of other tracks = 1 point
+ *   - Checking in = 2 points
  *
  * Server-side validation prevents client-side manipulation.
  */
@@ -43,6 +50,24 @@ const MAIN_EVENT_SONG = {
   title: "kill this love",
   artist: "blackpink",
 };
+
+// ── Points constants ──
+const POINTS_YT_MAIN = 5;
+const POINTS_YT_OTHER = 1;
+const POINTS_SP_MAIN = 2;
+const POINTS_SP_OTHER = 1;
+const POINTS_CHECK_IN = 2;
+
+// ── BLACKPINK member solo artists ──
+const BLACKPINK_SOLO_ARTISTS = [
+  "lisa",
+  "lalisa",
+  "jisoo",
+  "jennie",
+  "rose",
+  "rosé",
+  "blackpink",
+];
 
 // ── Helpers ──
 
@@ -92,13 +117,19 @@ function normalizeTrackKey(name: string, artist: string): string {
   return a + "|" + s;
 }
 
-/** Only the event main song should be stream-countable */
+/** Check if this is the main event song */
 function isMainEventSong(trackName: string, trackArtist: string): boolean {
   return (
     cleanForMatch(trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist) &&
     extractCoreSongTitle(trackName, trackArtist) ===
       cleanForMatch(MAIN_EVENT_SONG.title)
   );
+}
+
+/** Check if this is a BLACKPINK or solo member song */
+function isBlackpinkOrSolo(trackArtist: string): boolean {
+  const cleaned = cleanForMatch(trackArtist);
+  return BLACKPINK_SOLO_ARTISTS.some((a) => cleaned === a || cleaned.indexOf(a) === 0);
 }
 
 /** Detect platform from album art + raw track name */
@@ -143,6 +174,15 @@ function checkInterleave(
   // If history is shorter than required, don't block (new users)
   if (recentTrackKeys.length < requiredDifferent) return true;
   return false;
+}
+
+/** Calculate points for a single stream */
+function calculateStreamPoints(platform: string, isMain: boolean): number {
+  if (platform === "youtube") {
+    return isMain ? POINTS_YT_MAIN : POINTS_YT_OTHER;
+  }
+  // Spotify and "other" both use Spotify points
+  return isMain ? POINTS_SP_MAIN : POINTS_SP_OTHER;
 }
 
 // ── Mutations ──
@@ -243,7 +283,8 @@ export const stopListening = mutation({
 
 /**
  * Try to count a stream. Server validates all platform-specific rules.
- * Also triggers stream milestone event (every 100 streams).
+ * Now counts ALL songs (not just main) — non-main songs don't affect
+ * the room's cumulative/verified tracking but do earn points.
  */
 export const tryCountStream = mutation({
   args: {
@@ -269,16 +310,7 @@ export const tryCountStream = mutation({
       return { counted: false, reason: "already_counted" };
     }
 
-    // Count streams only for the event main song.
-    if (!isMainEventSong(session.trackName, session.trackArtist)) {
-      return {
-        counted: false,
-        reason: "not_main_song",
-        requiredTrack: MAIN_EVENT_SONG.title,
-        requiredArtist: MAIN_EVENT_SONG.artist,
-      };
-    }
-
+    const isMain = isMainEventSong(session.trackName, session.trackArtist);
     const platform = (session.platform as "youtube" | "spotify" | "other") || "other";
     const listenedMs = now - session.startedAt;
     const listenedSeconds = Math.floor(listenedMs / 1000);
@@ -298,8 +330,7 @@ export const tryCountStream = mutation({
     const todayPlatformCount = todayAllStreams.filter(
       (s) =>
         s.countedAt >= dayStartMs &&
-        (s.platform || "other") === platform &&
-        isMainEventSong(s.trackName, s.trackArtist)
+        (s.platform || "other") === platform
     ).length;
 
     // 3. Get most recent stream of this exact track (for cooldown)
@@ -417,6 +448,8 @@ export const tryCountStream = mutation({
     }
 
     // 5. All checks passed — count the stream!
+    const points = calculateStreamPoints(platform, isMain);
+
     await ctx.db.insert("streamCounts", {
       roomId: args.roomId,
       phoneNumber: args.phoneNumber,
@@ -424,6 +457,7 @@ export const tryCountStream = mutation({
       trackArtist: session.trackArtist,
       trackKey: session.trackKey,
       platform,
+      isMainSong: isMain,
       countedAt: now,
       listenDuration: listenedSeconds,
     });
@@ -431,38 +465,74 @@ export const tryCountStream = mutation({
     // Mark session as counted
     await ctx.db.patch(session._id, { counted: true });
 
-    // 6. Check if we crossed a 100-stream milestone
-    const totalStreams = await ctx.db
+    // 5b. Update user's totalPoints
+    const userStreams = await ctx.db
       .query("streamCounts")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
       .collect();
 
-    const totalCount = totalStreams.filter((s) =>
-      isMainEventSong(s.trackName, s.trackArtist)
-    ).length;
-    if (totalCount > 0 && totalCount % 100 === 0) {
-      // Dedup: don't fire if a stream_milestone event was fired in the last 30s
-      const recentMilestone = await ctx.db
-        .query("events")
-        .withIndex("by_room_type", (q) =>
-          q.eq("roomId", args.roomId).eq("type", "stream_milestone")
-        )
-        .order("desc")
-        .first();
+    let totalPoints = 0;
+    for (const s of userStreams) {
+      const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+      totalPoints += calculateStreamPoints((s.platform as string) || "other", sIsMain);
+    }
 
-      if (!recentMilestone || now - recentMilestone.createdAt > 30000) {
-        await ctx.db.insert("events", {
-          roomId: args.roomId,
-          type: "stream_milestone",
-          data: { totalStreams: totalCount },
-          createdAt: now,
-        });
+    // Add check-in points
+    const participant = await ctx.db
+      .query("participants")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
+    if (participant) {
+      // Count check-in points: each check-in = 2 points
+      // We track this based on offlineTracking being true (they checked in at least once)
+      const checkInPoints = participant.offlineTracking ? POINTS_CHECK_IN : 0;
+      await ctx.db.patch(participant._id, {
+        totalPoints: totalPoints + checkInPoints,
+      });
+    }
+
+    // 6. Check if we crossed a 100-stream milestone (main song streams only for room milestones)
+    if (isMain) {
+      const totalRoomStreams = await ctx.db
+        .query("streamCounts")
+        .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+        .collect();
+
+      const totalMainCount = totalRoomStreams.filter((s) =>
+        s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist)
+      ).length;
+
+      if (totalMainCount > 0 && totalMainCount % 100 === 0) {
+        // Dedup: don't fire if a stream_milestone event was fired in the last 30s
+        const recentMilestone = await ctx.db
+          .query("events")
+          .withIndex("by_room_type", (q) =>
+            q.eq("roomId", args.roomId).eq("type", "stream_milestone")
+          )
+          .order("desc")
+          .first();
+
+        if (!recentMilestone || now - recentMilestone.createdAt > 30000) {
+          await ctx.db.insert("events", {
+            roomId: args.roomId,
+            type: "stream_milestone",
+            data: { totalStreams: totalMainCount },
+            createdAt: now,
+          });
+        }
       }
     }
 
     return {
       counted: true,
       platform,
+      isMainSong: isMain,
+      points,
       trackName: session.trackName,
       trackArtist: session.trackArtist,
       listenDuration: listenedSeconds,
@@ -474,6 +544,7 @@ export const tryCountStream = mutation({
 
 /**
  * Get stream counts for a room split by platform.
+ * Only main song streams count toward room cumulative tracking.
  */
 export const getRoomStreamsByPlatform = query({
   args: { roomId: v.string() },
@@ -489,14 +560,15 @@ export const getRoomStreamsByPlatform = query({
     let totalBlackpink = 0;
     let totalOther = 0;
     for (const s of streams) {
-      const isBlackpink =
-        cleanForMatch(s.trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist);
-      if (isBlackpink) {
+      const isBpOrSolo = isBlackpinkOrSolo(s.trackArtist);
+      if (isBpOrSolo) {
         totalBlackpink++;
       } else {
         totalOther++;
       }
-      if (!isMainEventSong(s.trackName, s.trackArtist)) continue;
+      // Only main song for room cumulative counts
+      const isMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+      if (!isMain) continue;
       if ((s.platform || "other") === "youtube") {
         youtube++;
       } else if ((s.platform || "other") === "spotify") {
@@ -529,7 +601,7 @@ export const getRoomStreamCounts = query({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
     const streams = allStreams.filter((s) =>
-      isMainEventSong(s.trackName, s.trackArtist)
+      s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist)
     );
 
     const trackMap: Record<
@@ -588,7 +660,7 @@ export const getUserStreamCounts = query({
       )
       .collect();
     const mainStreams = allStreams.filter((s) =>
-      isMainEventSong(s.trackName, s.trackArtist)
+      s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist)
     );
 
     let mainYoutube = 0;
@@ -596,15 +668,17 @@ export const getUserStreamCounts = query({
     let mainOther = 0;
     let totalBlackpink = 0;
     let totalOther = 0;
+    let totalPoints = 0;
 
     for (const s of allStreams) {
-      const isBlackpink =
-        cleanForMatch(s.trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist);
-      if (isBlackpink) {
+      const isBpOrSolo = isBlackpinkOrSolo(s.trackArtist);
+      if (isBpOrSolo) {
         totalBlackpink++;
       } else {
         totalOther++;
       }
+      const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+      totalPoints += calculateStreamPoints((s.platform as string) || "other", sIsMain);
     }
 
     for (const s of mainStreams) {
@@ -625,6 +699,7 @@ export const getUserStreamCounts = query({
       mainOther,
       totalBlackpink,
       totalOther,
+      totalPoints,
       streams: mainStreams.map((s) => ({
         trackName: s.trackName,
         trackArtist: s.trackArtist,
@@ -633,5 +708,72 @@ export const getUserStreamCounts = query({
         listenDuration: s.listenDuration,
       })),
     };
+  },
+});
+
+/**
+ * Get user points for all participants in a room.
+ * Used by the leaderboard to rank by points.
+ */
+export const getUserPoints = query({
+  args: {
+    roomId: v.string(),
+    phoneNumber: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const streams = await ctx.db
+      .query("streamCounts")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .collect();
+
+    let points = 0;
+    for (const s of streams) {
+      const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+      points += calculateStreamPoints((s.platform as string) || "other", sIsMain);
+    }
+
+    return { points };
+  },
+});
+
+/**
+ * Recalculate and update points for a user (called on check-in).
+ */
+export const recalculatePoints = mutation({
+  args: {
+    roomId: v.string(),
+    phoneNumber: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const streams = await ctx.db
+      .query("streamCounts")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .collect();
+
+    let streamPoints = 0;
+    for (const s of streams) {
+      const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+      streamPoints += calculateStreamPoints((s.platform as string) || "other", sIsMain);
+    }
+
+    const participant = await ctx.db
+      .query("participants")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
+    if (participant) {
+      const checkInPoints = participant.offlineTracking ? POINTS_CHECK_IN : 0;
+      await ctx.db.patch(participant._id, {
+        totalPoints: streamPoints + checkInPoints,
+      });
+    }
+
+    return { totalPoints: streamPoints + (participant?.offlineTracking ? POINTS_CHECK_IN : 0) };
   },
 });

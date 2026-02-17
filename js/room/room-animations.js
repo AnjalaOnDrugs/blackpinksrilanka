@@ -50,6 +50,65 @@ ROOM.Animations = {
       '<strong>' + this.esc(data.username) + '</strong> climbed to #' + data.newRank + '!');
   },
 
+  // ========== SURPASS NOTIFICATION IN CHAT ==========
+  // Shows a notification in the chat panel when someone surpasses another user
+  // Top 3 surpasses get a special premium notification
+  showSurpassNotification: function (data) {
+    var bubbleLayer = document.getElementById('chatBubbleLayer');
+    if (!bubbleLayer) return;
+
+    var isTop3 = data.newRank <= 3;
+
+    var notif = document.createElement('div');
+    notif.className = 'room-surpass-notif' + (isTop3 ? ' room-surpass-notif--top3' : '');
+
+    if (isTop3) {
+      // Special premium notification for top 3 surpasses
+      var crownEmoji = data.newRank === 1 ? '👑' : data.newRank === 2 ? '🥈' : '🥉';
+      var rankLabel = data.newRank === 1 ? '1st Place!' : data.newRank === 2 ? '2nd Place!' : '3rd Place!';
+
+      notif.innerHTML =
+        '<div class="room-surpass-notif-glow"></div>' +
+        '<div class="room-surpass-notif-crown">' + crownEmoji + '</div>' +
+        '<div class="room-surpass-notif-content">' +
+          '<div class="room-surpass-notif-title">RANK UP</div>' +
+          '<div class="room-surpass-notif-names">' +
+            '<strong>' + this.esc(data.username) + '</strong>' +
+            '<span class="room-surpass-notif-arrow">→</span>' +
+            '<span class="room-surpass-notif-rank">' + rankLabel + '</span>' +
+          '</div>' +
+          '<div class="room-surpass-notif-overtaken">passed ' + this.esc(data.overtakenUsername) + '</div>' +
+        '</div>' +
+        '<div class="room-surpass-notif-sparkles">' +
+          '<span class="room-surpass-sparkle room-surpass-sparkle--1">✦</span>' +
+          '<span class="room-surpass-sparkle room-surpass-sparkle--2">✦</span>' +
+          '<span class="room-surpass-sparkle room-surpass-sparkle--3">✦</span>' +
+          '<span class="room-surpass-sparkle room-surpass-sparkle--4">✦</span>' +
+        '</div>';
+    } else {
+      // Normal surpass notification
+      notif.innerHTML =
+        '<div class="room-surpass-notif-content">' +
+          '<span class="room-surpass-notif-icon">⚡</span>' +
+          '<span><strong>' + this.esc(data.username) + '</strong> surpassed ' +
+          this.esc(data.overtakenUsername) + ' → #' + data.newRank + '</span>' +
+        '</div>';
+    }
+
+    bubbleLayer.appendChild(notif);
+
+    // Remove after animation
+    var duration = isTop3 ? 6000 : 4000;
+    setTimeout(function () {
+      if (notif.parentNode) {
+        notif.classList.add('room-surpass-notif--exit');
+        setTimeout(function () {
+          if (notif.parentNode) notif.remove();
+        }, 500);
+      }
+    }, duration);
+  },
+
   // ========== MILESTONE ANIMATION ==========
   playMilestone: function (data) {
     var self = this;
@@ -310,11 +369,13 @@ ROOM.Animations = {
       }, 1000);
     }
 
-    // Show a subtle toast
+    // Show a subtle toast with points info
+    var ptsLabel = data.points ? ' <span class="room-toast-points">+' + data.points + ' pts</span>' : '';
     this.showToast('stream', '▶',
       '<strong>' + this.esc(data.username) + '</strong> +1 stream — ' +
       '<strong>' + this.esc(data.track) + '</strong>' +
       (data.artist ? ' by ' + this.esc(data.artist) : '') +
+      ptsLabel +
       ' <span class="room-toast-duration">(' + data.duration + 's)</span>');
   },
 

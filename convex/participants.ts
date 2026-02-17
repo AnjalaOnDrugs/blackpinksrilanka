@@ -10,8 +10,8 @@ export const listByRoom = query({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    // Sort by totalMinutes descending
-    participants.sort((a, b) => b.totalMinutes - a.totalMinutes);
+    // Sort by totalPoints descending (fallback to totalMinutes for legacy)
+    participants.sort((a, b) => (b.totalPoints ?? 0) - (a.totalPoints ?? 0) || b.totalMinutes - a.totalMinutes);
 
     return participants.map((p) => ({
       id: p.phoneNumber,
@@ -22,6 +22,7 @@ export const listByRoom = query({
         isOnline: p.isOnline,
         lastfmUsername: p.lastfmUsername,
         totalMinutes: p.totalMinutes,
+        totalPoints: p.totalPoints ?? 0,
         currentRank: p.currentRank,
         previousRank: p.previousRank,
         milestones: p.milestones,

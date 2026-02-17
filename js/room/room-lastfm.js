@@ -572,7 +572,7 @@ ROOM.LastFM = {
 
       if (result.counted) {
         console.log('[Stream] Counted stream for:', result.trackName, '—', result.trackArtist,
-          '(listened', result.listenDuration + 's)');
+          '(listened', result.listenDuration + 's, main:', result.isMainSong, ', +' + (result.points || 0) + ' pts)');
 
         // Fire a stream_counted event for UI feedback
         if (ROOM.Firebase && ROOM.Firebase.fireEvent) {
@@ -580,7 +580,9 @@ ROOM.LastFM = {
             username: ROOM.currentUser.username,
             track: result.trackName,
             artist: result.trackArtist,
-            duration: result.listenDuration
+            duration: result.listenDuration,
+            isMainSong: result.isMainSong,
+            points: result.points || 0
           });
         }
       }
