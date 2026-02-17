@@ -213,6 +213,8 @@ ROOM.LastFM = {
   // Track which offline users this client is responsible for polling
   _offlinePollAssignments: {},
   _offlinePollInterval: null,
+  // Track last known track per offline user to avoid redundant startListening calls
+  _offlineLastTrack: {},
 
   init: function () {
     this.apiKey = CONFIG.lastfmApiKey;
@@ -375,7 +377,12 @@ ROOM.LastFM = {
       // Check if check-in has expired
       var timeSinceCheckIn = now - p.data.lastCheckIn;
       if (timeSinceCheckIn > checkInExpiry) {
-        // Check-in expired — disable offline tracking
+        // Check-in expired — disable offline tracking and clean up stream session
+        delete self._offlineLastTrack[p.id];
+        ConvexService.mutation('streams:stopListening', {
+          roomId: ROOM.Firebase.roomId,
+          phoneNumber: p.id
+        }).catch(function () {});
         ConvexService.mutation('participants:disableOfflineTracking', {
           roomId: ROOM.Firebase.roomId,
           phoneNumber: p.id
@@ -384,20 +391,74 @@ ROOM.LastFM = {
       }
 
       // Poll this offline user's Last.fm
+      var userId = p.id;
       self.getUserRecentTracks(p.data.lastfmUsername).then(function (trackData) {
         if (!trackData) {
-          return ROOM.Firebase.updateParticipantTrack(p.id, null);
+          // No track — stop any active stream session
+          if (self._offlineLastTrack[userId]) {
+            delete self._offlineLastTrack[userId];
+            ConvexService.mutation('streams:stopListening', {
+              roomId: ROOM.Firebase.roomId,
+              phoneNumber: userId
+            }).catch(function () {});
+          }
+          return ROOM.Firebase.updateParticipantTrack(userId, null);
         }
 
         if (self.isLikelyNonMusic(trackData.name, trackData.artist)) {
-          return ROOM.Firebase.updateParticipantTrack(p.id, null);
+          if (self._offlineLastTrack[userId]) {
+            delete self._offlineLastTrack[userId];
+            ConvexService.mutation('streams:stopListening', {
+              roomId: ROOM.Firebase.roomId,
+              phoneNumber: userId
+            }).catch(function () {});
+          }
+          return ROOM.Firebase.updateParticipantTrack(userId, null);
         }
 
         return self.validateMusicTrack(trackData.name, trackData.artist).then(function (isMusic) {
           if (!isMusic) {
-            return ROOM.Firebase.updateParticipantTrack(p.id, null);
+            if (self._offlineLastTrack[userId]) {
+              delete self._offlineLastTrack[userId];
+              ConvexService.mutation('streams:stopListening', {
+                roomId: ROOM.Firebase.roomId,
+                phoneNumber: userId
+              }).catch(function () {});
+            }
+            return ROOM.Firebase.updateParticipantTrack(userId, null);
           }
-          return ROOM.Firebase.updateParticipantTrack(p.id, trackData);
+
+          // Update track display
+          ROOM.Firebase.updateParticipantTrack(userId, trackData);
+
+          // Manage stream session for this offline-tracked user
+          if (trackData.nowPlaying) {
+            var offlineTrackId = trackData.name + '|' + trackData.artist;
+            if (self._offlineLastTrack[userId] !== offlineTrackId) {
+              self._offlineLastTrack[userId] = offlineTrackId;
+              ConvexService.mutation('streams:startListening', {
+                roomId: ROOM.Firebase.roomId,
+                phoneNumber: userId,
+                trackName: trackData.name,
+                trackArtist: trackData.artist,
+                trackAlbumArt: trackData.albumArt || undefined
+              }).catch(function () {});
+            }
+            // Try counting the stream (idempotent — won't double-count)
+            ConvexService.mutation('streams:tryCountStream', {
+              roomId: ROOM.Firebase.roomId,
+              phoneNumber: userId
+            }).catch(function () {});
+          } else {
+            // Not currently playing — end session
+            if (self._offlineLastTrack[userId]) {
+              delete self._offlineLastTrack[userId];
+              ConvexService.mutation('streams:stopListening', {
+                roomId: ROOM.Firebase.roomId,
+                phoneNumber: userId
+              }).catch(function () {});
+            }
+          }
         });
       }).catch(function () {
         // Silently handle errors

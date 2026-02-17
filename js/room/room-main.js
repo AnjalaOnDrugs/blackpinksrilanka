@@ -372,6 +372,11 @@ function setupCleanup() {
         ROOM.Firebase.heartbeat(ROOM.currentUser.phoneNumber);
       }
     } else if (document.visibilityState === 'visible') {
+      // Immediately poll and check streams to catch up after mobile throttling
+      if (ROOM.LastFM) {
+        ROOM.LastFM.pollCurrentUser();
+        ROOM.LastFM._checkStreamCount();
+      }
       // When user returns, check if they need to check in
       if (ROOM.currentUser && ROOM.LastFM && !ROOM.LastFM.isCheckedIn()) {
         // Only show reminder if the check-in button is visible (not already checked in)
