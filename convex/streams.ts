@@ -34,12 +34,16 @@ const SP_INTERLEAVE_REQUIRED = 1; // 1 different song in between
 
 // ── Shared ──
 const MAX_RECENT_TRACKS = 5; // how many track keys to keep in history
+const MAIN_EVENT_SONG = {
+  title: "kill this love",
+  artist: "blackpink",
+};
 
 // ── Helpers ──
 
-/** Normalize track key for consistent matching */
-function normalizeTrackKey(name: string, artist: string): string {
-  let s = (name || "").toLowerCase();
+/** Clean text for consistent matching */
+function cleanForMatch(value: string): string {
+  let s = (value || "").toLowerCase();
   s = s.replace(
     /[\(\[](?:official\s*(?:music\s*)?(?:video|audio)|lyrics?|visuali[sz]er|(?:feat|ft)\.?\s*[^\)\]]*)\s*[\)\]]/gi,
     ""
@@ -52,14 +56,44 @@ function normalizeTrackKey(name: string, artist: string): string {
   s = s.replace(/\s+(?:feat|ft)\.?\s+.*/gi, "");
   s = s.replace(/[^\w\s]/g, " ");
   s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
 
-  const a = (artist || "")
-    .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+/** Extract core song title and strip artist prefixes like "BLACKPINK - Kill This Love" */
+function extractCoreSongTitle(name: string, artist: string): string {
+  let cleanName = cleanForMatch(name);
+  const cleanArtist = cleanForMatch(artist);
 
+  if (cleanArtist && cleanName.indexOf(cleanArtist + " ") === 0) {
+    cleanName = cleanName.substring(cleanArtist.length).trim();
+  }
+
+  const rawLower = (name || "").toLowerCase();
+  const dashIdx = rawLower.indexOf(" - ");
+  if (dashIdx > 0) {
+    const beforeDash = cleanForMatch(rawLower.substring(0, dashIdx));
+    if (beforeDash === cleanArtist || cleanArtist.indexOf(beforeDash) === 0) {
+      cleanName = cleanForMatch(rawLower.substring(dashIdx + 3));
+    }
+  }
+
+  return cleanName;
+}
+
+/** Normalize track key for consistent matching */
+function normalizeTrackKey(name: string, artist: string): string {
+  const a = cleanForMatch(artist);
+  const s = extractCoreSongTitle(name, artist);
   return a + "|" + s;
+}
+
+/** Only the event main song should be stream-countable */
+function isMainEventSong(trackName: string, trackArtist: string): boolean {
+  return (
+    cleanForMatch(trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist) &&
+    extractCoreSongTitle(trackName, trackArtist) ===
+      cleanForMatch(MAIN_EVENT_SONG.title)
+  );
 }
 
 /** Detect platform from raw track name */
@@ -221,6 +255,16 @@ export const tryCountStream = mutation({
       return { counted: false, reason: "already_counted" };
     }
 
+    // Count streams only for the event main song.
+    if (!isMainEventSong(session.trackName, session.trackArtist)) {
+      return {
+        counted: false,
+        reason: "not_main_song",
+        requiredTrack: MAIN_EVENT_SONG.title,
+        requiredArtist: MAIN_EVENT_SONG.artist,
+      };
+    }
+
     const platform = (session.platform as "youtube" | "spotify") || "spotify";
     const listenedMs = now - session.startedAt;
     const listenedSeconds = Math.floor(listenedMs / 1000);
@@ -238,7 +282,10 @@ export const tryCountStream = mutation({
       .collect();
 
     const todayPlatformCount = todayAllStreams.filter(
-      (s) => s.countedAt >= dayStartMs && (s.platform || "spotify") === platform
+      (s) =>
+        s.countedAt >= dayStartMs &&
+        (s.platform || "spotify") === platform &&
+        isMainEventSong(s.trackName, s.trackArtist)
     ).length;
 
     // 3. Get most recent stream of this exact track (for cooldown)
@@ -376,7 +423,9 @@ export const tryCountStream = mutation({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const totalCount = totalStreams.length;
+    const totalCount = totalStreams.filter((s) =>
+      isMainEventSong(s.trackName, s.trackArtist)
+    ).length;
     if (totalCount > 0 && totalCount % 100 === 0) {
       // Dedup: don't fire if a stream_milestone event was fired in the last 30s
       const recentMilestone = await ctx.db
@@ -423,6 +472,7 @@ export const getRoomStreamsByPlatform = query({
     let youtube = 0;
     let spotify = 0;
     for (const s of streams) {
+      if (!isMainEventSong(s.trackName, s.trackArtist)) continue;
       if ((s.platform || "spotify") === "youtube") {
         youtube++;
       } else {
@@ -430,7 +480,7 @@ export const getRoomStreamsByPlatform = query({
       }
     }
 
-    return { youtube, spotify, total: streams.length };
+    return { youtube, spotify, total: youtube + spotify };
   },
 });
 
@@ -440,10 +490,13 @@ export const getRoomStreamsByPlatform = query({
 export const getRoomStreamCounts = query({
   args: { roomId: v.string() },
   handler: async (ctx, args) => {
-    const streams = await ctx.db
+    const allStreams = await ctx.db
       .query("streamCounts")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
+    const streams = allStreams.filter((s) =>
+      isMainEventSong(s.trackName, s.trackArtist)
+    );
 
     const trackMap: Record<
       string,
@@ -494,12 +547,15 @@ export const getUserStreamCounts = query({
     phoneNumber: v.string(),
   },
   handler: async (ctx, args) => {
-    const streams = await ctx.db
+    const allStreams = await ctx.db
       .query("streamCounts")
       .withIndex("by_room_phone", (q) =>
         q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
       )
       .collect();
+    const streams = allStreams.filter((s) =>
+      isMainEventSong(s.trackName, s.trackArtist)
+    );
 
     return {
       totalStreams: streams.length,
