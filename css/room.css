@@ -3171,11 +3171,7 @@
   }
 
   .room-chat-log-messages {
-    max-height: 30vh;
-  }
-
-  .room-chat-log {
-    margin-bottom: 70px;
+    max-height: calc(30vh - 70px);
   }
 
   .room-chat-bubble {
