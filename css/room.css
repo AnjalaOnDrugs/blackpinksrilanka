@@ -3174,6 +3174,10 @@
     max-height: 30vh;
   }
 
+  .room-chat-log {
+    margin-bottom: 70px;
+  }
+
   .room-chat-bubble {
     max-width: 220px;
     padding: 8px 12px;
