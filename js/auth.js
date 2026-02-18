@@ -30,9 +30,11 @@ async function checkAuthState() {
  * @param {string} username - User's chosen username
  * @param {string} password - User's chosen password
  * @param {string} [district] - User's district (optional)
+ * @param {number|null} [lat] - Precise latitude (optional, only if user granted permission)
+ * @param {number|null} [lng] - Precise longitude (optional)
  * @returns {Promise<Object>} User credential
  */
-async function signUpWithPhone(phoneNumber, username, password, district) {
+async function signUpWithPhone(phoneNumber, username, password, district, lat, lng) {
   try {
     // Construct email using phone number
     const email = `${phoneNumber}@bpsl.local`;
@@ -40,13 +42,17 @@ async function signUpWithPhone(phoneNumber, username, password, district) {
     // Create Firebase Auth account
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 
-    // Update Convex user record with username and district
+    // Update Convex user record with username, district, and precise coords
     var regArgs = {
       phoneNumber: phoneNumber,
       username: username
     };
     if (district) {
       regArgs.district = district;
+    }
+    if (lat != null && lng != null) {
+      regArgs.lat = lat;
+      regArgs.lng = lng;
     }
     await ConvexService.mutation('users:completeRegistration', regArgs);
 
@@ -130,7 +136,9 @@ async function getCurrentUserData() {
       avatarColor: userDoc.avatarColor,
       authStage: userDoc.authStage,
       registeredAt: userDoc.registeredAt,
-      district: userDoc.district || null
+      district: userDoc.district || null,
+      lat: userDoc.lat ?? null,
+      lng: userDoc.lng ?? null
     };
   } catch (error) {
     console.error('Error getting user data:', error);

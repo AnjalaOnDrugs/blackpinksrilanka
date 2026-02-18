@@ -187,24 +187,46 @@
             </div>
           </div>
 
-          <div class="form-group" id="districtGroup">
+          <!-- PHASE 1: Location permission prompt -->
+          <div class="auth-location-prompt" id="locationPromptCard">
+            <div class="auth-location-icon">📍</div>
+            <div class="auth-location-title">Location for charts</div>
+            <div class="auth-location-desc">
+              We'd love to show your streams on a precise heat map of Sri Lanka.<br>
+              Your exact location is never shown to other users.
+            </div>
+            <div class="auth-location-actions">
+              <button type="button" class="auth-btn-detect--allow" id="allowLocationBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                Allow location
+              </button>
+              <button type="button" class="auth-btn-detect--skip" id="skipLocationBtn">
+                I'd rather not
+              </button>
+            </div>
+          </div>
+
+          <!-- PHASE 2: District dropdown (shown after location decision) -->
+          <div class="form-group" id="districtGroup" style="display:none;">
             <label for="district">Your District</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                 <circle cx="12" cy="10" r="3"/>
               </svg>
-              <select class="form-control" id="district" required>
+              <select class="form-control" id="district">
                 <option value="">Select your district...</option>
               </select>
             </div>
-            <button type="button" class="btn auth-btn-detect" id="detectLocationBtn">
+            <button type="button" class="btn auth-btn-detect" id="detectLocationBtn" style="display:none;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="3 11 22 2 13 21 11 13 3 11"/>
               </svg>
               <span>Detect my location</span>
             </button>
-            <small class="auth-helper-text" id="districtHelper">We use this to show streams on a Sri Lanka heat map</small>
+            <small class="auth-helper-text" id="districtHelper">We use this to show streams on the district heat map</small>
           </div>
 
           <button type="submit" class="btn auth-btn auth-btn-primary" id="accountSubmitBtn">

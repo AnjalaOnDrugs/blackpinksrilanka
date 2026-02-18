@@ -36,6 +36,36 @@ ROOM.HeatMap = {
 
     this.setupInteraction();
     this.subscribe(roomId);
+    this.setupTabs(roomId);
+  },
+
+  setupTabs: function (roomId) {
+    var self = this;
+    var tabDistricts = document.getElementById('heatmapTabDistricts');
+    var tabPrecise = document.getElementById('heatmapTabPrecise');
+    var contentDistricts = document.getElementById('heatmapContentDistricts');
+    var contentPrecise = document.getElementById('heatmapContentPrecise');
+
+    if (!tabDistricts || !tabPrecise) return;
+
+    tabDistricts.addEventListener('click', function () {
+      tabDistricts.classList.add('room-heatmap-tab--active');
+      tabPrecise.classList.remove('room-heatmap-tab--active');
+      if (contentDistricts) contentDistricts.style.display = '';
+      if (contentPrecise) contentPrecise.style.display = 'none';
+    });
+
+    tabPrecise.addEventListener('click', function () {
+      tabPrecise.classList.add('room-heatmap-tab--active');
+      tabDistricts.classList.remove('room-heatmap-tab--active');
+      if (contentPrecise) contentPrecise.style.display = '';
+      if (contentDistricts) contentDistricts.style.display = 'none';
+
+      // Lazy-init Deck.gl on first click
+      if (!ROOM.HeatMap.Deck._initialized) {
+        ROOM.HeatMap.Deck.init(roomId, 'heatMapDeckCanvas');
+      }
+    });
   },
 
   subscribe: function (roomId) {
@@ -235,5 +265,205 @@ ROOM.HeatMap = {
       this.watchCancel = null;
     }
     this.hideTooltip();
+    ROOM.HeatMap.Deck.destroy();
+  }
+};
+
+// ─────────────────────────────────────────────
+// ROOM.HeatMap.Deck  –  Precise Deck.gl map
+// ─────────────────────────────────────────────
+ROOM.HeatMap.Deck = {
+  _initialized: false,
+  _deckCompact: null,
+  _deckFull: null,
+  _watchCancel: null,
+  _data: [],           // [{ lat, lng, weight }]
+  _radiusPixels: 30,
+
+  // Pink color range (low → high)
+  COLOR_RANGE: [
+    [247, 166, 185, 100],
+    [240, 100, 150, 160],
+    [220,  50, 120, 200],
+    [200,   0, 100, 230],
+    [255,   0, 160, 255],
+    [255, 100, 255, 255]
+  ],
+
+  // Sri Lanka center
+  INITIAL_VIEW: {
+    longitude: 80.7718,
+    latitude:   7.8731,
+    zoom: 7,
+    pitch: 0,
+    bearing: 0
+  },
+
+  init: function (roomId, compactContainerId) {
+    this._initialized = true;
+    this._initCompact(compactContainerId);
+    this._subscribe(roomId);
+    this._setupControls();
+  },
+
+  _initCompact: function (containerId) {
+    var self = this;
+    var container = document.getElementById(containerId);
+    if (!container || typeof deck === 'undefined') return;
+
+    this._deckCompact = new deck.DeckGL({
+      container: containerId,
+      mapLib: maplibregl,
+      mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      initialViewState: this.INITIAL_VIEW,
+      controller: true,
+      layers: []
+    });
+  },
+
+  _subscribe: function (roomId) {
+    var self = this;
+    this._watchCancel = ConvexService.watch(
+      'streams:getPreciseHeatmapData',
+      { roomId: roomId },
+      function (data) {
+        if (data) {
+          self._data = data;
+          self._render();
+        }
+      }
+    );
+  },
+
+  _buildLayer: function () {
+    var self = this;
+    if (typeof deck === 'undefined') return null;
+    return new deck.HeatmapLayer({
+      id: 'precise-heatmap',
+      data: self._data,
+      getPosition: function (d) { return [d.lng, d.lat]; },
+      getWeight: function (d) { return d.weight || 1; },
+      radiusPixels: self._radiusPixels,
+      intensity: 1.2,
+      threshold: 0.03,
+      opacity: 0.85,
+      colorRange: self.COLOR_RANGE,
+      aggregation: 'SUM'
+    });
+  },
+
+  _render: function () {
+    var layer = this._buildLayer();
+    if (!layer) return;
+
+    if (this._deckCompact) {
+      this._deckCompact.setProps({ layers: [layer] });
+    }
+    if (this._deckFull) {
+      // Build a fresh layer instance for the full-screen instance
+      this._deckFull.setProps({ layers: [this._buildLayer()] });
+    }
+
+    // Update hint text
+    var hint = document.getElementById('deckHintText');
+    if (hint) {
+      var count = this._data.length;
+      hint.textContent = count > 0
+        ? count + ' user' + (count !== 1 ? 's' : '') + ' with precise location'
+        : 'Only users who shared their precise location appear here.';
+    }
+  },
+
+  _setupControls: function () {
+    var self = this;
+
+    // Compact panel radius slider
+    var slider = document.getElementById('deckRadiusSlider');
+    var sliderVal = document.getElementById('deckRadiusVal');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        self._radiusPixels = Number(this.value);
+        if (sliderVal) sliderVal.textContent = self._radiusPixels + 'px';
+        self._render();
+        // Keep fullscreen slider in sync
+        var fullSlider = document.getElementById('deckRadiusSliderFull');
+        if (fullSlider) fullSlider.value = self._radiusPixels;
+        var fullVal = document.getElementById('deckRadiusValFull');
+        if (fullVal) fullVal.textContent = self._radiusPixels + 'px';
+      });
+    }
+
+    // Fullscreen open button
+    var fsBtn = document.getElementById('deckFullscreenBtn');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', function () {
+        self._openFullscreen();
+      });
+    }
+
+    // Fullscreen close button
+    var closeBtn = document.getElementById('deckFullscreenClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        self._closeFullscreen();
+      });
+    }
+
+    // Fullscreen radius slider
+    var fullSlider = document.getElementById('deckRadiusSliderFull');
+    var fullVal = document.getElementById('deckRadiusValFull');
+    if (fullSlider) {
+      fullSlider.addEventListener('input', function () {
+        self._radiusPixels = Number(this.value);
+        if (fullVal) fullVal.textContent = self._radiusPixels + 'px';
+        self._render();
+        // Sync compact slider
+        var cSlider = document.getElementById('deckRadiusSlider');
+        if (cSlider) cSlider.value = self._radiusPixels;
+        var cVal = document.getElementById('deckRadiusVal');
+        if (cVal) cVal.textContent = self._radiusPixels + 'px';
+      });
+    }
+  },
+
+  _openFullscreen: function () {
+    var modal = document.getElementById('deckFullscreenModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    // Lazy-create fullscreen DeckGL instance
+    if (!this._deckFull && typeof deck !== 'undefined') {
+      this._deckFull = new deck.DeckGL({
+        container: 'heatMapDeckCanvasFull',
+        mapLib: maplibregl,
+        mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        initialViewState: this.INITIAL_VIEW,
+        controller: true,
+        layers: []
+      });
+      // Render current data into the new instance
+      this._render();
+    }
+  },
+
+  _closeFullscreen: function () {
+    var modal = document.getElementById('deckFullscreenModal');
+    if (modal) modal.style.display = 'none';
+  },
+
+  destroy: function () {
+    if (this._watchCancel) {
+      this._watchCancel();
+      this._watchCancel = null;
+    }
+    if (this._deckCompact) {
+      this._deckCompact.finalize();
+      this._deckCompact = null;
+    }
+    if (this._deckFull) {
+      this._deckFull.finalize();
+      this._deckFull = null;
+    }
+    this._initialized = false;
   }
 };

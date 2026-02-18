@@ -826,3 +826,45 @@ export const getStreamsByDistrict = query({
     }));
   },
 });
+
+/**
+ * Get per-user stream counts with precise lat/lng for the Deck.gl heat map.
+ * Only returns entries for users who have granted location permission (lat/lng stored).
+ * Weight = total stream count for that user in the room.
+ */
+export const getPreciseHeatmapData = query({
+  args: { roomId: v.string() },
+  handler: async (ctx, args) => {
+    const streams = await ctx.db
+      .query("streamCounts")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    // Aggregate stream count per user
+    const userStreamCounts: Record<string, number> = {};
+    for (const s of streams) {
+      userStreamCounts[s.phoneNumber] = (userStreamCounts[s.phoneNumber] || 0) + 1;
+    }
+
+    // Look up lat/lng for each user; skip those without coordinates
+    const result: Array<{ lat: number; lng: number; weight: number; phoneNumber: string }> = [];
+
+    for (const phoneNumber of Object.keys(userStreamCounts)) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
+        .first();
+
+      if (user?.lat != null && user?.lng != null) {
+        result.push({
+          lat: user.lat,
+          lng: user.lng,
+          weight: userStreamCounts[phoneNumber],
+          phoneNumber,
+        });
+      }
+    }
+
+    return result;
+  },
+});

@@ -115,6 +115,8 @@ export const completeRegistration = mutation({
     phoneNumber: v.string(),
     username: v.string(),
     district: v.optional(v.string()),
+    lat: v.optional(v.number()),
+    lng: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -128,6 +130,8 @@ export const completeRegistration = mutation({
         registeredAt: Date.now(),
         authStage: 3,
         ...(args.district ? { district: args.district } : {}),
+        ...(args.lat != null ? { lat: args.lat } : {}),
+        ...(args.lng != null ? { lng: args.lng } : {}),
       });
     }
   },
@@ -148,6 +152,28 @@ export const updateDistrict = mutation({
     if (user) {
       await ctx.db.patch(user._id, {
         district: args.district,
+      });
+    }
+  },
+});
+
+// Update precise coordinates (opt-in for Deck.gl heat map)
+export const updateCoordinates = mutation({
+  args: {
+    phoneNumber: v.string(),
+    lat: v.number(),
+    lng: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+
+    if (user) {
+      await ctx.db.patch(user._id, {
+        lat: args.lat,
+        lng: args.lng,
       });
     }
   },

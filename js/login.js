@@ -8,6 +8,8 @@ let currentPhone = '';
 let currentStage = 'login';
 let otpCheckInterval = null;
 let detectedUsername = ''; // Store username when account is detected
+let capturedLat = null;   // Precise latitude (if user grants location permission)
+let capturedLng = null;   // Precise longitude (if user grants location permission)
 
 // DOM Elements
 const messageContainer = document.getElementById('messageContainer');
@@ -38,44 +40,73 @@ const showSignupLink = document.getElementById('showSignupLink');
 // Populate district dropdown
 populateDistrictDropdown('district');
 
-// Detect location button handler
-var detectLocationBtn = document.getElementById('detectLocationBtn');
-if (detectLocationBtn) {
-  detectLocationBtn.addEventListener('click', function () {
-    var btn = this;
-    var helper = document.getElementById('districtHelper');
-    var districtSelect = document.getElementById('district');
+// ── Two-phase location prompt ──
 
+function _showDistrictGroup(helperMsg) {
+  var promptCard = document.getElementById('locationPromptCard');
+  var districtGroup = document.getElementById('districtGroup');
+  if (promptCard) promptCard.style.display = 'none';
+  if (districtGroup) districtGroup.style.display = '';
+  if (helperMsg) {
+    var helper = document.getElementById('districtHelper');
+    if (helper) { helper.textContent = helperMsg; helper.style.color = '#25D366'; }
+  }
+}
+
+// "Allow location" button — try geolocation, store raw coords AND detect district
+var allowLocationBtn = document.getElementById('allowLocationBtn');
+if (allowLocationBtn) {
+  allowLocationBtn.addEventListener('click', function () {
+    var btn = this;
     btn.disabled = true;
     btn.innerHTML = '<span class="auth-loading"></span>Detecting...';
 
     if (!navigator.geolocation) {
-      helper.textContent = 'Geolocation not supported. Please select manually.';
-      helper.style.color = '#ff6b7a';
-      btn.style.display = 'none';
+      // Browser doesn't support — fall through to manual district selection
+      _showDistrictGroup('Geolocation not supported. Please select your district manually.');
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       function (position) {
-        var district = findDistrictByCoords(position.coords.latitude, position.coords.longitude);
+        capturedLat = position.coords.latitude;
+        capturedLng = position.coords.longitude;
+
+        var district = findDistrictByCoords(capturedLat, capturedLng);
+        _showDistrictGroup(
+          district
+            ? 'Location captured \u2714 Detected: ' + district + '. You can change it if needed.'
+            : 'Location captured \u2714 Could not detect district \u2014 please select manually.'
+        );
+
         if (district) {
-          districtSelect.value = district;
-          helper.textContent = 'Detected: ' + district + '. You can change it if needed.';
-          helper.style.color = '#25D366';
-        } else {
-          helper.textContent = 'Could not detect district. Please select manually.';
-          helper.style.color = '#ff6b7a';
+          var districtSelect = document.getElementById('district');
+          if (districtSelect) districtSelect.value = district;
         }
-        btn.style.display = 'none';
       },
       function () {
-        helper.textContent = 'Location access denied. Please select your district manually.';
-        helper.style.color = '#ff6b7a';
-        btn.style.display = 'none';
+        // User denied permission — fall back to manual district selection
+        capturedLat = null;
+        capturedLng = null;
+        _showDistrictGroup('Location access denied. Please select your district manually.');
       },
       { timeout: 10000, maximumAge: 300000 }
     );
+  });
+}
+
+// "I'd rather not" button — skip precise location, show district dropdown only
+var skipLocationBtn = document.getElementById('skipLocationBtn');
+if (skipLocationBtn) {
+  skipLocationBtn.addEventListener('click', function () {
+    capturedLat = null;
+    capturedLng = null;
+    _showDistrictGroup(null);
+    var helper = document.getElementById('districtHelper');
+    if (helper) {
+      helper.textContent = 'We understand! Your streams will appear on the district map.';
+      helper.style.color = '';
+    }
   });
 }
 
@@ -350,7 +381,10 @@ accountForm.addEventListener('submit', async (e) => {
 
   const usernameInput = document.getElementById('username').value.trim();
   const passwordInput = document.getElementById('password').value;
-  const districtInput = document.getElementById('district').value;
+  const districtGroup = document.getElementById('districtGroup');
+  const districtInput = districtGroup && districtGroup.style.display !== 'none'
+    ? document.getElementById('district').value
+    : '';
 
   if (!usernameInput) {
     showMessage('Please enter a username', 'error');
@@ -362,16 +396,14 @@ accountForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  if (!districtInput) {
-    showMessage('Please select your district', 'error');
-    return;
-  }
+  // District is optional — if the district group is visible a selection is encouraged but not blocking
+  // (user may have skipped location and not selected a district yet — that's allowed)
 
   setButtonLoading(accountSubmitBtn, true);
 
   try {
-    // Create Firebase Auth account
-    await signUpWithPhone(currentPhone, usernameInput, passwordInput, districtInput);
+    // Create Firebase Auth account (pass district and precise coords if available)
+    await signUpWithPhone(currentPhone, usernameInput, passwordInput, districtInput || null, capturedLat, capturedLng);
 
     showMessage('Account created successfully! Redirecting...', 'success');
 
