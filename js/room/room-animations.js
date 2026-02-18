@@ -9,6 +9,8 @@ ROOM.Animations = {
   overlay: null,
   toastContainer: null,
   twinCardsContainer: null,
+  bongPromptEl: null,
+  bongPromptTimer: null,
 
   init: function () {
     this.overlay = document.getElementById('eventOverlay');
@@ -468,16 +470,31 @@ ROOM.Animations = {
     bongOverlay.className = 'room-bong-overlay';
 
     var initial = data.targetUsername ? data.targetUsername.charAt(0).toUpperCase() : '?';
-    var lightstickHtml = ROOM.Activity.lightstickSvg();
+    var targetAvatarColor = data.targetAvatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
 
     bongOverlay.innerHTML =
       '<div class="room-bong-backdrop"></div>' +
       '<div class="room-bong-scene">' +
-        '<div class="room-bong-avatar" style="background:' + data.targetAvatarColor + ';">' +
+        '<div class="room-bong-aura"></div>' +
+        '<div class="room-bong-avatar" style="background:' + targetAvatarColor + ';">' +
           '<span>' + initial + '</span>' +
         '</div>' +
-        '<div class="room-bong-lightstick">' + lightstickHtml + '</div>' +
+        '<div class="room-bong-lightstick">' +
+          '<div class="room-bong-lightstick-trail"></div>' +
+          '<img class="room-bong-lightstick-img" src="assets/logo/lightstick.png" alt="BLACKPINK lightstick">' +
+        '</div>' +
         '<div class="room-bong-impact"></div>' +
+        '<div class="room-bong-shockwave"></div>' +
+        '<div class="room-bong-sparks">' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+        '</div>' +
         '<div class="room-bong-text">' +
           '<strong>' + this.esc(data.senderUsername) + '</strong> bonged you!' +
         '</div>' +
@@ -485,18 +502,21 @@ ROOM.Animations = {
 
     this.overlay.appendChild(bongOverlay);
 
-    // Screen shake on hit (~800ms into the swing animation)
+    // Screen shake on the strike frame
     setTimeout(function () {
       document.body.classList.add('room-screen-shake');
       setTimeout(function () {
         document.body.classList.remove('room-screen-shake');
-      }, 400);
-    }, 800);
+      }, 520);
+    }, 640);
 
-    // Pink confetti on impact
+    // Confetti bursts synced with impact + rebound
     setTimeout(function () {
-      self.spawnConfetti(20);
-    }, 800);
+      self.spawnConfetti(24);
+    }, 640);
+    setTimeout(function () {
+      self.spawnConfetti(12);
+    }, 920);
 
     // Remove after animation
     setTimeout(function () {
@@ -504,9 +524,149 @@ ROOM.Animations = {
         bongOverlay.classList.add('room-bong-overlay--exit');
         setTimeout(function () {
           if (bongOverlay.parentNode) bongOverlay.remove();
-        }, 500);
+        }, 450);
       }
-    }, 4500);
+    }, 3800);
+  },
+
+  promptBongBack: function (data) {
+    var self = this;
+    if (!data || !data.senderPhoneNumber || !data.senderUsername) return;
+
+    this.dismissBongBackPrompt();
+
+    var safeName = this.esc(data.senderUsername);
+    var prompt = document.createElement('div');
+    prompt.className = 'room-bong-back-prompt';
+    prompt.innerHTML =
+      '<div class="room-bong-back-card">' +
+        '<div class="room-bong-back-title">Bong <strong>' + safeName + '</strong> back?</div>' +
+        '<div class="room-bong-back-actions">' +
+          '<button class="room-bong-back-btn room-bong-back-btn--mercy">I will show mercy</button>' +
+          '<button class="room-bong-back-btn room-bong-back-btn--bong">' +
+            '<img src="assets/logo/lightstick.png" alt="Lightstick">' +
+            '<span>Bong</span>' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(prompt);
+    this.bongPromptEl = prompt;
+
+    var mercyBtn = prompt.querySelector('.room-bong-back-btn--mercy');
+    var bongBtn = prompt.querySelector('.room-bong-back-btn--bong');
+
+    if (mercyBtn) {
+      mercyBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        self.dismissBongBackPrompt();
+        self.showToast('bong', 'OK', 'Mercy shown to <strong>' + safeName + '</strong>.');
+      });
+    }
+
+    if (bongBtn) {
+      bongBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        self.dismissBongBackPrompt();
+        if (ROOM.Activity && ROOM.Activity.sendBongBack) {
+          ROOM.Activity.sendBongBack({
+            targetPhoneNumber: data.senderPhoneNumber,
+            targetUsername: data.senderUsername,
+            targetAvatarColor: data.senderAvatarColor
+          });
+        }
+      });
+    }
+
+    this.bongPromptTimer = setTimeout(function () {
+      self.dismissBongBackPrompt();
+    }, 9000);
+  },
+
+  dismissBongBackPrompt: function () {
+    if (this.bongPromptTimer) {
+      clearTimeout(this.bongPromptTimer);
+      this.bongPromptTimer = null;
+    }
+
+    if (!this.bongPromptEl) return;
+    var prompt = this.bongPromptEl;
+    this.bongPromptEl = null;
+    prompt.classList.add('room-bong-back-prompt--exit');
+    setTimeout(function () {
+      if (prompt.parentNode) prompt.remove();
+    }, 220);
+  },
+
+  // ========== BONG BACK (COUNTER) ANIMATION ==========
+  playBongBack: function (data) {
+    var self = this;
+    var bongOverlay = document.createElement('div');
+    bongOverlay.className = 'room-bong-overlay room-bong-overlay--counter';
+
+    var initial = data.targetUsername ? data.targetUsername.charAt(0).toUpperCase() : '?';
+    var targetAvatarColor = data.targetAvatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+
+    bongOverlay.innerHTML =
+      '<div class="room-bong-backdrop"></div>' +
+      '<div class="room-bong-scene room-bong-scene--counter">' +
+        '<div class="room-bong-riposte-badge">COUNTER BONG</div>' +
+        '<div class="room-bong-aura"></div>' +
+        '<div class="room-bong-avatar" style="background:' + targetAvatarColor + ';">' +
+          '<span>' + initial + '</span>' +
+        '</div>' +
+        '<div class="room-bong-lightstick room-bong-lightstick--counter">' +
+          '<div class="room-bong-lightstick-trail"></div>' +
+          '<img class="room-bong-lightstick-img" src="assets/logo/Jennie_lightstick.png" alt="BLACKPINK lightstick">' +
+        '</div>' +
+        '<div class="room-bong-impact room-bong-impact--counter"></div>' +
+        '<div class="room-bong-shockwave room-bong-shockwave--counter"></div>' +
+        '<div class="room-bong-sparks">' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+          '<span class="room-bong-spark"></span>' +
+        '</div>' +
+        '<div class="room-bong-text room-bong-text--counter">' +
+          'you got bonged back!' +
+        '</div>' +
+      '</div>';
+
+    this.overlay.appendChild(bongOverlay);
+
+    setTimeout(function () {
+      document.body.classList.add('room-screen-shake');
+      setTimeout(function () {
+        document.body.classList.remove('room-screen-shake');
+      }, 420);
+    }, 520);
+
+    setTimeout(function () {
+      document.body.classList.add('room-screen-shake');
+      setTimeout(function () {
+        document.body.classList.remove('room-screen-shake');
+      }, 320);
+    }, 760);
+
+    setTimeout(function () {
+      self.spawnConfetti(30);
+    }, 520);
+    setTimeout(function () {
+      self.spawnConfetti(18);
+    }, 860);
+
+    setTimeout(function () {
+      if (bongOverlay.parentNode) {
+        bongOverlay.classList.add('room-bong-overlay--exit');
+        setTimeout(function () {
+          if (bongOverlay.parentNode) bongOverlay.remove();
+        }, 420);
+      }
+    }, 3600);
   },
 
   // ========== CONFETTI ==========

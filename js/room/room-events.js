@@ -61,6 +61,13 @@ ROOM.Events = {
         // Only the target user sees the full center-screen animation
         if (ROOM.currentUser && eventData.data.targetPhoneNumber === ROOM.currentUser.phoneNumber) {
           ROOM.Animations.playBong(eventData.data);
+          ROOM.Animations.promptBongBack(eventData.data);
+        }
+        break;
+      case 'bong_back':
+        // Only the target user sees bong-back animation
+        if (ROOM.currentUser && eventData.data.targetPhoneNumber === ROOM.currentUser.phoneNumber) {
+          ROOM.Animations.playBongBack(eventData.data);
         }
         break;
     }

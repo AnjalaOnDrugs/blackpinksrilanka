@@ -83,6 +83,54 @@ export const sendBong = mutation({
   },
 });
 
+// Send a bong-back (counter poke) with rate limiting
+export const sendBongBack = mutation({
+  args: {
+    roomId: v.string(),
+    senderPhoneNumber: v.string(),
+    senderUsername: v.string(),
+    senderAvatarColor: v.string(),
+    targetPhoneNumber: v.string(),
+    targetUsername: v.string(),
+    targetAvatarColor: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Rate limit: 30s cooldown per sender→target pair for bong-back
+    const recent = await ctx.db
+      .query("events")
+      .withIndex("by_room_type", (q) =>
+        q.eq("roomId", args.roomId).eq("type", "bong_back")
+      )
+      .order("desc")
+      .first();
+
+    if (
+      recent &&
+      now - recent.createdAt < 30000 &&
+      recent.data?.senderPhoneNumber === args.senderPhoneNumber &&
+      recent.data?.targetPhoneNumber === args.targetPhoneNumber
+    ) {
+      return null;
+    }
+
+    return await ctx.db.insert("events", {
+      roomId: args.roomId,
+      type: "bong_back",
+      data: {
+        senderPhoneNumber: args.senderPhoneNumber,
+        senderUsername: args.senderUsername,
+        senderAvatarColor: args.senderAvatarColor,
+        targetPhoneNumber: args.targetPhoneNumber,
+        targetUsername: args.targetUsername,
+        targetAvatarColor: args.targetAvatarColor,
+      },
+      createdAt: now,
+    });
+  },
+});
+
 // Get recent events (since a given timestamp)
 export const listRecent = query({
   args: {

@@ -14,6 +14,7 @@ ROOM.Firebase = {
   roomId: null,
   _initTimestamp: null,
   _lastfmDebounceTimer: null,
+  _processedEventIds: {},
 
   init: function (roomId) {
     this.roomId = roomId;
@@ -50,6 +51,9 @@ ROOM.Firebase = {
       function (events) {
         if (!events) return;
         events.forEach(function (evt) {
+          // Skip events we've already processed (watch fires with full list on every update)
+          if (evt._id && self._processedEventIds[evt._id]) return;
+
           // Only handle events created after init (don't replay old events)
           if (evt.createdAt > self._initTimestamp) {
             // Don't replay events older than 10 seconds
@@ -63,6 +67,11 @@ ROOM.Firebase = {
                 });
               }
             }
+          }
+
+          // Mark as processed regardless of age (so we never re-handle it)
+          if (evt._id) {
+            self._processedEventIds[evt._id] = true;
           }
         });
       }

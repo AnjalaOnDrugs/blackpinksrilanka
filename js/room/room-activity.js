@@ -8,6 +8,8 @@ window.ROOM = window.ROOM || {};
 ROOM.Activity = {
   listEl: null,
   _bongCooldowns: {},
+  lightstickAsset: 'assets/logo/lightstick.png',
+  jennieLightstickAsset: 'assets/logo/Jennie_lightstick.png',
 
   init: function () {
     this.listEl = document.getElementById('activityList');
@@ -20,11 +22,11 @@ ROOM.Activity = {
     // Event delegation on the activity list
     if (!this.listEl) return;
     this.listEl.addEventListener('click', function (e) {
-      // Handle kebab menu toggle
-      var kebab = e.target.closest('.room-activity-kebab');
-      if (kebab) {
+      // Handle actions menu toggle
+      var menuToggle = e.target.closest('.room-activity-menu-toggle');
+      if (menuToggle) {
         e.stopPropagation();
-        self.toggleDropdown(kebab);
+        self.toggleDropdown(menuToggle);
         return;
       }
 
@@ -43,23 +45,28 @@ ROOM.Activity = {
     });
   },
 
-  toggleDropdown: function (kebabBtn) {
-    var actionsEl = kebabBtn.closest('.room-activity-actions');
-    var dropdown = actionsEl.querySelector('.room-activity-dropdown');
-    var isOpen = dropdown.style.display !== 'none';
+  toggleDropdown: function (menuToggleBtn) {
+    var card = menuToggleBtn.closest('.room-activity-card');
+    if (!card) return;
+    var isOpen = card.classList.contains('room-activity-card--menu-open');
 
     this.closeAllDropdowns();
 
     if (!isOpen) {
-      dropdown.style.display = '';
+      card.classList.add('room-activity-card--menu-open');
+      menuToggleBtn.setAttribute('aria-expanded', 'true');
     }
   },
 
   closeAllDropdowns: function () {
     if (!this.listEl) return;
-    var dropdowns = this.listEl.querySelectorAll('.room-activity-dropdown');
-    for (var i = 0; i < dropdowns.length; i++) {
-      dropdowns[i].style.display = 'none';
+    var openCards = this.listEl.querySelectorAll('.room-activity-card--menu-open');
+    for (var i = 0; i < openCards.length; i++) {
+      openCards[i].classList.remove('room-activity-card--menu-open');
+    }
+    var expandedToggles = this.listEl.querySelectorAll('.room-activity-menu-toggle[aria-expanded="true"]');
+    for (var j = 0; j < expandedToggles.length; j++) {
+      expandedToggles[j].setAttribute('aria-expanded', 'false');
     }
   },
 
@@ -90,18 +97,47 @@ ROOM.Activity = {
     });
 
     // Confirmation toast for sender
-    ROOM.Animations.showToast('bong', '🔨', 'You bonged <strong>' + this.escapeHtml(targetUsername) + '</strong>!');
+    ROOM.Animations.showToast(
+      'bong',
+      '<img class="room-bong-toast-icon" src="' + this.lightstickAsset + '" alt="Lightstick">',
+      'You bonged <strong>' + this.escapeHtml(targetUsername) + '</strong>!'
+    );
+  },
+
+  sendBongBack: function (payload) {
+    var targetPhone = payload && (payload.targetPhoneNumber || payload.targetPhone);
+    var targetUsername = payload && payload.targetUsername;
+    var targetColor = payload && payload.targetAvatarColor;
+    if (!targetPhone || !targetUsername) return;
+
+    // Separate cooldown bucket from normal bong actions
+    var cooldownKey = 'back:' + targetPhone;
+    if (this._bongCooldowns[cooldownKey] && Date.now() - this._bongCooldowns[cooldownKey] < 30000) {
+      ROOM.Animations.showToast('bong', '⏳', 'You just bonged back <strong>' + this.escapeHtml(targetUsername) + '</strong>!');
+      return;
+    }
+
+    this._bongCooldowns[cooldownKey] = Date.now();
+
+    ConvexService.mutation('events:sendBongBack', {
+      roomId: ROOM.Firebase.roomId,
+      senderPhoneNumber: ROOM.currentUser.phoneNumber,
+      senderUsername: ROOM.currentUser.username,
+      senderAvatarColor: ROOM.currentUser.avatarColor,
+      targetPhoneNumber: targetPhone,
+      targetUsername: targetUsername,
+      targetAvatarColor: targetColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)'
+    });
+
+    ROOM.Animations.showToast(
+      'bong',
+      '<img class="room-bong-toast-icon" src="' + this.lightstickAsset + '" alt="Lightstick">',
+      'Counter bong sent to <strong>' + this.escapeHtml(targetUsername) + '</strong>!'
+    );
   },
 
   lightstickSvg: function () {
-    return '<svg class="room-bong-icon" viewBox="0 0 24 32" width="18" height="24">' +
-      // Handle (stick)
-      '<rect x="10.5" y="14" width="3" height="16" rx="1.5" fill="#f7a6b9"/>' +
-      // Head (heart shape)
-      '<path d="M12 2 C8 2 4 5 4 9 C4 13 12 16 12 16 C12 16 20 13 20 9 C20 5 16 2 12 2Z" fill="#FF1493" stroke="#f7a6b9" stroke-width="0.5"/>' +
-      // Star sparkle in center
-      '<path d="M12 6 L12.8 8.5 L15 9 L12.8 9.5 L12 12 L11.2 9.5 L9 9 L11.2 8.5Z" fill="#fff" opacity="0.9"/>' +
-      '</svg>';
+    return '<img class="room-bong-icon room-bong-icon--menu" src="' + this.lightstickAsset + '" alt="Lightstick">';
   },
 
   update: function (participants) {
@@ -208,36 +244,44 @@ ROOM.Activity = {
     // Actions dropdown (not shown on own card)
     // participant.id is the phone number (set by convex/participants.ts listByRoom)
     var actionsHtml = '';
+    var menuHtml = '';
     var participantPhone = participant.id;
     if (ROOM.currentUser && participantPhone && participantPhone !== ROOM.currentUser.phoneNumber) {
       actionsHtml =
         '<div class="room-activity-actions">' +
-          '<button class="room-activity-kebab">' +
-            '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>' +
+          '<button class="room-activity-menu-toggle" aria-label="Open actions" aria-expanded="false">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">' +
+              '<path d="M6 9l6 6 6-6"></path>' +
+            '</svg>' +
           '</button>' +
-          '<div class="room-activity-dropdown" style="display:none;">' +
-            '<button class="room-activity-dropdown-item room-activity-bong-btn"' +
-              ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
-              ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
-              ' data-target-color="' + color + '">' +
-              this.lightstickSvg() +
-              '<span>Bong</span>' +
-            '</button>' +
-          '</div>' +
+        '</div>';
+
+      menuHtml =
+        '<div class="room-activity-dropdown">' +
+          '<button class="room-activity-dropdown-item room-activity-bong-btn"' +
+            ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
+            ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
+            ' data-target-color="' + color + '">' +
+            this.lightstickSvg() +
+            '<span>Bong</span>' +
+          '</button>' +
         '</div>';
     }
 
     return '<div class="room-activity-card" data-id="' + participant.id + '">' +
-      '<div class="room-activity-avatar" style="background:' + color + ';">' +
-        '<span>' + initial + '</span>' +
-        '<div class="room-activity-status ' + statusClass + '"></div>' +
+      '<div class="room-activity-card-main">' +
+        '<div class="room-activity-avatar" style="background:' + color + ';">' +
+          '<span>' + initial + '</span>' +
+          '<div class="room-activity-status ' + statusClass + '"></div>' +
+        '</div>' +
+        '<div class="room-activity-info">' +
+          '<div class="room-activity-name">' + this.escapeHtml(d.username || 'Unknown') + '</div>' +
+          trackHtml +
+        '</div>' +
+        albumArtHtml +
+        actionsHtml +
       '</div>' +
-      '<div class="room-activity-info">' +
-        '<div class="room-activity-name">' + this.escapeHtml(d.username || 'Unknown') + '</div>' +
-        trackHtml +
-      '</div>' +
-      albumArtHtml +
-      actionsHtml +
+      menuHtml +
     '</div>';
   },
 
