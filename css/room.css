@@ -3562,8 +3562,8 @@
   top: 74px;
   right: 16px;
   width: 340px;
-  max-height: calc(100vh - 90px);
-  max-height: calc(100dvh - 90px);
+  height: calc(100vh - 90px);
+  height: calc(100dvh - 90px);
   z-index: 75;
   background: rgba(10, 10, 10, 0.92);
   backdrop-filter: blur(24px);
@@ -3576,6 +3576,8 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(247, 166, 185, 0.2) transparent;
   animation: roomHeatMapIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .room-panel--heatmap::-webkit-scrollbar {
@@ -3630,6 +3632,14 @@
 
 .room-heatmap-content {
   padding: 0 16px 16px;
+}
+
+/* Precise tab: fill remaining panel height so the map canvas stretches */
+#heatmapContentPrecise {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .room-heatmap-map-wrap {
@@ -3801,6 +3811,7 @@
   .room-panel--heatmap {
     position: static;
     width: 100%;
+    height: auto;
     max-height: none;
     border-radius: 20px;
     box-shadow: none;
@@ -3809,6 +3820,18 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     animation: none;
+  }
+
+  #heatmapContentPrecise {
+    /* Restore natural sizing; add bottom clearance for the fixed nav */
+    flex: none;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 8px));
+  }
+
+  .room-heatmap-deck-canvas {
+    flex: none;
+    aspect-ratio: 1000 / 1745;
+    height: auto;
   }
 
   .room-heatmap-close {
@@ -3872,7 +3895,8 @@
    ═══════════════════════════════════════════ */
 .room-heatmap-deck-canvas {
   width: 100%;
-  height: 340px;
+  flex: 1;
+  min-height: 0;
   border-radius: 10px;
   overflow: hidden;
   position: relative;
@@ -3884,6 +3908,22 @@
 .room-heatmap-deck-fullscreen-canvas canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Collapse MapLibre attribution bar by default (compact mode always on) */
+.room-heatmap-deck-canvas .maplibregl-ctrl-attrib,
+.room-heatmap-deck-fullscreen-canvas .maplibregl-ctrl-attrib {
+  /* Force compact style: show only the (i) button until clicked */
+  min-width: 0 !important;
+}
+.room-heatmap-deck-canvas .maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner,
+.room-heatmap-deck-fullscreen-canvas .maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner {
+  display: none !important;
+}
+/* Show the (i) toggle button so user can still expand it */
+.room-heatmap-deck-canvas .maplibregl-ctrl-attrib-button,
+.room-heatmap-deck-fullscreen-canvas .maplibregl-ctrl-attrib-button {
+  display: block !important;
 }
 
 /* ═══════════════════════════════════════════

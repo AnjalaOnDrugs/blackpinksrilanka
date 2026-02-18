@@ -317,7 +317,12 @@ ROOM.HeatMap.Deck = {
       mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
       initialViewState: this.INITIAL_VIEW,
       controller: true,
-      layers: []
+      layers: [],
+      onLoad: function () {
+        // Collapse attribution bar by default (same as clicking the (i) button once)
+        var el = document.querySelector('#' + containerId + ' .maplibregl-ctrl-attrib');
+        if (el) el.classList.add('maplibregl-compact');
+      }
     });
   },
 
@@ -439,7 +444,11 @@ ROOM.HeatMap.Deck = {
         mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
         initialViewState: this.INITIAL_VIEW,
         controller: true,
-        layers: []
+        layers: [],
+        onLoad: function () {
+          var el = document.querySelector('#heatMapDeckCanvasFull .maplibregl-ctrl-attrib');
+          if (el) el.classList.add('maplibregl-compact');
+        }
       });
       // Render current data into the new instance
       this._render();
