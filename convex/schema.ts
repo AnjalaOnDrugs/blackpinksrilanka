@@ -13,6 +13,9 @@ export default defineSchema({
     registeredAt: v.optional(v.number()),
     avatarColor: v.optional(v.string()),
     district: v.optional(v.string()),
+    districtLastChanged: v.optional(v.number()),
+    bias: v.optional(v.string()),
+    profilePicture: v.optional(v.string()),
     // Precise coordinates for Deck.gl heat map (stored only if user grants permission)
     lat: v.optional(v.number()),
     lng: v.optional(v.number()),

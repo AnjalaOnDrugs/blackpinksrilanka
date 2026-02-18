@@ -137,6 +137,9 @@ async function getCurrentUserData() {
       authStage: userDoc.authStage,
       registeredAt: userDoc.registeredAt,
       district: userDoc.district || null,
+      districtLastChanged: userDoc.districtLastChanged || null,
+      bias: userDoc.bias || null,
+      profilePicture: userDoc.profilePicture || null,
       lat: userDoc.lat ?? null,
       lng: userDoc.lng ?? null
     };

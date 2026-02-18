@@ -57,6 +57,12 @@ ROOM.Events = {
       case 'stream_milestone':
         ROOM.Animations.playStreamMilestone(eventData.data);
         break;
+      case 'bong':
+        // Only the target user sees the full center-screen animation
+        if (ROOM.currentUser && eventData.data.targetPhoneNumber === ROOM.currentUser.phoneNumber) {
+          ROOM.Animations.playBong(eventData.data);
+        }
+        break;
     }
   },
 

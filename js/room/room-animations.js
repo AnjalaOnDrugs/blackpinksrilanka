@@ -459,6 +459,56 @@ ROOM.Animations = {
       '<strong>' + totalStreams.toLocaleString() + ' streams!</strong> Milestone reached! 🎉');
   },
 
+  // ========== BONG (POKE) ANIMATION ==========
+  playBong: function (data) {
+    var self = this;
+
+    // Build the center-screen bong overlay
+    var bongOverlay = document.createElement('div');
+    bongOverlay.className = 'room-bong-overlay';
+
+    var initial = data.targetUsername ? data.targetUsername.charAt(0).toUpperCase() : '?';
+    var lightstickHtml = ROOM.Activity.lightstickSvg();
+
+    bongOverlay.innerHTML =
+      '<div class="room-bong-backdrop"></div>' +
+      '<div class="room-bong-scene">' +
+        '<div class="room-bong-avatar" style="background:' + data.targetAvatarColor + ';">' +
+          '<span>' + initial + '</span>' +
+        '</div>' +
+        '<div class="room-bong-lightstick">' + lightstickHtml + '</div>' +
+        '<div class="room-bong-impact"></div>' +
+        '<div class="room-bong-text">' +
+          '<strong>' + this.esc(data.senderUsername) + '</strong> bonged you!' +
+        '</div>' +
+      '</div>';
+
+    this.overlay.appendChild(bongOverlay);
+
+    // Screen shake on hit (~800ms into the swing animation)
+    setTimeout(function () {
+      document.body.classList.add('room-screen-shake');
+      setTimeout(function () {
+        document.body.classList.remove('room-screen-shake');
+      }, 400);
+    }, 800);
+
+    // Pink confetti on impact
+    setTimeout(function () {
+      self.spawnConfetti(20);
+    }, 800);
+
+    // Remove after animation
+    setTimeout(function () {
+      if (bongOverlay.parentNode) {
+        bongOverlay.classList.add('room-bong-overlay--exit');
+        setTimeout(function () {
+          if (bongOverlay.parentNode) bongOverlay.remove();
+        }, 500);
+      }
+    }, 4500);
+  },
+
   // ========== CONFETTI ==========
   spawnConfetti: function (count) {
     if (!this.overlay) return;

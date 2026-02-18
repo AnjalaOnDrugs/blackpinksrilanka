@@ -122,10 +122,10 @@ ROOM.HeatMap = {
         else colorIndex = 4;
 
         path.style.fill = self.COLORS[colorIndex];
-        path.style.stroke = 'rgba(247, 166, 185, 0.4)';
+        path.style.stroke = 'rgba(247, 166, 185, 0.45)';
       } else {
         path.style.fill = self.COLORS[0];
-        path.style.stroke = 'rgba(255, 255, 255, 0.08)';
+        path.style.stroke = 'rgba(247, 166, 185, 0.22)';
       }
     }
   },
@@ -143,16 +143,16 @@ ROOM.HeatMap = {
     if (!this.statsEl) return;
     this.statsEl.innerHTML =
       '<div class="room-heatmap-stat">' +
-        '<span class="room-heatmap-stat-value">' + totalStreams + '</span>' +
-        '<span class="room-heatmap-stat-label">Streams</span>' +
+      '<span class="room-heatmap-stat-value">' + totalStreams + '</span>' +
+      '<span class="room-heatmap-stat-label">Streams</span>' +
       '</div>' +
       '<div class="room-heatmap-stat">' +
-        '<span class="room-heatmap-stat-value">' + totalUsers + '</span>' +
-        '<span class="room-heatmap-stat-label">Streamers</span>' +
+      '<span class="room-heatmap-stat-value">' + totalUsers + '</span>' +
+      '<span class="room-heatmap-stat-label">Streamers</span>' +
       '</div>' +
       '<div class="room-heatmap-stat">' +
-        '<span class="room-heatmap-stat-value">' + districtsActive + '/25</span>' +
-        '<span class="room-heatmap-stat-label">Districts</span>' +
+      '<span class="room-heatmap-stat-value">' + districtsActive + '/25</span>' +
+      '<span class="room-heatmap-stat-label">Districts</span>' +
       '</div>';
   },
 
@@ -280,20 +280,20 @@ ROOM.HeatMap.Deck = {
   _data: [],           // [{ lat, lng, weight }]
   _radiusPixels: 30,
 
-  // Pink color range (low → high)
+  // Match district map pink palette (low → high)
   COLOR_RANGE: [
-    [247, 166, 185, 100],
-    [240, 100, 150, 160],
-    [220,  50, 120, 200],
-    [200,   0, 100, 230],
-    [255,   0, 160, 255],
-    [255, 100, 255, 255]
+    [247, 166, 185, 50],
+    [247, 166, 185, 90],
+    [247, 166, 185, 130],
+    [247, 166, 185, 170],
+    [247, 166, 185, 210],
+    [247, 166, 185, 255]
   ],
 
   // Sri Lanka center
   INITIAL_VIEW: {
     longitude: 80.7718,
-    latitude:   7.8731,
+    latitude: 7.8731,
     zoom: 7,
     pitch: 0,
     bearing: 0
@@ -322,8 +322,91 @@ ROOM.HeatMap.Deck = {
         // Collapse attribution bar by default (same as clicking the (i) button once)
         var el = document.querySelector('#' + containerId + ' .maplibregl-ctrl-attrib');
         if (el) el.classList.add('maplibregl-compact');
+        self._applyPinkBasemapStyle(self._deckCompact);
       }
     });
+  },
+
+  _getMapInstance: function (deckInstance) {
+    if (!deckInstance) return null;
+    if (typeof deckInstance.getMap === 'function') return deckInstance.getMap();
+    if (typeof deckInstance.getMapboxMap === 'function') return deckInstance.getMapboxMap();
+    if (deckInstance.map) return deckInstance.map;
+    if (deckInstance._map) return deckInstance._map;
+    if (deckInstance._mapboxMap) return deckInstance._mapboxMap;
+    if (deckInstance.deck && deckInstance.deck.map) return deckInstance.deck.map;
+    return null;
+  },
+
+  _applyPinkBasemapStyle: function (deckInstance) {
+    var map = this._getMapInstance(deckInstance);
+    if (!map || typeof map.getStyle !== 'function' || typeof map.setPaintProperty !== 'function') return;
+    if (map.__roomPinkMapStyled) return;
+    map.__roomPinkMapStyled = true;
+
+    var apply = function () {
+      var style = map.getStyle();
+      if (!style || !style.layers) return;
+
+      for (var i = 0; i < style.layers.length; i++) {
+        var layer = style.layers[i];
+        var id = (layer.id || '').toLowerCase();
+
+        try {
+          if (layer.type === 'line') {
+            var isBoundary = /admin|boundary|district|province|state|country|border/.test(id);
+            var isCountryBoundary = /country|admin.?0|adm.?0|national|admin.?level.?2|boundary.?country|boundary.?2|boundary_2/.test(id);
+            var isRoad = /road|street|transport|rail|highway|motorway|trunk/.test(id);
+            var lineColor = 'rgba(247,166,185,0.16)';
+            var lineOpacity = 0.35;
+            var lineWidth = 0.75;
+            if (isRoad) {
+              lineColor = 'rgba(247,166,185,0.22)';
+              lineOpacity = 0.45;
+            }
+            if (isBoundary) {
+              lineColor = 'rgba(247,166,185,0.35)';
+              lineOpacity = 0.5;
+              lineWidth = 1;
+            }
+            if (isCountryBoundary) {
+              lineColor = 'rgba(247,166,185,1)';
+              lineOpacity = 1;
+              lineWidth = 4;
+            }
+            map.setPaintProperty(layer.id, 'line-color', lineColor);
+            map.setPaintProperty(layer.id, 'line-opacity', lineOpacity);
+            map.setPaintProperty(layer.id, 'line-width', lineWidth);
+          } else if (layer.type === 'fill') {
+            if (/water|ocean|sea|marine|bathymetry/.test(id)) {
+              map.setPaintProperty(layer.id, 'fill-color', 'rgba(18,12,20,1)');
+              map.setPaintProperty(layer.id, 'fill-opacity', 0.2);
+            } else if (/land|earth|landcover|landuse|building/.test(id)) {
+              // Land fill — more visible pink tint so Sri Lanka shape stands out against dark ocean
+              map.setPaintProperty(layer.id, 'fill-color', 'rgba(247,166,185,0.15)');
+              map.setPaintProperty(layer.id, 'fill-opacity', 1);
+            }
+          } else if (layer.type === 'raster') {
+            if (/water|ocean|sea|marine|bathymetry/.test(id)) {
+              map.setPaintProperty(layer.id, 'raster-opacity', 0.2);
+            }
+          } else if (layer.type === 'background') {
+            map.setPaintProperty(layer.id, 'background-color', 'rgba(18,12,20,0.22)');
+          } else if (layer.type === 'symbol' && /label|place|city|country|town/.test(id)) {
+            map.setPaintProperty(layer.id, 'text-color', 'rgba(247,166,185,0.70)');
+            map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(12,10,14,0.85)');
+            map.setPaintProperty(layer.id, 'text-halo-width', 0.8);
+          }
+        } catch (e) {
+          // Some style layers may not support all paint props.
+        }
+      }
+    };
+
+    apply();
+    if (typeof map.on === 'function') {
+      map.on('styledata', apply);
+    }
   },
 
   _subscribe: function (roomId) {
@@ -432,6 +515,7 @@ ROOM.HeatMap.Deck = {
   },
 
   _openFullscreen: function () {
+    var self = this;
     var modal = document.getElementById('deckFullscreenModal');
     if (!modal) return;
     modal.style.display = 'flex';
@@ -448,6 +532,7 @@ ROOM.HeatMap.Deck = {
         onLoad: function () {
           var el = document.querySelector('#heatMapDeckCanvasFull .maplibregl-ctrl-attrib');
           if (el) el.classList.add('maplibregl-compact');
+          self._applyPinkBasemapStyle(self._deckFull);
         }
       });
       // Render current data into the new instance

@@ -45,14 +45,17 @@ if (streamingRoom) {
 }
 
 // ========== LOGOUT ==========
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  try {
-    await logoutUser();
-    window.location.href = 'index.html';
-  } catch (err) {
-    console.error('Logout error:', err);
-  }
-});
+var logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await logoutUser();
+      window.location.href = 'index.html';
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  });
+}
 
 // ========== FLOATING PARTICLES (background) ==========
 (function createParticles() {

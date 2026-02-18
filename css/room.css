@@ -1907,6 +1907,205 @@
   object-fit: cover;
 }
 
+/* ========== ACTIVITY CARD ACTIONS DROPDOWN ========== */
+.room-activity-actions {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.room-activity-kebab {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.room-activity-kebab:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.room-activity-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: rgba(20, 20, 25, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px;
+  min-width: 110px;
+  z-index: 100;
+  animation: roomDropdownIn 0.15s ease-out;
+}
+
+@keyframes roomDropdownIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.room-activity-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.room-activity-dropdown-item:hover {
+  background: rgba(247, 166, 185, 0.12);
+}
+
+.room-bong-icon {
+  flex-shrink: 0;
+}
+
+/* ========== BONG ANIMATION ========== */
+.room-bong-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: roomBongFadeIn 0.3s ease-out;
+}
+
+.room-bong-overlay--exit {
+  animation: roomBongFadeOut 0.5s ease-in forwards;
+}
+
+@keyframes roomBongFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes roomBongFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.room-bong-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.room-bong-scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.room-bong-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 40px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 40px rgba(247, 166, 185, 0.3);
+  animation: roomBongAvatarShake 0.5s ease-in-out 0.8s;
+}
+
+@keyframes roomBongAvatarShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-3deg); }
+  40% { transform: translateX(8px) rotate(3deg); }
+  60% { transform: translateX(-5px) rotate(-2deg); }
+  80% { transform: translateX(5px) rotate(2deg); }
+}
+
+.room-bong-lightstick {
+  position: absolute;
+  top: -50px;
+  right: -30px;
+  transform-origin: bottom center;
+  animation: roomBongSwing 0.8s ease-in forwards;
+}
+
+.room-bong-lightstick .room-bong-icon {
+  width: 48px;
+  height: 64px;
+}
+
+@keyframes roomBongSwing {
+  0% { transform: rotate(-60deg); opacity: 1; }
+  70% { transform: rotate(15deg); }
+  85% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); opacity: 1; }
+}
+
+.room-bong-impact {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 20, 147, 0.6), transparent);
+  animation: roomBongImpact 0.6s ease-out 0.8s forwards;
+  pointer-events: none;
+}
+
+@keyframes roomBongImpact {
+  0% { width: 0; height: 0; opacity: 1; }
+  50% { width: 200px; height: 200px; opacity: 0.6; }
+  100% { width: 300px; height: 300px; opacity: 0; }
+}
+
+.room-bong-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  animation: roomBongTextIn 0.4s ease-out 1.2s both;
+}
+
+.room-bong-text strong {
+  color: #f7a6b9;
+}
+
+@keyframes roomBongTextIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Bong toast variant */
+.room-toast--bong {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.12), rgba(247, 166, 185, 0.08));
+  border-color: rgba(255, 20, 147, 0.2);
+}
+
 /* ========== EVENT OVERLAY ========== */
 .room-event-overlay {
   position: fixed;
@@ -3655,7 +3854,7 @@
 
 .room-heatmap-district {
   fill: rgba(247, 166, 185, 0.08);
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: rgba(247, 166, 185, 0.22);
   stroke-width: 1.5;
   cursor: pointer;
   transition: fill 0.5s ease, stroke 0.3s ease, filter 0.3s ease;
@@ -3825,7 +4024,12 @@
   #heatmapContentPrecise {
     /* Restore natural sizing; add bottom clearance for the fixed nav */
     flex: none;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 8px));
+    padding-bottom: calc(78px + env(safe-area-inset-bottom, 8px));
+  }
+
+  #heatmapContentDistricts {
+    /* Keep legend/stats clear of the fixed bottom navigation */
+    padding-bottom: calc(78px + env(safe-area-inset-bottom, 8px));
   }
 
   .room-heatmap-deck-canvas {
@@ -3900,7 +4104,7 @@
   border-radius: 10px;
   overflow: hidden;
   position: relative;
-  background: #0d0d0d;
+  background: rgba(18, 12, 20, 0.18);
 }
 
 /* Deck.gl injects a canvas directly — make sure it fills the container */
@@ -3910,20 +4114,24 @@
   height: 100% !important;
 }
 
-/* Collapse MapLibre attribution bar by default (compact mode always on) */
+.room-heatmap-deck-canvas .maplibregl-canvas,
+.room-heatmap-deck-fullscreen-canvas .maplibregl-canvas,
+.room-heatmap-deck-canvas .maplibregl-canvas-container,
+.room-heatmap-deck-fullscreen-canvas .maplibregl-canvas-container {
+  background: rgba(18, 12, 20, 0.12) !important;
+}
+
+/* Hide attribution bar in heatmap views */
 .room-heatmap-deck-canvas .maplibregl-ctrl-attrib,
 .room-heatmap-deck-fullscreen-canvas .maplibregl-ctrl-attrib {
-  /* Force compact style: show only the (i) button until clicked */
-  min-width: 0 !important;
-}
-.room-heatmap-deck-canvas .maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner,
-.room-heatmap-deck-fullscreen-canvas .maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner {
   display: none !important;
 }
-/* Show the (i) toggle button so user can still expand it */
-.room-heatmap-deck-canvas .maplibregl-ctrl-attrib-button,
-.room-heatmap-deck-fullscreen-canvas .maplibregl-ctrl-attrib-button {
-  display: block !important;
+
+@media (max-width: 768px) {
+  .room-heatmap-deck-canvas .maplibregl-ctrl-bottom-left,
+  .room-heatmap-deck-canvas .maplibregl-ctrl-bottom-right {
+    bottom: calc(78px + env(safe-area-inset-bottom, 8px));
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -4020,7 +4228,7 @@
 .room-heatmap-deck-fullscreen-canvas {
   flex: 1;
   position: relative;
-  background: #0d0d0d;
+  background: rgba(18, 12, 20, 0.18);
   overflow: hidden;
 }
 

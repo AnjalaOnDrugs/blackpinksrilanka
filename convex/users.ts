@@ -198,3 +198,110 @@ export const updateLastfmUsername = mutation({
     }
   },
 });
+
+// Update username
+export const updateUsername = mutation({
+  args: {
+    phoneNumber: v.string(),
+    username: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check if the new username is already taken by another user
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .first();
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+
+    if (!currentUser) {
+      return { success: false, message: "User not found" };
+    }
+
+    if (existingUser && existingUser._id !== currentUser._id) {
+      return { success: false, message: "Username is already taken" };
+    }
+
+    await ctx.db.patch(currentUser._id, {
+      username: args.username,
+    });
+    return { success: true, message: "Username updated successfully" };
+  },
+});
+
+// Update bias (BLACKPINK member)
+export const updateBias = mutation({
+  args: {
+    phoneNumber: v.string(),
+    bias: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+
+    if (user) {
+      await ctx.db.patch(user._id, {
+        bias: args.bias,
+      });
+    }
+  },
+});
+
+// Update profile picture (base64 data URL)
+export const updateProfilePicture = mutation({
+  args: {
+    phoneNumber: v.string(),
+    profilePicture: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+
+    if (user) {
+      await ctx.db.patch(user._id, {
+        profilePicture: args.profilePicture,
+      });
+    }
+  },
+});
+
+// Update district (with monthly restriction)
+export const updateDistrictMonthly = mutation({
+  args: {
+    phoneNumber: v.string(),
+    district: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    // Check if district was changed in the last 30 days
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    if (user.districtLastChanged && (Date.now() - user.districtLastChanged) < thirtyDaysMs) {
+      const nextChangeDate = new Date(user.districtLastChanged + thirtyDaysMs);
+      return {
+        success: false,
+        message: `You can change your district again after ${nextChangeDate.toLocaleDateString()}`,
+      };
+    }
+
+    await ctx.db.patch(user._id, {
+      district: args.district,
+      districtLastChanged: Date.now(),
+    });
+    return { success: true, message: "District updated successfully" };
+  },
+});

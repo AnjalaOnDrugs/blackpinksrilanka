@@ -20,7 +20,13 @@
       "Bash(npx convex deploy:*)",
       "Bash(findstr:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python3:*)",
+      "Bash(sort:*)",
+      "WebFetch(domain:pavan168.github.io)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:mapsvg.com)",
+      "Bash(xargs:*)"
     ]
   }
 }

@@ -7,9 +7,101 @@ window.ROOM = window.ROOM || {};
 
 ROOM.Activity = {
   listEl: null,
+  _bongCooldowns: {},
 
   init: function () {
     this.listEl = document.getElementById('activityList');
+    this.setupActions();
+  },
+
+  setupActions: function () {
+    var self = this;
+
+    // Event delegation on the activity list
+    if (!this.listEl) return;
+    this.listEl.addEventListener('click', function (e) {
+      // Handle kebab menu toggle
+      var kebab = e.target.closest('.room-activity-kebab');
+      if (kebab) {
+        e.stopPropagation();
+        self.toggleDropdown(kebab);
+        return;
+      }
+
+      // Handle bong button click
+      var bongBtn = e.target.closest('.room-activity-bong-btn');
+      if (bongBtn) {
+        e.stopPropagation();
+        self.sendBong(bongBtn);
+        return;
+      }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function () {
+      self.closeAllDropdowns();
+    });
+  },
+
+  toggleDropdown: function (kebabBtn) {
+    var actionsEl = kebabBtn.closest('.room-activity-actions');
+    var dropdown = actionsEl.querySelector('.room-activity-dropdown');
+    var isOpen = dropdown.style.display !== 'none';
+
+    this.closeAllDropdowns();
+
+    if (!isOpen) {
+      dropdown.style.display = '';
+    }
+  },
+
+  closeAllDropdowns: function () {
+    if (!this.listEl) return;
+    var dropdowns = this.listEl.querySelectorAll('.room-activity-dropdown');
+    for (var i = 0; i < dropdowns.length; i++) {
+      dropdowns[i].style.display = 'none';
+    }
+  },
+
+  sendBong: function (btn) {
+    var targetPhone = btn.dataset.targetPhone;
+    var targetUsername = btn.dataset.targetUsername;
+    var targetColor = btn.dataset.targetColor;
+
+    // Client-side 30s cooldown per target
+    var cooldownKey = targetPhone;
+    if (this._bongCooldowns[cooldownKey] && Date.now() - this._bongCooldowns[cooldownKey] < 30000) {
+      ROOM.Animations.showToast('bong', '⏳', 'Wait before bonging <strong>' + this.escapeHtml(targetUsername) + '</strong> again!');
+      return;
+    }
+
+    this._bongCooldowns[cooldownKey] = Date.now();
+    this.closeAllDropdowns();
+
+    // Fire the bong mutation
+    ConvexService.mutation('events:sendBong', {
+      roomId: ROOM.Firebase.roomId,
+      senderPhoneNumber: ROOM.currentUser.phoneNumber,
+      senderUsername: ROOM.currentUser.username,
+      senderAvatarColor: ROOM.currentUser.avatarColor,
+      targetPhoneNumber: targetPhone,
+      targetUsername: targetUsername,
+      targetAvatarColor: targetColor
+    });
+
+    // Confirmation toast for sender
+    ROOM.Animations.showToast('bong', '🔨', 'You bonged <strong>' + this.escapeHtml(targetUsername) + '</strong>!');
+  },
+
+  lightstickSvg: function () {
+    return '<svg class="room-bong-icon" viewBox="0 0 24 32" width="18" height="24">' +
+      // Handle (stick)
+      '<rect x="10.5" y="14" width="3" height="16" rx="1.5" fill="#f7a6b9"/>' +
+      // Head (heart shape)
+      '<path d="M12 2 C8 2 4 5 4 9 C4 13 12 16 12 16 C12 16 20 13 20 9 C20 5 16 2 12 2Z" fill="#FF1493" stroke="#f7a6b9" stroke-width="0.5"/>' +
+      // Star sparkle in center
+      '<path d="M12 6 L12.8 8.5 L15 9 L12.8 9.5 L12 12 L11.2 9.5 L9 9 L11.2 8.5Z" fill="#fff" opacity="0.9"/>' +
+      '</svg>';
   },
 
   update: function (participants) {
@@ -113,6 +205,28 @@ ROOM.Activity = {
         '</div>';
     }
 
+    // Actions dropdown (not shown on own card)
+    // participant.id is the phone number (set by convex/participants.ts listByRoom)
+    var actionsHtml = '';
+    var participantPhone = participant.id;
+    if (ROOM.currentUser && participantPhone && participantPhone !== ROOM.currentUser.phoneNumber) {
+      actionsHtml =
+        '<div class="room-activity-actions">' +
+          '<button class="room-activity-kebab">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>' +
+          '</button>' +
+          '<div class="room-activity-dropdown" style="display:none;">' +
+            '<button class="room-activity-dropdown-item room-activity-bong-btn"' +
+              ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
+              ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
+              ' data-target-color="' + color + '">' +
+              this.lightstickSvg() +
+              '<span>Bong</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    }
+
     return '<div class="room-activity-card" data-id="' + participant.id + '">' +
       '<div class="room-activity-avatar" style="background:' + color + ';">' +
         '<span>' + initial + '</span>' +
@@ -123,6 +237,7 @@ ROOM.Activity = {
         trackHtml +
       '</div>' +
       albumArtHtml +
+      actionsHtml +
     '</div>';
   },
 

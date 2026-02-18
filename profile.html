@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3595712894194617"
+        crossorigin="anonymous"></script>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <meta charset="utf-8">
+    <title>My Profile - BLACKPINK SRI LANKA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="Manage your BLACKPINK Sri Lanka community profile - update your username, bias, district, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body class="profile-body">
+
+    <!-- Animated background -->
+    <div class="profile-bg">
+        <div class="profile-bg-glow profile-bg-glow--1"></div>
+        <div class="profile-bg-glow profile-bg-glow--2"></div>
+        <div class="profile-bg-glow profile-bg-glow--3"></div>
+    </div>
+
+    <!-- Top bar -->
+    <div class="profile-topbar">
+        <a class="profile-topbar-brand" href="members.html">
+            <img src="assets/Logo.png" alt="BPSL" width="34" height="34">
+            <span>PROFILE</span>
+        </a>
+        <a href="members.html" class="profile-topbar-back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6" />
+            </svg>
+            Back
+        </a>
+    </div>
+
+    <!-- Loading State -->
+    <div class="profile-main" id="profileLoading">
+        <div class="profile-loading">
+            <div class="profile-loading-spinner"></div>
+            <div class="profile-loading-text">Loading profile...</div>
+        </div>
+    </div>
+
+    <!-- Profile Content (hidden until loaded) -->
+    <div class="profile-main" id="profileContent" style="display: none;">
+
+        <!-- Profile Header (Avatar + Name) -->
+        <div class="profile-header profile-animate-in">
+            <div class="profile-avatar-wrap">
+                <div class="profile-avatar" id="profileAvatar">
+                    <span id="profileAvatarInitial">?</span>
+                </div>
+                <div class="profile-avatar-overlay" id="avatarOverlay">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <input type="file" class="profile-avatar-input" id="avatarInput" accept="image/*">
+                </div>
+            </div>
+
+            <div class="profile-header-name" id="profileDisplayName">Loading...</div>
+            <div class="profile-header-number" id="profilePhoneDisplay"></div>
+            <div class="profile-header-member-since" id="profileJoinDate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span id="joinDateText">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Account Info Card -->
+        <div class="profile-card profile-animate-in">
+            <div class="profile-card-glow"></div>
+            <div class="profile-card-title">Account</div>
+
+            <!-- Username -->
+            <div class="profile-row" id="usernameRow">
+                <div class="profile-row-icon profile-row-icon--pink">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                </div>
+                <div class="profile-row-content">
+                    <div class="profile-row-label">Username</div>
+                    <div class="profile-row-value" id="usernameValue">—</div>
+                    <div class="profile-edit-inline" id="usernameEdit">
+                        <input type="text" class="profile-edit-input" id="usernameInput" placeholder="New username"
+                            maxlength="24">
+                        <button class="profile-edit-save" id="usernameSave" title="Save">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </button>
+                        <button class="profile-edit-cancel" id="usernameCancel" title="Cancel">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-row-action">
+                    <button class="profile-edit-btn" id="usernameEditBtn" title="Edit username">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="profile-row">
+                <div class="profile-row-icon profile-row-icon--green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                </div>
+                <div class="profile-row-content">
+                    <div class="profile-row-label">Phone Number</div>
+                    <div class="profile-row-value" id="phoneValue">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLINK Info Card -->
+        <div class="profile-card profile-animate-in">
+            <div class="profile-card-glow"></div>
+            <div class="profile-card-title">BLINK Info</div>
+
+            <!-- Bias -->
+            <div class="profile-row" id="biasRow">
+                <div class="profile-row-icon profile-row-icon--purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                </div>
+                <div class="profile-row-content">
+                    <div class="profile-row-label">Bias</div>
+                    <div class="profile-row-value" id="biasValue">—</div>
+                    <div class="profile-edit-inline" id="biasEdit">
+                        <select class="profile-edit-select" id="biasSelect">
+                            <option value="">Select your bias...</option>
+                            <option value="Jisoo">Jisoo 💖</option>
+                            <option value="Jennie">Jennie 🐻</option>
+                            <option value="Rosé">Rosé 🌹</option>
+                            <option value="Lisa">Lisa 🐱</option>
+                            <option value="OT4">OT4 🖤💗</option>
+                        </select>
+                        <button class="profile-edit-save" id="biasSave" title="Save">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </button>
+                        <button class="profile-edit-cancel" id="biasCancel" title="Cancel">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-row-action">
+                    <button class="profile-edit-btn" id="biasEditBtn" title="Edit bias">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Last.fm -->
+            <div class="profile-row" id="lastfmRow">
+                <div class="profile-row-icon profile-row-icon--red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <circle cx="12" cy="12" r="3" />
+                        <line x1="12" y1="2" x2="12" y2="5" />
+                        <line x1="12" y1="19" x2="12" y2="22" />
+                    </svg>
+                </div>
+                <div class="profile-row-content">
+                    <div class="profile-row-label">Last.fm</div>
+                    <div class="profile-row-value" id="lastfmValue">—</div>
+                    <div class="profile-edit-inline" id="lastfmEdit">
+                        <input type="text" class="profile-edit-input" id="lastfmInput"
+                            placeholder="Your Last.fm username">
+                        <button class="profile-edit-save" id="lastfmSave" title="Save">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </button>
+                        <button class="profile-edit-cancel" id="lastfmCancel" title="Cancel">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-row-action">
+                    <button class="profile-edit-btn" id="lastfmEditBtn" title="Edit Last.fm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Joined Community -->
+            <div class="profile-row">
+                <div class="profile-row-icon profile-row-icon--gold">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                </div>
+                <div class="profile-row-content">
+                    <div class="profile-row-label">Joined Community</div>
+                    <div class="profile-row-value" id="joinedCommunityValue">
+                        <span class="profile-row-value--muted">Loading from sheet...</span>
+                    </div>
+                    <span class="profile-row-badge" id="sheetBadge" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"
+                            style="width:10px;height:10px;">
+                            <path
+                                d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0C.488 3.45.029 5.804 0 12c.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0C23.512 20.55 23.971 18.196 24 12c-.029-6.185-.484-8.549-4.385-8.816z" />
+                        </svg>
+                        From Sheet
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Card -->
+        <div class="profile-card profile-animate-in">
+            <div class="profile-card-glow"></div>
+            <div class="profile-card-title">Location</div>
+
+            <!-- District -->
+            <div class="profile-row" id="districtRow">
+                <div class="profile-row-icon profile-row-icon--blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                </div>
+                <div class="profile-row-content">
+                    <div class="profile-row-label">District</div>
+                    <div class="profile-row-value" id="districtValue">—</div>
+                    <div class="profile-cooldown-hint" id="districtCooldown" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <span id="districtCooldownText"></span>
+                    </div>
+                    <div class="profile-edit-inline" id="districtEdit">
+                        <select class="profile-edit-select" id="districtSelect">
+                            <option value="">Select your district...</option>
+                        </select>
+                        <button class="profile-edit-save" id="districtSave" title="Save">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </button>
+                        <button class="profile-edit-cancel" id="districtCancel" title="Cancel">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-row-action">
+                    <button class="profile-edit-btn" id="districtEditBtn" title="Edit district">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logout -->
+        <button class="profile-logout-btn" id="logoutBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Sign Out
+        </button>
+
+        <!-- Footer -->
+        <div class="profile-footer">
+            <span>BLACKPINK SRI LANKA</span>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="profile-toast" id="profileToast"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Convex Browser SDK -->
+    <script src="https://unpkg.com/convex@1.3.1/dist/browser.bundle.js"></script>
+
+    <!-- Configuration and Auth Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/convex-client.js"></script>
+    <script src="js/auth.js"></script>
+
+    <!-- Districts Data -->
+    <script src="js/districts.js"></script>
+
+    <!-- Profile Page Script -->
+    <script src="js/profile.js"></script>
+
+</body>
+
+</html>
