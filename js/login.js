@@ -35,6 +35,50 @@ const startOverLink = document.getElementById('startOverLink');
 const showLoginLink = document.getElementById('showLoginLink');
 const showSignupLink = document.getElementById('showSignupLink');
 
+// Populate district dropdown
+populateDistrictDropdown('district');
+
+// Detect location button handler
+var detectLocationBtn = document.getElementById('detectLocationBtn');
+if (detectLocationBtn) {
+  detectLocationBtn.addEventListener('click', function () {
+    var btn = this;
+    var helper = document.getElementById('districtHelper');
+    var districtSelect = document.getElementById('district');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="auth-loading"></span>Detecting...';
+
+    if (!navigator.geolocation) {
+      helper.textContent = 'Geolocation not supported. Please select manually.';
+      helper.style.color = '#ff6b7a';
+      btn.style.display = 'none';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var district = findDistrictByCoords(position.coords.latitude, position.coords.longitude);
+        if (district) {
+          districtSelect.value = district;
+          helper.textContent = 'Detected: ' + district + '. You can change it if needed.';
+          helper.style.color = '#25D366';
+        } else {
+          helper.textContent = 'Could not detect district. Please select manually.';
+          helper.style.color = '#ff6b7a';
+        }
+        btn.style.display = 'none';
+      },
+      function () {
+        helper.textContent = 'Location access denied. Please select your district manually.';
+        helper.style.color = '#ff6b7a';
+        btn.style.display = 'none';
+      },
+      { timeout: 10000, maximumAge: 300000 }
+    );
+  });
+}
+
 // Check if user is already logged in
 checkAuthState().then(user => {
   if (user) {
@@ -306,6 +350,7 @@ accountForm.addEventListener('submit', async (e) => {
 
   const usernameInput = document.getElementById('username').value.trim();
   const passwordInput = document.getElementById('password').value;
+  const districtInput = document.getElementById('district').value;
 
   if (!usernameInput) {
     showMessage('Please enter a username', 'error');
@@ -317,11 +362,16 @@ accountForm.addEventListener('submit', async (e) => {
     return;
   }
 
+  if (!districtInput) {
+    showMessage('Please select your district', 'error');
+    return;
+  }
+
   setButtonLoading(accountSubmitBtn, true);
 
   try {
     // Create Firebase Auth account
-    await signUpWithPhone(currentPhone, usernameInput, passwordInput);
+    await signUpWithPhone(currentPhone, usernameInput, passwordInput, districtInput);
 
     showMessage('Account created successfully! Redirecting...', 'success');
 

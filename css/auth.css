@@ -466,6 +466,42 @@
   box-shadow: 0 0 20px rgba(247, 166, 185, 0.1);
 }
 
+/* Detect Location Button */
+.auth-btn-detect {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  color: #999;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.auth-btn-detect:hover {
+  color: #f7a6b9;
+  background: rgba(247, 166, 185, 0.06);
+  border-color: rgba(247, 166, 185, 0.2);
+}
+
+.auth-btn-detect:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Select dropdown styling */
+select.form-control {
+  appearance: auto;
+  -webkit-appearance: auto;
+  padding-right: 16px;
+}
+
 /* ========== LINKS ========== */
 .auth-link {
   color: #f7a6b9;

@@ -114,6 +114,7 @@ export const completeRegistration = mutation({
   args: {
     phoneNumber: v.string(),
     username: v.string(),
+    district: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -126,6 +127,27 @@ export const completeRegistration = mutation({
         username: args.username,
         registeredAt: Date.now(),
         authStage: 3,
+        ...(args.district ? { district: args.district } : {}),
+      });
+    }
+  },
+});
+
+// Update user district
+export const updateDistrict = mutation({
+  args: {
+    phoneNumber: v.string(),
+    district: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+
+    if (user) {
+      await ctx.db.patch(user._id, {
+        district: args.district,
       });
     }
   },

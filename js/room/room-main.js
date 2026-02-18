@@ -26,7 +26,8 @@ checkAuthState().then(async function (user) {
       phoneNumber: userData.phoneNumber,
       username: userData.username || 'BLINK',
       lastfmUsername: userData.lastfmUsername || null,
-      avatarColor: userData.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)'
+      avatarColor: userData.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)',
+      district: userData.district || null
     };
 
     // Set profile initial
@@ -56,18 +57,23 @@ async function initRoom(roomId) {
   // 2. Join the room
   await ROOM.Firebase.joinRoom(ROOM.currentUser);
 
-  // 3. Check if user needs to link Last.fm
+  // 3. Check if user needs to set district
+  if (!ROOM.currentUser.district) {
+    await showDistrictModal();
+  }
+
+  // 4. Check if user needs to link Last.fm
   if (!ROOM.currentUser.lastfmUsername) {
     await showLastfmModal();
   }
 
-  // 4. Agora RTM (chat)
+  // 5. Agora RTM (chat)
   await ROOM.Agora.init(ROOM.currentUser.phoneNumber, roomId);
 
-  // 5. Last.fm polling
+  // 6. Last.fm polling
   ROOM.LastFM.init();
 
-  // 6. Initialize UI modules
+  // 7. Initialize UI modules
   ROOM.Leaderboard.init();
   ROOM.Activity.init();
   ROOM.Chat.init();
@@ -75,11 +81,13 @@ async function initRoom(roomId) {
   ROOM.Events.init();
   ROOM.Animations.init();
   ROOM.Atmosphere.init();
+  ROOM.HeatMap.init(roomId);
 
-  // 7. Setup mobile tabs
+  // 8. Setup mobile tabs and heat map toggle
   setupMobileTabs();
+  setupHeatMapToggle();
 
-  // 8. Hide loading, show room
+  // 9. Hide loading, show room
   document.getElementById('roomLoading').style.display = 'none';
   document.getElementById('roomTopbar').style.display = '';
   document.getElementById('roomLayout').style.display = '';
@@ -91,17 +99,17 @@ async function initRoom(roomId) {
     switchMobilePanel('panelStage');
   }
 
-  // 9. Stream counter expand/collapse toggle
+  // 10. Stream counter expand/collapse toggle
   setupStreamCounterToggle();
 
-  // 10. Check-in system (offline tracking)
+  // 11. Check-in system (offline tracking)
   // Small delay to let participants cache populate from Convex
   setTimeout(function () { initCheckIn(); }, 2000);
 
-  // 10. Heartbeat (every 30s)
+  // 12. Heartbeat (every 30s)
   startHeartbeat();
 
-  // 11. Cleanup on page unload
+  // 13. Cleanup on page unload
   setupCleanup();
 }
 
@@ -156,6 +164,110 @@ function showLastfmModal() {
 
     input.focus();
   });
+}
+
+// ========== DISTRICT MODAL ==========
+function showDistrictModal() {
+  return new Promise(function (resolve) {
+    var modal = document.getElementById('districtModal');
+    if (!modal) { resolve(); return; }
+
+    // Populate dropdown
+    if (typeof populateDistrictDropdown === 'function') {
+      populateDistrictDropdown('districtModalSelect');
+    }
+
+    // Hide loading while showing modal
+    document.getElementById('roomLoading').style.display = 'none';
+    modal.style.display = 'flex';
+
+    var saveBtn = document.getElementById('districtSaveBtn');
+    var skipBtn = document.getElementById('districtSkipBtn');
+    var detectBtn = document.getElementById('districtModalDetectBtn');
+    var select = document.getElementById('districtModalSelect');
+    var helper = document.getElementById('districtModalHelper');
+
+    function onDetect() {
+      if (!navigator.geolocation) {
+        if (helper) { helper.textContent = 'Geolocation not supported. Please select manually.'; helper.style.color = '#ff6b7a'; }
+        return;
+      }
+      if (detectBtn) { detectBtn.querySelector('span').textContent = 'Detecting...'; }
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          var district = typeof findDistrictByCoords === 'function'
+            ? findDistrictByCoords(pos.coords.latitude, pos.coords.longitude)
+            : null;
+          if (district && select) {
+            select.value = district;
+            if (helper) { helper.textContent = 'Detected: ' + district; helper.style.color = '#25D366'; }
+          } else {
+            if (helper) { helper.textContent = 'Could not detect. Please select manually.'; helper.style.color = '#ffc107'; }
+          }
+          if (detectBtn) { detectBtn.querySelector('span').textContent = 'Detect my location'; }
+        },
+        function () {
+          if (helper) { helper.textContent = 'Location access denied. Please select manually.'; helper.style.color = '#ff6b7a'; }
+          if (detectBtn) { detectBtn.querySelector('span').textContent = 'Detect my location'; }
+        },
+        { timeout: 10000, maximumAge: 300000 }
+      );
+    }
+
+    function onSave() {
+      var val = select ? select.value : '';
+      if (!val) {
+        if (select) select.style.borderColor = '#ff6b7a';
+        return;
+      }
+      ROOM.currentUser.district = val;
+      ConvexService.mutation('users:updateDistrict', {
+        phoneNumber: ROOM.currentUser.phoneNumber,
+        district: val
+      });
+      modal.style.display = 'none';
+      document.getElementById('roomLoading').style.display = 'flex';
+      cleanup();
+      resolve();
+    }
+
+    function onSkip() {
+      modal.style.display = 'none';
+      document.getElementById('roomLoading').style.display = 'flex';
+      cleanup();
+      resolve();
+    }
+
+    function cleanup() {
+      if (saveBtn) saveBtn.removeEventListener('click', onSave);
+      if (skipBtn) skipBtn.removeEventListener('click', onSkip);
+      if (detectBtn) detectBtn.removeEventListener('click', onDetect);
+    }
+
+    if (saveBtn) saveBtn.addEventListener('click', onSave);
+    if (skipBtn) skipBtn.addEventListener('click', onSkip);
+    if (detectBtn) detectBtn.addEventListener('click', onDetect);
+  });
+}
+
+// ========== HEAT MAP TOGGLE ==========
+function setupHeatMapToggle() {
+  var toggleBtn = document.getElementById('heatMapToggleBtn');
+  var closeBtn = document.getElementById('heatMapCloseBtn');
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+      ROOM.HeatMap.toggle();
+      toggleBtn.classList.toggle('room-topbar-map-btn--active', ROOM.HeatMap.isVisible);
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      ROOM.HeatMap.hide();
+      if (toggleBtn) toggleBtn.classList.remove('room-topbar-map-btn--active');
+    });
+  }
 }
 
 // ========== MOBILE TABS ==========
@@ -359,6 +471,7 @@ function setupCleanup() {
     ROOM.Voice.destroy();
     ROOM.LastFM.destroy();
     ROOM.Events.destroy();
+    ROOM.HeatMap.destroy();
     ROOM.Firebase.destroy();
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     if (checkInTimerInterval) clearInterval(checkInTimerInterval);

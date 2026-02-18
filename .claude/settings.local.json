@@ -17,7 +17,10 @@
       "Bash(node -e:*)",
       "WebFetch(domain:agoraio.zendesk.com)",
       "Bash(npx convex dev:*)",
-      "Bash(npx convex deploy:*)"
+      "Bash(npx convex deploy:*)",
+      "Bash(findstr:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

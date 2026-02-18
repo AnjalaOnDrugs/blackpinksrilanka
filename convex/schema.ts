@@ -12,6 +12,7 @@ export default defineSchema({
     lastfmUsername: v.optional(v.string()),
     registeredAt: v.optional(v.number()),
     avatarColor: v.optional(v.string()),
+    district: v.optional(v.string()),
   }).index("by_phone", ["phoneNumber"])
     .index("by_username", ["username"]),
 

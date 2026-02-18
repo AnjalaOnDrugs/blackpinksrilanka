@@ -29,9 +29,10 @@ async function checkAuthState() {
  * @param {string} phoneNumber - Normalized phone number
  * @param {string} username - User's chosen username
  * @param {string} password - User's chosen password
+ * @param {string} [district] - User's district (optional)
  * @returns {Promise<Object>} User credential
  */
-async function signUpWithPhone(phoneNumber, username, password) {
+async function signUpWithPhone(phoneNumber, username, password, district) {
   try {
     // Construct email using phone number
     const email = `${phoneNumber}@bpsl.local`;
@@ -39,11 +40,15 @@ async function signUpWithPhone(phoneNumber, username, password) {
     // Create Firebase Auth account
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 
-    // Update Convex user record with username
-    await ConvexService.mutation('users:completeRegistration', {
+    // Update Convex user record with username and district
+    var regArgs = {
       phoneNumber: phoneNumber,
       username: username
-    });
+    };
+    if (district) {
+      regArgs.district = district;
+    }
+    await ConvexService.mutation('users:completeRegistration', regArgs);
 
     return userCredential;
   } catch (error) {
@@ -124,7 +129,8 @@ async function getCurrentUserData() {
       lastfmUsername: userDoc.lastfmUsername,
       avatarColor: userDoc.avatarColor,
       authStage: userDoc.authStage,
-      registeredAt: userDoc.registeredAt
+      registeredAt: userDoc.registeredAt,
+      district: userDoc.district || null
     };
   } catch (error) {
     console.error('Error getting user data:', error);

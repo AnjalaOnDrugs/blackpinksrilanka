@@ -777,3 +777,52 @@ export const recalculatePoints = mutation({
     return { totalPoints: streamPoints + (participant?.offlineTracking ? POINTS_CHECK_IN : 0) };
   },
 });
+
+/**
+ * Get stream counts aggregated by district for the heat map.
+ * Joins streamCounts → users (via phoneNumber) to get district,
+ * then groups by district.
+ */
+export const getStreamsByDistrict = query({
+  args: { roomId: v.string() },
+  handler: async (ctx, args) => {
+    const streams = await ctx.db
+      .query("streamCounts")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    // Get unique phone numbers from streams
+    const phoneNumbers = [...new Set(streams.map((s) => s.phoneNumber))];
+
+    // Look up district for each phone number
+    const phoneToDistrict: Record<string, string> = {};
+    for (const phone of phoneNumbers) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+        .first();
+      if (user?.district) {
+        phoneToDistrict[phone] = user.district;
+      }
+    }
+
+    // Aggregate streams by district
+    const districtCounts: Record<string, { totalStreams: number; uniqueUsers: Set<string> }> = {};
+    for (const s of streams) {
+      const district = phoneToDistrict[s.phoneNumber];
+      if (!district) continue;
+      if (!districtCounts[district]) {
+        districtCounts[district] = { totalStreams: 0, uniqueUsers: new Set() };
+      }
+      districtCounts[district].totalStreams++;
+      districtCounts[district].uniqueUsers.add(s.phoneNumber);
+    }
+
+    // Return as serializable array (Sets aren't serializable)
+    return Object.entries(districtCounts).map(([district, data]) => ({
+      district,
+      totalStreams: data.totalStreams,
+      uniqueUsers: data.uniqueUsers.size,
+    }));
+  },
+});

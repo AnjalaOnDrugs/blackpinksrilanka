@@ -3553,3 +3553,269 @@
     transform: scale(1.2) rotate(180deg);
   }
 }
+
+/* ========== HEAT MAP PANEL ========== */
+
+/* Desktop: floating overlay */
+.room-panel--heatmap {
+  position: fixed;
+  top: 74px;
+  right: 16px;
+  width: 340px;
+  max-height: calc(100vh - 90px);
+  max-height: calc(100dvh - 90px);
+  z-index: 75;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(247, 166, 185, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(247, 166, 185, 0.05);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(247, 166, 185, 0.2) transparent;
+  animation: roomHeatMapIn 0.3s ease-out;
+}
+
+.room-panel--heatmap::-webkit-scrollbar {
+  width: 4px;
+}
+
+.room-panel--heatmap::-webkit-scrollbar-thumb {
+  background: rgba(247, 166, 185, 0.2);
+  border-radius: 4px;
+}
+
+@keyframes roomHeatMapIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.room-panel--heatmap .room-panel-header {
+  position: relative;
+}
+
+.room-heatmap-close {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #888;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  line-height: 1;
+}
+
+.room-heatmap-close:hover {
+  background: rgba(247, 166, 185, 0.15);
+  color: #f7a6b9;
+  border-color: rgba(247, 166, 185, 0.25);
+}
+
+.room-heatmap-content {
+  padding: 0 16px 16px;
+}
+
+.room-heatmap-map-wrap {
+  position: relative;
+  width: 100%;
+  padding: 8px;
+}
+
+.room-heatmap-svg {
+  width: 100%;
+  height: auto;
+}
+
+.room-heatmap-district {
+  fill: rgba(247, 166, 185, 0.08);
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: fill 0.5s ease, stroke 0.3s ease, filter 0.3s ease;
+}
+
+.room-heatmap-district:hover {
+  filter: brightness(1.4) drop-shadow(0 0 6px rgba(247, 166, 185, 0.3));
+  stroke: rgba(247, 166, 185, 0.6);
+  stroke-width: 2;
+}
+
+/* Tooltip */
+.room-heatmap-tooltip {
+  display: none;
+  position: absolute;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(247, 166, 185, 0.2);
+  border-radius: 10px;
+  font-size: 12px;
+  color: #fff;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.room-heatmap-tooltip strong {
+  color: #f7a6b9;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Legend */
+.room-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 6px;
+}
+
+.room-heatmap-legend-gradient {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg,
+    rgba(247, 166, 185, 0.08) 0%,
+    rgba(247, 166, 185, 0.25) 25%,
+    rgba(247, 166, 185, 0.45) 50%,
+    rgba(247, 166, 185, 0.70) 75%,
+    #f7a6b9 100%);
+}
+
+.room-heatmap-legend-label {
+  font-size: 10px;
+  color: #666;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  min-width: 16px;
+}
+
+.room-heatmap-legend-label:last-child {
+  text-align: right;
+}
+
+/* Stats row */
+.room-heatmap-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.room-heatmap-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.room-heatmap-stat-value {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #f7a6b9;
+}
+
+.room-heatmap-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #666;
+}
+
+/* Desktop topbar map toggle button */
+.room-topbar-map-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.room-topbar-map-btn:hover {
+  background: rgba(247, 166, 185, 0.12);
+  border-color: rgba(247, 166, 185, 0.25);
+  color: #f7a6b9;
+}
+
+.room-topbar-map-btn--active {
+  background: rgba(247, 166, 185, 0.15);
+  border-color: rgba(247, 166, 185, 0.3);
+  color: #f7a6b9;
+}
+
+/* District detect button in modal */
+.room-modal-detect-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  margin: 10px 0 6px;
+  background: rgba(37, 211, 102, 0.08);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  border-radius: 10px;
+  color: #25D366;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.room-modal-detect-btn:hover {
+  background: rgba(37, 211, 102, 0.15);
+  border-color: rgba(37, 211, 102, 0.35);
+}
+
+/* Mobile: full panel (same as other panels) */
+@media (max-width: 768px) {
+  .room-panel--heatmap {
+    position: static;
+    width: 100%;
+    max-height: none;
+    border-radius: 20px;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    animation: none;
+  }
+
+  .room-heatmap-close {
+    display: none;
+  }
+
+  .room-topbar-map-btn {
+    display: none;
+  }
+}
