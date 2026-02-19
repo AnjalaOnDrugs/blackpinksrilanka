@@ -5950,6 +5950,11 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  animation: none !important;
+}
+
+.room-fill-map-overlay--minimized * {
+  pointer-events: none !important;
 }
 
 .room-fill-map-overlay--success .room-fill-map-card {
@@ -5965,6 +5970,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(10px);
+  pointer-events: auto;
 }
 
 .room-fill-map-card {
@@ -5980,6 +5986,7 @@
   backdrop-filter: blur(16px);
   box-shadow: 0 24px 52px rgba(0, 0, 0, 0.6);
   animation: roomFillMapCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
 }
 
 .room-fill-map-header {
@@ -6256,6 +6263,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
+  pointer-events: auto;
 }
 
 .room-fill-map-ty-modal {
@@ -6268,6 +6276,7 @@
   width: 90%;
   text-align: center;
   animation: roomFillMapCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: auto;
 }
 
 .room-fill-map-ty-icon {
@@ -6421,8 +6430,13 @@
   align-items: center;
   justify-content: center;
   margin-top: 2px;
-  color: #f7a6b9;
-  font-size: 32px;
+  overflow: hidden;
+}
+
+.room-fill-map-capsule-icon img {
+  width: 60%;
+  height: auto;
+  object-fit: contain;
 }
 
 .room-fill-map-capsule-label {

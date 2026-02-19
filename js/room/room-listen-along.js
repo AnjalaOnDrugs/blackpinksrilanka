@@ -16,8 +16,8 @@ ROOM.ListenAlong = {
   _compactEl: null,
   _bubbleEl: null,
   _autoCompactTimer: null,
-  _initialAutoCompactMs: 8000,
-  _expandedAutoCompactMs: 15000,
+  _initialAutoCompactMs: 30000,
+  _expandedAutoCompactMs: 8000,
   _eventMeta: null,
   _participantsByPhone: {},
   _thankYouEl: null,
@@ -296,22 +296,22 @@ ROOM.ListenAlong = {
     }
 
     // Fetch and display member GIF
-    this._loadMemberGif(member);
+    this._loadMemberGif(member, card);
 
     // Fetch album art from Last.fm
     if (songName && songArtist) {
-      this._fetchAlbumArt(songName, songArtist);
+      this._fetchAlbumArt(songName, songArtist, card);
     }
 
     // Render existing participants (for late joiners)
     if (existingParticipants && existingParticipants.length > 0) {
       for (var i = 0; i < existingParticipants.length; i++) {
-        this._addParticipantToCard(existingParticipants[i]);
+        this._addParticipantToCard(existingParticipants[i], card);
       }
     }
 
     // Update points display with initial participant count
-    this._updatePointsDisplay();
+    this._updatePointsDisplay(card);
 
     // Start countdown
     this._startCountdown(endsAt, duration);
@@ -324,9 +324,9 @@ ROOM.ListenAlong = {
     }
   },
 
-  _loadMemberGif: function (member) {
+  _loadMemberGif: function (member, card) {
     var self = this;
-    var gifContainer = document.getElementById('listenAlongGif');
+    var gifContainer = card ? card.querySelector('#listenAlongGif') : (this._cardEl ? this._cardEl.querySelector('#listenAlongGif') : null);
     if (!gifContainer) return;
 
     // Check cache first
@@ -405,13 +405,13 @@ ROOM.ListenAlong = {
       'allowfullscreen loading="lazy" class="room-listen-along-gif-media"></iframe>';
   },
 
-  _fetchAlbumArt: function (songName, songArtist) {
+  _fetchAlbumArt: function (songName, songArtist, card) {
     var self = this;
     var cacheKey = songArtist + '::' + songName;
 
     // Check cache first
     if (this._albumArtCache[cacheKey]) {
-      this._renderAlbumArt(this._albumArtCache[cacheKey]);
+      this._renderAlbumArt(this._albumArtCache[cacheKey], card);
       return;
     }
 
@@ -440,7 +440,7 @@ ROOM.ListenAlong = {
         }
         if (artUrl) {
           self._albumArtCache[cacheKey] = artUrl;
-          self._renderAlbumArt(artUrl);
+          self._renderAlbumArt(artUrl, card);
         }
       })
       .catch(function () {
@@ -448,19 +448,19 @@ ROOM.ListenAlong = {
       });
   },
 
-  _renderAlbumArt: function (artUrl) {
-    var artContainer = document.getElementById('listenAlongSongArt');
+  _renderAlbumArt: function (artUrl, card) {
+    var artContainer = card ? card.querySelector('#listenAlongSongArt') : (this._cardEl ? this._cardEl.querySelector('#listenAlongSongArt') : null);
     if (!artContainer) return;
     artContainer.innerHTML = '<img src="' + this._esc(artUrl) + '" alt="Album art" class="room-listen-along-song-art-img" loading="lazy">';
 
-    var compactArt = document.getElementById('listenAlongCapsuleArt');
+    var compactArt = this._compactEl ? this._compactEl.querySelector('#listenAlongCapsuleArt') : document.getElementById('listenAlongCapsuleArt');
     if (compactArt) {
       compactArt.innerHTML = '<img src="' + this._esc(artUrl) + '" alt="Album art" class="room-listen-along-capsule-art-img" loading="lazy">';
     }
   },
 
-  _addParticipantToCard: function (data) {
-    var container = document.getElementById('listenAlongParticipants');
+  _addParticipantToCard: function (data, card) {
+    var container = card ? card.querySelector('#listenAlongParticipants') : (this._cardEl ? this._cardEl.querySelector('#listenAlongParticipants') : null);
     if (!container) return;
 
     // Check if already rendered
@@ -523,7 +523,7 @@ ROOM.ListenAlong = {
   },
 
   _updateJoinStatus: function (joined) {
-    var statusEl = document.getElementById('listenAlongStatus');
+    var statusEl = this._cardEl ? this._cardEl.querySelector('#listenAlongStatus') : document.getElementById('listenAlongStatus');
     if (!statusEl) return;
 
     if (joined) {
@@ -555,17 +555,17 @@ ROOM.ListenAlong = {
 
       var mins = Math.floor(remaining / 60000);
       var secs = Math.floor((remaining % 60000) / 1000);
-      var countdownEl = document.getElementById('listenAlongCountdown');
+      var countdownEl = self._cardEl ? self._cardEl.querySelector('#listenAlongCountdown') : null;
       if (countdownEl) {
         countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
       }
 
-      var compactCountdownEl = document.getElementById('listenAlongCapsuleCountdown');
+      var compactCountdownEl = self._compactEl ? self._compactEl.querySelector('#listenAlongCapsuleCountdown') : null;
       if (compactCountdownEl) {
         compactCountdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
       }
 
-      var fillEl = document.getElementById('listenAlongProgressFill');
+      var fillEl = self._cardEl ? self._cardEl.querySelector('#listenAlongProgressFill') : null;
       if (fillEl) {
         var percentage = (remaining / duration) * 100;
         fillEl.style.width = percentage + '%';
@@ -734,7 +734,7 @@ ROOM.ListenAlong = {
   },
 
   _refreshCompactFromState: function () {
-    var titleEl = document.getElementById('listenAlongCapsuleTitle');
+    var titleEl = this._compactEl ? this._compactEl.querySelector('#listenAlongCapsuleTitle') : null;
     if (titleEl) {
       var songTitle = this._requiredSong && this._requiredSong.name
         ? this._requiredSong.name
@@ -742,8 +742,8 @@ ROOM.ListenAlong = {
       titleEl.textContent = songTitle;
     }
 
-    var fullCountdown = document.getElementById('listenAlongCountdown');
-    var compactCountdown = document.getElementById('listenAlongCapsuleCountdown');
+    var fullCountdown = this._cardEl ? this._cardEl.querySelector('#listenAlongCountdown') : null;
+    var compactCountdown = this._compactEl ? this._compactEl.querySelector('#listenAlongCapsuleCountdown') : null;
     if (compactCountdown && fullCountdown) {
       compactCountdown.textContent = fullCountdown.textContent || '--:--';
     }
@@ -754,7 +754,7 @@ ROOM.ListenAlong = {
     if (songName && songArtist) {
       var cacheKey = songArtist + '::' + songName;
       if (this._albumArtCache[cacheKey]) {
-        var capsuleArt = document.getElementById('listenAlongCapsuleArt');
+        var capsuleArt = this._compactEl ? this._compactEl.querySelector('#listenAlongCapsuleArt') : null;
         if (capsuleArt) {
           capsuleArt.innerHTML = '<img src="' + this._esc(this._albumArtCache[cacheKey]) + '" alt="Album art" class="room-listen-along-capsule-art-img" loading="lazy">';
         }
@@ -765,7 +765,7 @@ ROOM.ListenAlong = {
   },
 
   _refreshCompactParticipants: function () {
-    var container = document.getElementById('listenAlongCapsuleParticipants');
+    var container = this._bubbleEl ? this._bubbleEl : document.getElementById('listenAlongCapsuleParticipants');
     if (!container) return;
     container.innerHTML = '';
 
@@ -806,8 +806,8 @@ ROOM.ListenAlong = {
     this._positionBubblesAboveCapsule();
   },
 
-  _updatePointsDisplay: function () {
-    var pointsEl = document.getElementById('listenAlongPoints');
+  _updatePointsDisplay: function (card) {
+    var pointsEl = card ? card.querySelector('#listenAlongPoints') : (this._cardEl ? this._cardEl.querySelector('#listenAlongPoints') : null);
     if (!pointsEl) return;
     var count = Object.keys(this._participantsByPhone).length;
     var label = pointsEl.querySelector('.room-listen-along-points-label');

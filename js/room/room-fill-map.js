@@ -18,8 +18,8 @@ ROOM.FillMap = {
   _compactEl: null,
   _bubbleEl: null,
   _autoCompactTimer: null,
-  _initialAutoCompactMs: 8000,
-  _expandedAutoCompactMs: 15000,
+  _initialAutoCompactMs: 30000,
+  _expandedAutoCompactMs: 8000,
   _capsuleSide: 'right',
   _swipeStartX: null,
   _swipeStartY: null,
@@ -321,7 +321,7 @@ ROOM.FillMap = {
     this._overlayEl = container;
 
     // Insert cloned SVG
-    var svgContainer = document.getElementById('fillMapSvgContainer');
+    var svgContainer = container.querySelector('#fillMapSvgContainer');
     if (svgContainer && svgClone) {
       svgClone.id = 'fillMapSvg';
       svgClone.classList.add('room-fill-map-svg');
@@ -360,7 +360,7 @@ ROOM.FillMap = {
     }
 
     // Minimize button
-    var minimizeBtn = document.getElementById('fillMapMinimizeBtn');
+    var minimizeBtn = container.querySelector('#fillMapMinimizeBtn');
     if (minimizeBtn) {
       minimizeBtn.addEventListener('click', function (e) {
         e.preventDefault();
@@ -381,7 +381,7 @@ ROOM.FillMap = {
   },
 
   _fillDistrictVisual: function (district, username, profilePicture) {
-    var svg = document.getElementById('fillMapSvg');
+    var svg = this._overlayEl ? this._overlayEl.querySelector('#fillMapSvg') : null;
     if (svg) {
       var path = svg.querySelector('[data-district="' + district + '"]');
       if (path) {
@@ -475,7 +475,7 @@ ROOM.FillMap = {
     if (!overlay) return;
     overlay.classList.add('room-fill-map-overlay--success');
 
-    var statusEl = document.getElementById('fillMapStatus');
+    var statusEl = this._overlayEl.querySelector('#fillMapStatus');
     if (statusEl) {
       statusEl.innerHTML =
         '<div class="room-fill-map-status-icon">🎉</div>' +
@@ -493,7 +493,7 @@ ROOM.FillMap = {
     if (!overlay) return;
     overlay.classList.add('room-fill-map-overlay--failed');
 
-    var statusEl = document.getElementById('fillMapStatus');
+    var statusEl = this._overlayEl.querySelector('#fillMapStatus');
     if (statusEl) {
       statusEl.innerHTML =
         '<div class="room-fill-map-status-icon">⏰</div>' +
@@ -564,7 +564,7 @@ ROOM.FillMap = {
     capsule.setAttribute('aria-label', 'Open Fill the Map');
     capsule.innerHTML =
       '<div class="room-fill-map-capsule-glare"></div>' +
-      '<div class="room-fill-map-capsule-icon">🗺️</div>' +
+      '<div class="room-fill-map-capsule-icon"><img src="assets/logo/map.png" alt="Map" loading="lazy"></div>' +
       '<div class="room-fill-map-capsule-label">FILL THE MAP</div>' +
       '<div class="room-fill-map-capsule-title" id="fillMapCapsuleTitle">...</div>' +
       '<div class="room-fill-map-capsule-countdown" id="fillMapCapsuleCountdown">--:--</div>' +
@@ -609,14 +609,14 @@ ROOM.FillMap = {
   },
 
   _refreshCompactFromState: function () {
-    var titleEl = document.getElementById('fillMapCapsuleTitle');
+    var titleEl = this._compactEl ? this._compactEl.querySelector('#fillMapCapsuleTitle') : null;
     if (titleEl && this._eventData) {
       var songTitle = this._eventData.songName ? this._eventData.songName : 'BLACKPINK';
       titleEl.textContent = songTitle;
     }
 
-    var fullCountdown = document.getElementById('fillMapCountdown');
-    var compactCountdown = document.getElementById('fillMapCapsuleCountdown');
+    var fullCountdown = this._overlayEl ? this._overlayEl.querySelector('#fillMapCountdown') : null;
+    var compactCountdown = this._compactEl ? this._compactEl.querySelector('#fillMapCapsuleCountdown') : null;
     if (compactCountdown && fullCountdown) {
       compactCountdown.textContent = fullCountdown.textContent || '--:--';
     }
@@ -625,7 +625,7 @@ ROOM.FillMap = {
   },
 
   _refreshCompactParticipants: function () {
-    var container = document.getElementById('fillMapCapsuleParticipants');
+    var container = this._bubbleEl ? this._bubbleEl : document.getElementById('fillMapCapsuleParticipants');
     if (!container || !this._eventData) return;
     container.innerHTML = '';
 
@@ -764,7 +764,6 @@ ROOM.FillMap = {
     this._clearAutoCompactTimer();
     if (!this._overlayEl) {
       this._removeCompactCard();
-      this._eventData = null;
       if (this._countdownInterval) {
         clearInterval(this._countdownInterval);
         this._countdownInterval = null;
@@ -786,7 +785,6 @@ ROOM.FillMap = {
     }
 
     this._removeCompactCard();
-    this._eventData = null;
   },
 
   _resetState: function () {
@@ -813,17 +811,17 @@ ROOM.FillMap = {
 
       var mins = Math.floor(remaining / 60000);
       var secs = Math.floor((remaining % 60000) / 1000);
-      var countdownEl = document.getElementById('fillMapCountdown');
+      var countdownEl = self._overlayEl ? self._overlayEl.querySelector('#fillMapCountdown') : null;
       if (countdownEl) {
         countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
       }
 
-      var compactCountdownEl = document.getElementById('fillMapCapsuleCountdown');
+      var compactCountdownEl = self._compactEl ? self._compactEl.querySelector('#fillMapCapsuleCountdown') : null;
       if (compactCountdownEl) {
         compactCountdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
       }
 
-      var fillEl = document.getElementById('fillMapProgressFill');
+      var fillEl = self._overlayEl ? self._overlayEl.querySelector('#fillMapProgressFill') : null;
       if (fillEl) {
         var percentage = (remaining / duration) * 100;
         fillEl.style.width = percentage + '%';
