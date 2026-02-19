@@ -13,6 +13,10 @@ ROOM.ListenAlong = {
   _activeEventId: null,
   _hasJoined: false,
   _cardEl: null,
+  _compactEl: null,
+  _autoCompactTimer: null,
+  _eventMeta: null,
+  _participantsByPhone: {},
   _thankYouEl: null,
   _gifCache: {},
   _albumArtCache: {},
@@ -205,6 +209,14 @@ ROOM.ListenAlong = {
   _showEventCard: function (member, endsAt, duration, existingParticipants, songName, songArtist) {
     var self = this;
     this._removeEventCard();
+    this._participantsByPhone = {};
+    this._eventMeta = {
+      member: member,
+      endsAt: endsAt,
+      duration: duration,
+      songName: songName,
+      songArtist: songArtist
+    };
 
     var overlay = document.getElementById('eventOverlay');
     if (!overlay) return;
@@ -223,7 +235,10 @@ ROOM.ListenAlong = {
             '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.7 1.32.42.18.48.66.24 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-.99-.12-1.11-.6-.12-.48.12-.99.6-1.11 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.21 1.17zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-.96.6-1.5.3z"/></svg>' +
             ' LISTEN ALONG' +
           '</div>' +
-          '<span class="room-listen-along-countdown" id="listenAlongCountdown">--:--</span>' +
+          '<div class="room-listen-along-header-actions">' +
+            '<span class="room-listen-along-countdown" id="listenAlongCountdown">--:--</span>' +
+            '<button class="room-listen-along-minimize" id="listenAlongMinimizeBtn" type="button" aria-label="Minimize Listen Along">-</button>' +
+          '</div>' +
         '</div>' +
         '<div class="room-listen-along-title">' + this._esc(member) + '\'s Spotify Listen Along</div>' +
         '<div class="room-listen-along-gif" id="listenAlongGif"></div>' +
@@ -254,6 +269,15 @@ ROOM.ListenAlong = {
     overlay.appendChild(card);
     this._cardEl = card;
 
+    var minimizeBtn = card.querySelector('#listenAlongMinimizeBtn');
+    if (minimizeBtn) {
+      minimizeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self._minimizeToCompact();
+      });
+    }
+
     // Fetch and display member GIF
     this._loadMemberGif(member);
 
@@ -271,6 +295,10 @@ ROOM.ListenAlong = {
 
     // Start countdown
     this._startCountdown(endsAt, duration);
+
+    if (this._isCompactModeEnabled()) {
+      this._scheduleAutoCompact();
+    }
 
     // Confetti burst on start
     if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
@@ -406,6 +434,11 @@ ROOM.ListenAlong = {
     var artContainer = document.getElementById('listenAlongSongArt');
     if (!artContainer) return;
     artContainer.innerHTML = '<img src="' + this._esc(artUrl) + '" alt="Album art" class="room-listen-along-song-art-img" loading="lazy">';
+
+    var compactArt = document.getElementById('listenAlongCapsuleArt');
+    if (compactArt) {
+      compactArt.innerHTML = '<img src="' + this._esc(artUrl) + '" alt="Album art" class="room-listen-along-capsule-art-img" loading="lazy">';
+    }
   },
 
   _addParticipantToCard: function (data) {
@@ -450,6 +483,12 @@ ROOM.ListenAlong = {
       albumArtHtml;
 
     container.appendChild(entry);
+    this._participantsByPhone[data.phoneNumber] = {
+      phoneNumber: data.phoneNumber,
+      username: data.username,
+      avatarColor: color
+    };
+    this._refreshCompactParticipants();
 
     // Animate entry
     entry.style.opacity = '0';
@@ -499,6 +538,11 @@ ROOM.ListenAlong = {
         countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
       }
 
+      var compactCountdownEl = document.getElementById('listenAlongCapsuleCountdown');
+      if (compactCountdownEl) {
+        compactCountdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      }
+
       var fillEl = document.getElementById('listenAlongProgressFill');
       if (fillEl) {
         var percentage = (remaining / duration) * 100;
@@ -521,7 +565,18 @@ ROOM.ListenAlong = {
   },
 
   _removeEventCard: function () {
-    if (!this._cardEl) return;
+    this._clearAutoCompactTimer();
+
+    if (!this._cardEl) {
+      this._removeCompactCard();
+      this._eventMeta = null;
+      this._participantsByPhone = {};
+      if (this._countdownInterval) {
+        clearInterval(this._countdownInterval);
+        this._countdownInterval = null;
+      }
+      return;
+    }
     var card = this._cardEl;
     this._cardEl = null;
 
@@ -533,6 +588,123 @@ ROOM.ListenAlong = {
     if (this._countdownInterval) {
       clearInterval(this._countdownInterval);
       this._countdownInterval = null;
+    }
+
+    this._removeCompactCard();
+    this._eventMeta = null;
+    this._participantsByPhone = {};
+  },
+
+  _isCompactModeEnabled: function () {
+    return window.innerWidth <= 768;
+  },
+
+  _scheduleAutoCompact: function () {
+    var self = this;
+    this._clearAutoCompactTimer();
+    this._autoCompactTimer = setTimeout(function () {
+      self._minimizeToCompact();
+    }, 4000);
+  },
+
+  _clearAutoCompactTimer: function () {
+    if (this._autoCompactTimer) {
+      clearTimeout(this._autoCompactTimer);
+      this._autoCompactTimer = null;
+    }
+  },
+
+  _minimizeToCompact: function () {
+    if (!this._cardEl || !this._activeEventId || !this._isCompactModeEnabled()) return;
+    this._clearAutoCompactTimer();
+    this._ensureCompactCard();
+    this._refreshCompactFromState();
+    this._cardEl.classList.add('room-listen-along-card--minimized');
+    if (this._compactEl) {
+      this._compactEl.classList.add('room-listen-along-capsule--visible');
+    }
+  },
+
+  _expandFromCompact: function () {
+    this._clearAutoCompactTimer();
+    if (this._cardEl) {
+      this._cardEl.classList.remove('room-listen-along-card--minimized');
+    }
+    if (this._compactEl) {
+      this._compactEl.classList.remove('room-listen-along-capsule--visible');
+    }
+  },
+
+  _ensureCompactCard: function () {
+    var self = this;
+    if (this._compactEl) return;
+
+    var overlay = document.getElementById('eventOverlay');
+    if (!overlay) return;
+
+    var capsule = document.createElement('button');
+    capsule.type = 'button';
+    capsule.className = 'room-listen-along-capsule';
+    capsule.setAttribute('aria-label', 'Open Listen Along');
+    capsule.innerHTML =
+      '<div class="room-listen-along-capsule-glare"></div>' +
+      '<div class="room-listen-along-capsule-art" id="listenAlongCapsuleArt">' +
+        '<div class="room-listen-along-capsule-art-placeholder">♪</div>' +
+      '</div>' +
+      '<div class="room-listen-along-capsule-label">LISTEN ALONG</div>' +
+      '<div class="room-listen-along-capsule-title" id="listenAlongCapsuleTitle">BLACKPINK</div>' +
+      '<div class="room-listen-along-capsule-countdown" id="listenAlongCapsuleCountdown">--:--</div>' +
+      '<div class="room-listen-along-capsule-people" id="listenAlongCapsuleParticipants"></div>' +
+      '<div class="room-listen-along-capsule-glow"></div>';
+
+    capsule.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self._expandFromCompact();
+    });
+
+    overlay.appendChild(capsule);
+    this._compactEl = capsule;
+  },
+
+  _removeCompactCard: function () {
+    if (!this._compactEl) return;
+    this._compactEl.remove();
+    this._compactEl = null;
+  },
+
+  _refreshCompactFromState: function () {
+    var titleEl = document.getElementById('listenAlongCapsuleTitle');
+    if (titleEl) {
+      var songTitle = this._requiredSong && this._requiredSong.name
+        ? this._requiredSong.name
+        : (this._eventMeta && this._eventMeta.songName ? this._eventMeta.songName : 'BLACKPINK');
+      titleEl.textContent = songTitle;
+    }
+
+    var fullCountdown = document.getElementById('listenAlongCountdown');
+    var compactCountdown = document.getElementById('listenAlongCapsuleCountdown');
+    if (compactCountdown && fullCountdown) {
+      compactCountdown.textContent = fullCountdown.textContent || '--:--';
+    }
+    this._refreshCompactParticipants();
+  },
+
+  _refreshCompactParticipants: function () {
+    var container = document.getElementById('listenAlongCapsuleParticipants');
+    if (!container) return;
+    container.innerHTML = '';
+
+    var keys = Object.keys(this._participantsByPhone || {});
+    var maxToShow = 3;
+    for (var i = 0; i < keys.length && i < maxToShow; i++) {
+      var p = this._participantsByPhone[keys[i]];
+      var bubble = document.createElement('div');
+      bubble.className = 'room-listen-along-capsule-person';
+      bubble.setAttribute('data-phone', p.phoneNumber);
+      bubble.style.background = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+      bubble.textContent = (p.username || '?').charAt(0).toUpperCase();
+      container.appendChild(bubble);
     }
   },
 
@@ -627,8 +799,10 @@ ROOM.ListenAlong = {
   destroy: function () {
     if (this._checkInterval) clearInterval(this._checkInterval);
     if (this._countdownInterval) clearInterval(this._countdownInterval);
+    this._clearAutoCompactTimer();
     this._stopJoinCheck();
     this._removeEventCard();
+    this._removeCompactCard();
     if (this._thankYouEl) {
       this._thankYouEl.remove();
       this._thankYouEl = null;
