@@ -70,6 +70,15 @@ ROOM.Events = {
           ROOM.Animations.playBongBack(eventData.data);
         }
         break;
+      case 'listen_along_start':
+        ROOM.ListenAlong && ROOM.ListenAlong.handleStart(eventData.data);
+        break;
+      case 'listen_along_join':
+        ROOM.ListenAlong && ROOM.ListenAlong.handleJoin(eventData.data);
+        break;
+      case 'listen_along_end':
+        ROOM.ListenAlong && ROOM.ListenAlong.handleEnd(eventData.data);
+        break;
     }
   },
 

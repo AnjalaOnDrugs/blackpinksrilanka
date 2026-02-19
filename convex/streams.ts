@@ -769,12 +769,14 @@ export const recalculatePoints = mutation({
 
     if (participant) {
       const checkInPoints = participant.offlineTracking ? POINTS_CHECK_IN : 0;
+      const bonusPoints = participant.bonusPoints ?? 0;
       await ctx.db.patch(participant._id, {
-        totalPoints: streamPoints + checkInPoints,
+        totalPoints: streamPoints + checkInPoints + bonusPoints,
       });
     }
 
-    return { totalPoints: streamPoints + (participant?.offlineTracking ? POINTS_CHECK_IN : 0) };
+    const bonusPoints = participant?.bonusPoints ?? 0;
+    return { totalPoints: streamPoints + (participant?.offlineTracking ? POINTS_CHECK_IN : 0) + bonusPoints };
   },
 });
 

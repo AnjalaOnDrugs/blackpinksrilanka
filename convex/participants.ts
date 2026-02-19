@@ -31,6 +31,7 @@ export const listByRoom = query({
         streakMinutes: p.streakMinutes,
         offlineTracking: p.offlineTracking ?? false,
         lastCheckIn: p.lastCheckIn ?? null,
+        bonusPoints: p.bonusPoints ?? 0,
       },
     }));
   },

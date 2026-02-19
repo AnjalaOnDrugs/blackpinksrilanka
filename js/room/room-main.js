@@ -80,6 +80,7 @@ async function initRoom(roomId) {
   ROOM.Voice.init();
   ROOM.Events.init();
   ROOM.Animations.init();
+  ROOM.ListenAlong.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 
@@ -471,6 +472,7 @@ function setupCleanup() {
     ROOM.Voice.destroy();
     ROOM.LastFM.destroy();
     ROOM.Events.destroy();
+    ROOM.ListenAlong.destroy();
     ROOM.HeatMap.destroy();
     ROOM.Firebase.destroy();
     if (heartbeatInterval) clearInterval(heartbeatInterval);

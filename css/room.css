@@ -4974,3 +4974,521 @@
   backdrop-filter: blur(10px);
   min-width: 220px;
 }
+
+
+/* ========== LISTEN ALONG EVENT ========== */
+
+.room-listen-along-card {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  z-index: 190;
+  width: 360px;
+  animation: roomListenAlongIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.room-listen-along-card--exit {
+  animation: roomListenAlongOut 0.5s ease-in forwards !important;
+}
+
+.room-listen-along-glow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(30, 215, 96, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.room-listen-along-content {
+  background: linear-gradient(135deg, rgba(30, 215, 96, 0.08), rgba(247, 166, 185, 0.05), rgba(10, 10, 10, 0.95));
+  border: 1px solid rgba(30, 215, 96, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.room-listen-along-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.room-listen-along-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(30, 215, 96, 0.15);
+  color: #1DB954;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(30, 215, 96, 0.25);
+}
+
+.room-listen-along-badge svg {
+  width: 14px;
+  height: 14px;
+  fill: #1DB954;
+}
+
+.room-listen-along-countdown {
+  font-family: 'Outfit', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: #1DB954;
+  text-shadow: 0 0 10px rgba(30, 215, 96, 0.3);
+}
+
+.room-listen-along-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+/* GIF container */
+.room-listen-along-gif {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-listen-along-gif-media {
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.room-listen-along-gif-loading {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  padding: 40px;
+}
+
+/* Song display */
+.room-listen-along-song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(29, 185, 84, 0.08);
+  border: 1px solid rgba(29, 185, 84, 0.15);
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.room-listen-along-song-art {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-listen-along-song-art-placeholder {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.room-listen-along-song-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.room-listen-along-song-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.room-listen-along-song-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.room-listen-along-song-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-listen-along-song-badge {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Progress bar */
+.room-listen-along-progress {
+  margin-bottom: 14px;
+}
+
+.room-listen-along-progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.room-listen-along-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1DB954, #f7a6b9);
+  border-radius: 2px;
+  transition: width 1s linear;
+  width: 100%;
+}
+
+/* Participants list */
+.room-listen-along-participants {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.room-listen-along-participant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.room-listen-along-participant-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.room-listen-along-participant-avatar span {
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.room-listen-along-participant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-listen-along-participant-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-listen-along-participant-track {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-listen-along-participant-artist {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.room-listen-along-participant-art {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.room-listen-along-participant-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Status / join instruction */
+.room-listen-along-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(30, 215, 96, 0.08);
+  border: 1px solid rgba(30, 215, 96, 0.15);
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  animation: roomListenAlongPulse 2s ease-in-out infinite;
+}
+
+.room-listen-along-status--joined {
+  background: rgba(30, 215, 96, 0.12);
+  border-color: rgba(30, 215, 96, 0.3);
+  color: #1DB954;
+  animation: none;
+}
+
+.room-listen-along-status-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ========== THANK YOU DIALOG ========== */
+
+.room-listen-along-thankyou {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: roomListenAlongFadeIn 0.3s ease forwards;
+}
+
+.room-listen-along-thankyou--exit {
+  animation: roomListenAlongFadeOut 0.4s ease forwards !important;
+}
+
+.room-listen-along-ty-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.room-listen-along-ty-modal {
+  position: relative;
+  background: linear-gradient(135deg, rgba(30, 215, 96, 0.08), rgba(247, 166, 185, 0.05), rgba(15, 15, 20, 0.98));
+  border: 1px solid rgba(30, 215, 96, 0.25);
+  border-radius: 24px;
+  padding: 32px 28px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: roomListenAlongModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.room-listen-along-ty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.room-listen-along-ty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.room-listen-along-ty-points-big {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1DB954;
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(30, 215, 96, 0.3);
+}
+
+.room-listen-along-ty-desc {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+.room-listen-along-ty-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.room-listen-along-ty-participant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.room-listen-along-ty-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.room-listen-along-ty-avatar span {
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.room-listen-along-ty-name {
+  flex: 1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-align: left;
+}
+
+.room-listen-along-ty-art {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.room-listen-along-ty-points {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1DB954;
+  flex-shrink: 0;
+}
+
+.room-listen-along-ty-close {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(30, 215, 96, 0.15);
+  color: #1DB954;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid rgba(30, 215, 96, 0.25);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.room-listen-along-ty-close:hover {
+  background: rgba(30, 215, 96, 0.25);
+}
+
+/* ========== LISTEN ALONG ANIMATIONS ========== */
+
+@keyframes roomListenAlongIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes roomListenAlongOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+}
+
+@keyframes roomListenAlongPulse {
+  0%, 100% {
+    border-color: rgba(30, 215, 96, 0.15);
+  }
+  50% {
+    border-color: rgba(30, 215, 96, 0.35);
+    box-shadow: 0 0 12px rgba(30, 215, 96, 0.1);
+  }
+}
+
+@keyframes roomListenAlongFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes roomListenAlongFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes roomListenAlongModalIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ========== LISTEN ALONG RESPONSIVE ========== */
+
+@media (max-width: 768px) {
+  .room-listen-along-card {
+    right: 10px;
+    left: 10px;
+    bottom: 80px;
+    width: auto;
+  }
+
+  .room-listen-along-gif-media {
+    max-height: 160px;
+  }
+
+  .room-listen-along-ty-modal {
+    padding: 24px 20px;
+  }
+
+  .room-listen-along-ty-points-big {
+    font-size: 24px;
+  }
+}

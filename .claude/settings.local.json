@@ -26,7 +26,11 @@
       "WebFetch(domain:pavan168.github.io)",
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:mapsvg.com)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:klipy.com)",
+      "WebFetch(domain:docs.klipy.com)"
     ]
   }
 }

@@ -144,7 +144,20 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4);
+    // 5. Subscribe to active listen-along events (for late joiners)
+    var unsub5 = ConvexService.watch(
+      'listenAlong:getActiveListenAlong',
+      { roomId: roomId },
+      function (event) {
+        if (event && event.status === 'active') {
+          if (ROOM.ListenAlong && ROOM.ListenAlong.handleActiveEvent) {
+            ROOM.ListenAlong.handleActiveEvent(event);
+          }
+        }
+      }
+    );
+
+    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5);
   },
 
   getParticipants: function () {

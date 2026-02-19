@@ -39,5 +39,37 @@ const CONFIG = {
 
   // Offline tracking / check-in
   checkInInterval: 3600000,   // 1 hour — how long a check-in lasts (ms)
-  offlinePollInterval: 10000  // 10s — how often online clients poll offline users' Last.fm
+  offlinePollInterval: 10000, // 10s — how often online clients poll offline users' Last.fm
+
+  // Listen Along event settings
+  listenAlongCheckInterval: 60000,    // Check every 60s if we should trigger
+  listenAlongCooldown: 10000,       // 1 hour between events
+  listenAlongDuration: 180000,        // 3 minute event duration
+  listenAlongTriggerChance: 1,     // 15% chance per check once cooldown elapsed
+  listenAlongJoinCheckInterval: 5000, // Check every 5s if current user is playing
+
+  // Listen Along song catalog (random pick per event)
+  listenAlongSongs: [
+    { name: "DDU-DU DDU-DU", artist: "BLACKPINK" },
+    { name: "Kill This Love", artist: "BLACKPINK" },
+    { name: "How You Like That", artist: "BLACKPINK" },
+    { name: "Lovesick Girls", artist: "BLACKPINK" },
+    { name: "Pink Venom", artist: "BLACKPINK" },
+    { name: "Shut Down", artist: "BLACKPINK" },
+    { name: "Boombayah", artist: "BLACKPINK" },
+    { name: "As If It's Your Last", artist: "BLACKPINK" },
+    { name: "Playing With Fire", artist: "BLACKPINK" },
+    { name: "Whistle", artist: "BLACKPINK" },
+    { name: "Ice Cream", artist: "BLACKPINK" },
+    { name: "SOLO", artist: "Jennie" },
+    { name: "MONEY", artist: "Lisa" },
+    { name: "LALISA", artist: "Lisa" },
+    { name: "Flower", artist: "Jisoo" },
+    { name: "On The Ground", artist: "Rosé" },
+    { name: "APT.", artist: "Rosé" },
+    { name: "number one girl", artist: "Rosé" },
+  ],
+
+  // Klipy GIF API
+  klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv'
 };

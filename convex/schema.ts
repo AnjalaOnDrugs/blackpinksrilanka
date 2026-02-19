@@ -51,6 +51,7 @@ export default defineSchema({
     streakMinutes: v.number(),
     offlineTracking: v.optional(v.boolean()),
     lastCheckIn: v.optional(v.number()),
+    bonusPoints: v.optional(v.number()),
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"])
     .index("by_room_minutes", ["roomId", "totalMinutes"]),
@@ -117,6 +118,29 @@ export default defineSchema({
     // Whether this session has already been counted as a stream
     counted: v.boolean(),
   }).index("by_room_phone", ["roomId", "phoneNumber"]),
+
+  listenAlongEvents: defineTable({
+    roomId: v.string(),
+    member: v.string(),
+    songName: v.optional(v.string()),
+    songArtist: v.optional(v.string()),
+    participants: v.array(
+      v.object({
+        phoneNumber: v.string(),
+        username: v.string(),
+        avatarColor: v.string(),
+        trackName: v.optional(v.string()),
+        trackArtist: v.optional(v.string()),
+        albumArt: v.optional(v.string()),
+      })
+    ),
+    startedAt: v.number(),
+    endsAt: v.number(),
+    status: v.string(),
+    pointsAwarded: v.optional(v.boolean()),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_status", ["roomId", "status"]),
 
   rooms: defineTable({
     roomId: v.string(),

@@ -1,0 +1,637 @@
+/**
+ * Room Listen Along
+ * Hourly mini-event: a BLACKPINK member's Spotify Listen Along.
+ * Auto-triggers when 2+ users online; users join by playing music.
+ */
+
+window.ROOM = window.ROOM || {};
+
+ROOM.ListenAlong = {
+  _checkInterval: null,
+  _countdownInterval: null,
+  _joinCheckInterval: null,
+  _activeEventId: null,
+  _hasJoined: false,
+  _cardEl: null,
+  _thankYouEl: null,
+  _gifCache: {},
+  _albumArtCache: {},
+  _requiredSong: null,
+
+  init: function () {
+    this._startPeriodicCheck();
+  },
+
+  // ========== SCHEDULING ==========
+
+  _startPeriodicCheck: function () {
+    var self = this;
+    var interval = CONFIG.listenAlongCheckInterval || 60000;
+
+    // Try immediately so users don't wait a full interval after joining.
+    self._tryTrigger();
+
+    this._checkInterval = setInterval(function () {
+      self._tryTrigger();
+    }, interval);
+  },
+
+  _tryTrigger: function () {
+    if (this._activeEventId) return; // Event already active
+
+    var participants = ROOM.Firebase.getParticipants();
+    var onlineUsers = participants.filter(function (p) { return p.data.isOnline; });
+
+    if (onlineUsers.length < 2) return;
+    if (!ROOM.currentUser) return;
+
+    // Random chance gate
+    var chance = CONFIG.listenAlongTriggerChance || 0.15;
+    if (Math.random() > chance) return;
+
+    // Pick a random BLACKPINK song from the catalog
+    var songs = CONFIG.listenAlongSongs || [];
+    if (songs.length === 0) return;
+    var song = songs[Math.floor(Math.random() * songs.length)];
+
+    // Server-side dedup handles the 1-hour cooldown
+    ConvexService.mutation('listenAlong:startListenAlong', {
+      roomId: ROOM.Firebase.roomId,
+      songName: song.name,
+      songArtist: song.artist,
+      cooldownMs: CONFIG.listenAlongCooldown,
+      durationMs: CONFIG.listenAlongDuration
+    });
+  },
+
+  // ========== EVENT HANDLERS (called from room-events.js) ==========
+
+  handleStart: function (data) {
+    this._activeEventId = data.listenAlongId;
+    this._hasJoined = false;
+    this._requiredSong = { name: data.songName, artist: data.songArtist };
+    this._showEventCard(data.member, data.endsAt, data.duration || CONFIG.listenAlongDuration, [], data.songName, data.songArtist);
+    this._startJoinCheck();
+
+    // Toast notification
+    if (ROOM.Animations && ROOM.Animations.showToast) {
+      ROOM.Animations.showToast('energy', '🎵',
+        '<strong>' + this._esc(data.member) + '\'s Listen Along</strong> just started! Play <strong>' + this._esc(data.songName) + '</strong> to join!');
+    }
+  },
+
+  handleJoin: function (data) {
+    if (!this._activeEventId) return;
+    this._addParticipantToCard(data);
+
+    // Check if this is the current user joining
+    if (ROOM.currentUser && data.phoneNumber === ROOM.currentUser.phoneNumber) {
+      this._hasJoined = true;
+      this._updateJoinStatus(true);
+    }
+  },
+
+  handleEnd: function (data) {
+    this._stopJoinCheck();
+
+    // Check if current user was a participant
+    var wasParticipant = false;
+    if (ROOM.currentUser && data.participants) {
+      for (var i = 0; i < data.participants.length; i++) {
+        if (data.participants[i].phoneNumber === ROOM.currentUser.phoneNumber) {
+          wasParticipant = true;
+          break;
+        }
+      }
+    }
+
+    this._removeEventCard();
+
+    if (wasParticipant) {
+      this._showThankYouDialog(data);
+    }
+
+    this._activeEventId = null;
+    this._hasJoined = false;
+    this._requiredSong = null;
+  },
+
+  // Called from Convex subscription for late joiners
+  handleActiveEvent: function (event) {
+    if (!event || this._activeEventId) return; // Already showing
+    if (Date.now() > event.endsAt) return; // Expired
+
+    this._activeEventId = event._id;
+    this._hasJoined = false;
+    this._requiredSong = { name: event.songName, artist: event.songArtist };
+
+    // Check if current user already joined
+    if (ROOM.currentUser && event.participants) {
+      for (var i = 0; i < event.participants.length; i++) {
+        if (event.participants[i].phoneNumber === ROOM.currentUser.phoneNumber) {
+          this._hasJoined = true;
+          break;
+        }
+      }
+    }
+
+    var duration = event.endsAt - event.startedAt;
+    this._showEventCard(event.member, event.endsAt, duration, event.participants || [], event.songName, event.songArtist);
+    if (!this._hasJoined) {
+      this._startJoinCheck();
+    }
+    this._updateJoinStatus(this._hasJoined);
+  },
+
+  // ========== AUTO-JOIN ==========
+
+  _startJoinCheck: function () {
+    var self = this;
+    if (this._joinCheckInterval) clearInterval(this._joinCheckInterval);
+
+    this._joinCheckInterval = setInterval(function () {
+      self._checkAndJoin();
+    }, CONFIG.listenAlongJoinCheckInterval || 5000);
+  },
+
+  _stopJoinCheck: function () {
+    if (this._joinCheckInterval) {
+      clearInterval(this._joinCheckInterval);
+      this._joinCheckInterval = null;
+    }
+  },
+
+  _checkAndJoin: function () {
+    if (!this._activeEventId || this._hasJoined || !ROOM.currentUser) return;
+    if (!this._requiredSong) return;
+
+    var participants = ROOM.Firebase.getParticipants();
+    var me = null;
+    for (var i = 0; i < participants.length; i++) {
+      if (participants[i].id === ROOM.currentUser.phoneNumber) {
+        me = participants[i];
+        break;
+      }
+    }
+
+    if (!me || !me.data.currentTrack || !me.data.currentTrack.nowPlaying) return;
+
+    // Check if user is playing the REQUIRED song (fuzzy match)
+    var isCorrectSong = ROOM.LastFM.isSameSong(
+      me.data.currentTrack.name, me.data.currentTrack.artist,
+      this._requiredSong.name, this._requiredSong.artist
+    );
+    if (!isCorrectSong) return; // Wrong song — don't join
+
+    // User is playing the correct song — auto-join!
+    this._hasJoined = true;
+    this._stopJoinCheck();
+    this._updateJoinStatus(true);
+
+    ConvexService.mutation('listenAlong:joinListenAlong', {
+      roomId: ROOM.Firebase.roomId,
+      listenAlongId: this._activeEventId,
+      phoneNumber: ROOM.currentUser.phoneNumber,
+      username: ROOM.currentUser.username,
+      avatarColor: ROOM.currentUser.avatarColor,
+      trackName: me.data.currentTrack.name || undefined,
+      trackArtist: me.data.currentTrack.artist || undefined,
+      albumArt: me.data.currentTrack.albumArt || undefined
+    });
+  },
+
+  // ========== UI: EVENT CARD ==========
+
+  _showEventCard: function (member, endsAt, duration, existingParticipants, songName, songArtist) {
+    var self = this;
+    this._removeEventCard();
+
+    var overlay = document.getElementById('eventOverlay');
+    if (!overlay) return;
+
+    var card = document.createElement('div');
+    card.className = 'room-listen-along-card';
+
+    var songDisplayName = songName ? this._esc(songName) : 'a BLACKPINK song';
+    var songDisplayArtist = songArtist ? this._esc(songArtist) : '';
+
+    card.innerHTML =
+      '<div class="room-listen-along-glow"></div>' +
+      '<div class="room-listen-along-content">' +
+        '<div class="room-listen-along-header">' +
+          '<div class="room-listen-along-badge">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.7 1.32.42.18.48.66.24 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-.99-.12-1.11-.6-.12-.48.12-.99.6-1.11 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.21 1.17zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-.96.6-1.5.3z"/></svg>' +
+            ' LISTEN ALONG' +
+          '</div>' +
+          '<span class="room-listen-along-countdown" id="listenAlongCountdown">--:--</span>' +
+        '</div>' +
+        '<div class="room-listen-along-title">' + this._esc(member) + '\'s Spotify Listen Along</div>' +
+        '<div class="room-listen-along-gif" id="listenAlongGif"></div>' +
+        '<div class="room-listen-along-song" id="listenAlongSong">' +
+          '<div class="room-listen-along-song-art" id="listenAlongSongArt">' +
+            '<div class="room-listen-along-song-art-placeholder">♪</div>' +
+          '</div>' +
+          '<div class="room-listen-along-song-info">' +
+            '<div class="room-listen-along-song-name">' + songDisplayName + '</div>' +
+            '<div class="room-listen-along-song-artist">' + songDisplayArtist + '</div>' +
+          '</div>' +
+          '<div class="room-listen-along-song-badge">' +
+            '<svg viewBox="0 0 24 24" fill="#1DB954" width="18" height="18"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.7 1.32.42.18.48.66.24 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-.99-.12-1.11-.6-.12-.48.12-.99.6-1.11 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.21 1.17zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-.96.6-1.5.3z"/></svg>' +
+          '</div>' +
+        '</div>' +
+        '<div class="room-listen-along-progress">' +
+          '<div class="room-listen-along-progress-bar">' +
+            '<div class="room-listen-along-progress-fill" id="listenAlongProgressFill"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="room-listen-along-participants" id="listenAlongParticipants"></div>' +
+        '<div class="room-listen-along-status" id="listenAlongStatus">' +
+          '<div class="room-listen-along-status-icon">🎧</div>' +
+          '<span>Play <strong>' + songDisplayName + '</strong> to join!</span>' +
+        '</div>' +
+      '</div>';
+
+    overlay.appendChild(card);
+    this._cardEl = card;
+
+    // Fetch and display member GIF
+    this._loadMemberGif(member);
+
+    // Fetch album art from Last.fm
+    if (songName && songArtist) {
+      this._fetchAlbumArt(songName, songArtist);
+    }
+
+    // Render existing participants (for late joiners)
+    if (existingParticipants && existingParticipants.length > 0) {
+      for (var i = 0; i < existingParticipants.length; i++) {
+        this._addParticipantToCard(existingParticipants[i]);
+      }
+    }
+
+    // Start countdown
+    this._startCountdown(endsAt, duration);
+
+    // Confetti burst on start
+    if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
+      ROOM.Animations.spawnConfetti(20);
+    }
+  },
+
+  _loadMemberGif: function (member) {
+    var self = this;
+    var gifContainer = document.getElementById('listenAlongGif');
+    if (!gifContainer) return;
+
+    // Check cache first
+    if (this._gifCache[member]) {
+      this._renderGif(gifContainer, this._gifCache[member]);
+      return;
+    }
+
+    // Show loading placeholder
+    gifContainer.innerHTML = '<div class="room-listen-along-gif-loading">Loading...</div>';
+
+    // Fetch from Klipy API
+    var apiKey = CONFIG.klipyApiKey;
+    if (!apiKey) {
+      this._renderFallbackGif(gifContainer);
+      return;
+    }
+
+    var query = encodeURIComponent(member + ' blackpink');
+    var url = 'https://api.klipy.com/api/v1/' + apiKey + '/gifs/search?q=' + query + '&customer_id=bpsl&per_page=8';
+
+    fetch(url)
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (json.result && json.data && json.data.data && json.data.data.length > 0) {
+          var gifs = json.data.data;
+          var pick = gifs[Math.floor(Math.random() * gifs.length)];
+
+          // Prefer md mp4 for performance, fallback to gif
+          var gifUrl = null;
+          var isVideo = false;
+          if (pick.file && pick.file.md) {
+            if (pick.file.md.mp4 && pick.file.md.mp4.url) {
+              gifUrl = pick.file.md.mp4.url;
+              isVideo = true;
+            } else if (pick.file.md.gif && pick.file.md.gif.url) {
+              gifUrl = pick.file.md.gif.url;
+            } else if (pick.file.md.webp && pick.file.md.webp.url) {
+              gifUrl = pick.file.md.webp.url;
+            }
+          }
+
+          if (gifUrl) {
+            self._gifCache[member] = { url: gifUrl, isVideo: isVideo };
+            self._renderGif(gifContainer, { url: gifUrl, isVideo: isVideo });
+          } else {
+            self._renderFallbackGif(gifContainer);
+          }
+        } else {
+          self._renderFallbackGif(gifContainer);
+        }
+      })
+      .catch(function () {
+        self._renderFallbackGif(gifContainer);
+      });
+  },
+
+  _renderGif: function (container, gifData) {
+    if (!container) return;
+    if (gifData.isVideo) {
+      container.innerHTML =
+        '<video autoplay loop muted playsinline class="room-listen-along-gif-media">' +
+          '<source src="' + this._esc(gifData.url) + '" type="video/mp4">' +
+        '</video>';
+    } else {
+      container.innerHTML =
+        '<img src="' + this._esc(gifData.url) + '" alt="BLACKPINK member" class="room-listen-along-gif-media" loading="lazy">';
+    }
+  },
+
+  _renderFallbackGif: function (container) {
+    if (!container) return;
+    container.innerHTML =
+      '<iframe src="https://klipy.com/gifs/jisoo-blackpink-Ufe/player" ' +
+      'width="100%" height="200" title="Jisoo Blackpink" frameborder="0" ' +
+      'allowfullscreen loading="lazy" class="room-listen-along-gif-media"></iframe>';
+  },
+
+  _fetchAlbumArt: function (songName, songArtist) {
+    var self = this;
+    var cacheKey = songArtist + '::' + songName;
+
+    // Check cache first
+    if (this._albumArtCache[cacheKey]) {
+      this._renderAlbumArt(this._albumArtCache[cacheKey]);
+      return;
+    }
+
+    var apiKey = CONFIG.lastfmApiKey;
+    if (!apiKey) return;
+
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo' +
+      '&api_key=' + encodeURIComponent(apiKey) +
+      '&artist=' + encodeURIComponent(songArtist) +
+      '&track=' + encodeURIComponent(songName) +
+      '&format=json';
+
+    fetch(url)
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        var artUrl = null;
+        if (json.track && json.track.album && json.track.album.image) {
+          var images = json.track.album.image;
+          // Try extralarge first, then large, then medium
+          for (var i = images.length - 1; i >= 0; i--) {
+            if (images[i]['#text'] && images[i]['#text'].length > 0) {
+              artUrl = images[i]['#text'];
+              break;
+            }
+          }
+        }
+        if (artUrl) {
+          self._albumArtCache[cacheKey] = artUrl;
+          self._renderAlbumArt(artUrl);
+        }
+      })
+      .catch(function () {
+        // Silently fail — placeholder stays visible
+      });
+  },
+
+  _renderAlbumArt: function (artUrl) {
+    var artContainer = document.getElementById('listenAlongSongArt');
+    if (!artContainer) return;
+    artContainer.innerHTML = '<img src="' + this._esc(artUrl) + '" alt="Album art" class="room-listen-along-song-art-img" loading="lazy">';
+  },
+
+  _addParticipantToCard: function (data) {
+    var container = document.getElementById('listenAlongParticipants');
+    if (!container) return;
+
+    // Check if already rendered
+    if (container.querySelector('[data-phone="' + data.phoneNumber + '"]')) return;
+
+    var initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
+    var color = data.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+
+    var entry = document.createElement('div');
+    entry.className = 'room-listen-along-participant';
+    entry.setAttribute('data-phone', data.phoneNumber);
+
+    var albumArtHtml = '';
+    if (data.albumArt) {
+      albumArtHtml =
+        '<div class="room-listen-along-participant-art">' +
+          '<img src="' + this._esc(data.albumArt) + '" alt="" loading="lazy">' +
+        '</div>';
+    }
+
+    var trackHtml = '';
+    if (data.trackName) {
+      trackHtml =
+        '<div class="room-listen-along-participant-track">' +
+          this._esc(data.trackName) +
+          (data.trackArtist ? ' <span class="room-listen-along-participant-artist">- ' + this._esc(data.trackArtist) + '</span>' : '') +
+        '</div>';
+    }
+
+    entry.innerHTML =
+      '<div class="room-listen-along-participant-avatar" style="background:' + color + ';">' +
+        '<span>' + initial + '</span>' +
+      '</div>' +
+      '<div class="room-listen-along-participant-info">' +
+        '<div class="room-listen-along-participant-name">' + this._esc(data.username) + '</div>' +
+        trackHtml +
+      '</div>' +
+      albumArtHtml;
+
+    container.appendChild(entry);
+
+    // Animate entry
+    entry.style.opacity = '0';
+    entry.style.transform = 'translateX(-10px)';
+    requestAnimationFrame(function () {
+      entry.style.transition = 'all 0.3s ease';
+      entry.style.opacity = '1';
+      entry.style.transform = 'translateX(0)';
+    });
+  },
+
+  _updateJoinStatus: function (joined) {
+    var statusEl = document.getElementById('listenAlongStatus');
+    if (!statusEl) return;
+
+    if (joined) {
+      statusEl.innerHTML =
+        '<div class="room-listen-along-status-icon">✅</div>' +
+        '<span>You\'re in! Keep listening...</span>';
+      statusEl.classList.add('room-listen-along-status--joined');
+    } else {
+      var songLabel = this._requiredSong ? '<strong>' + this._esc(this._requiredSong.name) + '</strong>' : 'the song';
+      statusEl.innerHTML =
+        '<div class="room-listen-along-status-icon">🎧</div>' +
+        '<span>Play ' + songLabel + ' to join!</span>';
+      statusEl.classList.remove('room-listen-along-status--joined');
+    }
+  },
+
+  _startCountdown: function (endsAt, duration) {
+    var self = this;
+    if (this._countdownInterval) clearInterval(this._countdownInterval);
+
+    function update() {
+      var remaining = endsAt - Date.now();
+      if (remaining <= 0) {
+        clearInterval(self._countdownInterval);
+        self._countdownInterval = null;
+        self._triggerEnd();
+        return;
+      }
+
+      var mins = Math.floor(remaining / 60000);
+      var secs = Math.floor((remaining % 60000) / 1000);
+      var countdownEl = document.getElementById('listenAlongCountdown');
+      if (countdownEl) {
+        countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      }
+
+      var fillEl = document.getElementById('listenAlongProgressFill');
+      if (fillEl) {
+        var percentage = (remaining / duration) * 100;
+        fillEl.style.width = percentage + '%';
+      }
+    }
+
+    update();
+    this._countdownInterval = setInterval(update, 1000);
+  },
+
+  _triggerEnd: function () {
+    if (!this._activeEventId) return;
+
+    // Any client can trigger end — server dedup prevents double awards
+    ConvexService.mutation('listenAlong:endListenAlong', {
+      roomId: ROOM.Firebase.roomId,
+      listenAlongId: this._activeEventId
+    });
+  },
+
+  _removeEventCard: function () {
+    if (!this._cardEl) return;
+    var card = this._cardEl;
+    this._cardEl = null;
+
+    card.classList.add('room-listen-along-card--exit');
+    setTimeout(function () {
+      if (card.parentNode) card.remove();
+    }, 500);
+
+    if (this._countdownInterval) {
+      clearInterval(this._countdownInterval);
+      this._countdownInterval = null;
+    }
+  },
+
+  // ========== UI: THANK YOU DIALOG ==========
+
+  _showThankYouDialog: function (data) {
+    var self = this;
+
+    if (this._thankYouEl) {
+      this._thankYouEl.remove();
+      this._thankYouEl = null;
+    }
+
+    var overlay = document.createElement('div');
+    overlay.className = 'room-listen-along-thankyou';
+
+    var participantsHtml = '';
+    if (data.participants) {
+      for (var i = 0; i < data.participants.length; i++) {
+        var p = data.participants[i];
+        var initial = p.username ? p.username.charAt(0).toUpperCase() : '?';
+        var color = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+        var albumHtml = '';
+        if (p.albumArt) {
+          albumHtml = '<img class="room-listen-along-ty-art" src="' + this._esc(p.albumArt) + '" alt="" loading="lazy">';
+        }
+
+        participantsHtml +=
+          '<div class="room-listen-along-ty-participant">' +
+            '<div class="room-listen-along-ty-avatar" style="background:' + color + ';">' +
+              '<span>' + initial + '</span>' +
+            '</div>' +
+            '<div class="room-listen-along-ty-name">' + this._esc(p.username) + '</div>' +
+            albumHtml +
+            '<div class="room-listen-along-ty-points">+' + (data.pointsEach || 0) + ' pts</div>' +
+          '</div>';
+      }
+    }
+
+    overlay.innerHTML =
+      '<div class="room-listen-along-ty-backdrop"></div>' +
+      '<div class="room-listen-along-ty-modal">' +
+        '<div class="room-listen-along-ty-icon">🎵</div>' +
+        '<div class="room-listen-along-ty-title">Listen Along Complete!</div>' +
+        '<div class="room-listen-along-ty-points-big">+' + (data.pointsEach || 0) + ' points earned!</div>' +
+        '<div class="room-listen-along-ty-desc">Thanks for vibing together!</div>' +
+        '<div class="room-listen-along-ty-list">' + participantsHtml + '</div>' +
+        '<button class="room-listen-along-ty-close" id="listenAlongCloseBtn">Close</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    this._thankYouEl = overlay;
+
+    // Close button
+    var closeBtn = document.getElementById('listenAlongCloseBtn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        self._dismissThankYou();
+      });
+    }
+
+    // Auto-dismiss after 8 seconds
+    setTimeout(function () {
+      self._dismissThankYou();
+    }, 8000);
+
+    // Confetti celebration
+    if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
+      ROOM.Animations.spawnConfetti(40);
+    }
+  },
+
+  _dismissThankYou: function () {
+    if (!this._thankYouEl) return;
+    var el = this._thankYouEl;
+    this._thankYouEl = null;
+
+    el.classList.add('room-listen-along-thankyou--exit');
+    setTimeout(function () {
+      if (el.parentNode) el.remove();
+    }, 400);
+  },
+
+  // ========== UTILITIES ==========
+
+  _esc: function (text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  },
+
+  destroy: function () {
+    if (this._checkInterval) clearInterval(this._checkInterval);
+    if (this._countdownInterval) clearInterval(this._countdownInterval);
+    this._stopJoinCheck();
+    this._removeEventCard();
+    if (this._thankYouEl) {
+      this._thankYouEl.remove();
+      this._thankYouEl = null;
+    }
+  }
+};
