@@ -5927,3 +5927,570 @@
     font-size: 24px;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   FILL THE MAP EVENT
+   ═══════════════════════════════════════════════ */
+
+.room-fill-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 195;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: roomFillMapFadeIn 0.3s ease forwards;
+}
+
+.room-fill-map-overlay--exit {
+  animation: roomFillMapFadeOut 0.5s ease forwards !important;
+}
+
+.room-fill-map-overlay--minimized {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.room-fill-map-overlay--success .room-fill-map-card {
+  border-color: rgba(37, 211, 102, 0.4);
+}
+
+.room-fill-map-overlay--failed .room-fill-map-card {
+  border-color: rgba(255, 107, 122, 0.4);
+}
+
+.room-fill-map-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+}
+
+.room-fill-map-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(247, 166, 185, 0.25);
+  border-radius: 24px;
+  padding: 24px;
+  max-width: 420px;
+  width: 92%;
+  max-height: 85vh;
+  overflow-y: auto;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.6);
+  animation: roomFillMapCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.room-fill-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.room-fill-map-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-fill-map-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(247, 166, 185, 0.15);
+  color: #f7a6b9;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(247, 166, 185, 0.25);
+}
+
+.room-fill-map-badge svg {
+  width: 14px;
+  height: 14px;
+  fill: #f7a6b9;
+}
+
+.room-fill-map-countdown {
+  font-family: 'Outfit', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: #f7a6b9;
+  text-shadow: 0 0 10px rgba(247, 166, 185, 0.3);
+}
+
+.room-fill-map-close-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-fill-map-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.room-fill-map-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.room-fill-map-subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 16px;
+}
+
+.room-fill-map-subtitle strong {
+  color: #f7a6b9;
+}
+
+/* SVG Map Container */
+.room-fill-map-svg-container {
+  position: relative;
+  width: 100%;
+  max-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(247, 166, 185, 0.1);
+}
+
+.room-fill-map-svg {
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+}
+
+/* Blinking district animation */
+.room-fill-map-blink {
+  animation: roomFillMapBlink 1.2s ease-in-out infinite;
+}
+
+/* Filled district */
+.room-fill-map-filled {
+  animation: roomFillMapFillPulse 0.6s ease forwards;
+}
+
+/* Avatar inside SVG district */
+.room-fill-map-svg-avatar {
+  border-radius: 50%;
+  border: 2px solid #25D366;
+  background: linear-gradient(135deg, #f7a6b9, #e8758a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4);
+  animation: roomFillMapAvatarIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* District status cards */
+.room-fill-map-districts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.room-fill-map-district-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.room-fill-map-district-card--filled {
+  background: rgba(37, 211, 102, 0.08);
+  border-color: rgba(37, 211, 102, 0.2);
+}
+
+.room-fill-map-district-card--waiting {
+  border-color: rgba(247, 166, 185, 0.15);
+}
+
+.room-fill-map-district-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.room-fill-map-district-avatar--empty {
+  background: rgba(247, 166, 185, 0.12);
+  border: 1px dashed rgba(247, 166, 185, 0.3);
+  position: relative;
+}
+
+.room-fill-map-district-avatar-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: roomFillMapPulse 1.5s ease-in-out infinite;
+  background: rgba(247, 166, 185, 0.2);
+}
+
+.room-fill-map-district-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.room-fill-map-district-avatar-initial {
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.room-fill-map-district-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-fill-map-district-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.room-fill-map-district-user {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: #25D366;
+}
+
+.room-fill-map-district-user--waiting {
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+}
+
+/* Progress bar */
+.room-fill-map-progress {
+  margin-bottom: 12px;
+}
+
+.room-fill-map-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.room-fill-map-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f7a6b9, #e8758a);
+  border-radius: 4px;
+  transition: width 1s linear;
+}
+
+/* Status bar */
+.room-fill-map-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(247, 166, 185, 0.06);
+  border-radius: 12px;
+  border: 1px solid rgba(247, 166, 185, 0.12);
+  margin-bottom: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+}
+
+.room-fill-map-status--success {
+  background: rgba(37, 211, 102, 0.1);
+  border-color: rgba(37, 211, 102, 0.25);
+  color: #25D366;
+}
+
+.room-fill-map-status--failed {
+  background: rgba(255, 107, 122, 0.1);
+  border-color: rgba(255, 107, 122, 0.25);
+  color: #ff6b7a;
+}
+
+.room-fill-map-status-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.room-fill-map-status strong {
+  color: #f7a6b9;
+}
+
+.room-fill-map-status--success strong {
+  color: #25D366;
+}
+
+.room-fill-map-points {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+}
+
+.room-fill-map-points strong {
+  color: #f7a6b9;
+}
+
+/* Thank You Dialog */
+.room-fill-map-thankyou {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: roomFillMapFadeIn 0.3s ease forwards;
+}
+
+.room-fill-map-thankyou--exit {
+  animation: roomFillMapFadeOut 0.4s ease forwards !important;
+}
+
+.room-fill-map-ty-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.room-fill-map-ty-modal {
+  position: relative;
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.08), rgba(247, 166, 185, 0.05), rgba(15, 15, 20, 0.98));
+  border: 1px solid rgba(37, 211, 102, 0.25);
+  border-radius: 24px;
+  padding: 32px 28px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: roomFillMapCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.room-fill-map-ty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.room-fill-map-ty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.room-fill-map-ty-points-big {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #25D366;
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(37, 211, 102, 0.3);
+}
+
+.room-fill-map-ty-desc {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+.room-fill-map-ty-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.room-fill-map-ty-participant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.room-fill-map-ty-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f7a6b9, #e8758a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.room-fill-map-ty-avatar span {
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.room-fill-map-ty-name {
+  flex: 1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-align: left;
+}
+
+.room-fill-map-ty-points {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #25D366;
+}
+
+.room-fill-map-ty-close {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(247, 166, 185, 0.15), rgba(232, 117, 138, 0.2));
+  color: #f7a6b9;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-fill-map-ty-close:hover {
+  background: linear-gradient(135deg, rgba(247, 166, 185, 0.25), rgba(232, 117, 138, 0.3));
+}
+
+/* ── Fill the Map Keyframes ── */
+
+@keyframes roomFillMapBlink {
+  0%, 100% {
+    fill: rgba(247, 166, 185, 0.2);
+    stroke: rgba(247, 166, 185, 0.4);
+  }
+  50% {
+    fill: rgba(247, 166, 185, 0.55);
+    stroke: rgba(247, 166, 185, 0.8);
+  }
+}
+
+@keyframes roomFillMapFillPulse {
+  0% {
+    fill: rgba(247, 166, 185, 0.5);
+  }
+  50% {
+    fill: rgba(37, 211, 102, 0.6);
+  }
+  100% {
+    fill: rgba(37, 211, 102, 0.45);
+  }
+}
+
+@keyframes roomFillMapAvatarIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes roomFillMapPulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+@keyframes roomFillMapFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes roomFillMapFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes roomFillMapCardIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Fill the Map Mobile ── */
+@media (max-width: 768px) {
+  .room-fill-map-card {
+    width: 95%;
+    padding: 20px 16px;
+    max-height: 80vh;
+  }
+
+  .room-fill-map-svg-container {
+    max-height: 200px;
+  }
+
+  .room-fill-map-ty-modal {
+    padding: 24px 20px;
+  }
+
+  .room-fill-map-ty-points-big {
+    font-size: 24px;
+  }
+}

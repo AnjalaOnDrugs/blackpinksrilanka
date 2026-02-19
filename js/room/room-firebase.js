@@ -157,7 +157,20 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5);
+    // 6. Subscribe to active Fill the Map events (for late joiners)
+    var unsub6 = ConvexService.watch(
+      'fillTheMap:getActiveFillTheMap',
+      { roomId: roomId },
+      function (event) {
+        if (event && event.status === 'active') {
+          if (ROOM.FillMap && ROOM.FillMap.handleActiveEvent) {
+            ROOM.FillMap.handleActiveEvent(event);
+          }
+        }
+      }
+    );
+
+    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6);
   },
 
   getParticipants: function () {

@@ -143,6 +143,23 @@ export default defineSchema({
     .index("by_room", ["roomId"])
     .index("by_room_status", ["roomId", "status"]),
 
+  fillTheMapEvents: defineTable({
+    roomId: v.string(),
+    // The main song users must listen to
+    songName: v.string(),
+    songArtist: v.string(),
+    // 3 chosen districts (from districts that have registered users)
+    chosenDistricts: v.array(v.string()),
+    // Filled districts: district → { phoneNumber, username, profilePicture, filledAt }
+    filledDistricts: v.any(),
+    startedAt: v.number(),
+    endsAt: v.number(),
+    status: v.string(), // "active" | "completed" | "failed" | "ended"
+    pointsAwarded: v.optional(v.boolean()),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_status", ["roomId", "status"]),
+
   rooms: defineTable({
     roomId: v.string(),
     name: v.string(),

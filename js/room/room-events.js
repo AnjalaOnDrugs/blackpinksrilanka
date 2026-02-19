@@ -79,6 +79,18 @@ ROOM.Events = {
       case 'listen_along_end':
         ROOM.ListenAlong && ROOM.ListenAlong.handleEnd(eventData.data);
         break;
+      case 'fill_map_start':
+        ROOM.FillMap && ROOM.FillMap.handleStart(eventData.data);
+        break;
+      case 'fill_map_fill':
+        ROOM.FillMap && ROOM.FillMap.handleFill(eventData.data);
+        break;
+      case 'fill_map_complete':
+        ROOM.FillMap && ROOM.FillMap.handleComplete(eventData.data);
+        break;
+      case 'fill_map_failed':
+        ROOM.FillMap && ROOM.FillMap.handleFailed(eventData.data);
+        break;
     }
   },
 

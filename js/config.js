@@ -70,6 +70,13 @@ const CONFIG = {
     { name: "number one girl", artist: "Rosé" },
   ],
 
+  // Fill the Map event settings
+  fillMapCheckInterval: 60000,       // Check every 60s if we should trigger
+  fillMapCooldown: 10000,          // 1 hour between events
+  fillMapDuration: 180000,           // 3 minute event duration
+  fillMapTriggerChance: 1,        // 15% chance per check once cooldown elapsed
+  fillMapJoinCheckInterval: 5000,    // Check every 5s if current user is playing the song
+
   // Klipy GIF API
   klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv'
 };

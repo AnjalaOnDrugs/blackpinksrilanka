@@ -9,6 +9,7 @@
  */
 
 import type * as events from "../events.js";
+import type * as fillTheMap from "../fillTheMap.js";
 import type * as listenAlong from "../listenAlong.js";
 import type * as messages from "../messages.js";
 import type * as participants from "../participants.js";
@@ -25,6 +26,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   events: typeof events;
+  fillTheMap: typeof fillTheMap;
   listenAlong: typeof listenAlong;
   messages: typeof messages;
   participants: typeof participants;
