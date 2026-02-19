@@ -16,6 +16,8 @@ ROOM.ListenAlong = {
   _compactEl: null,
   _bubbleEl: null,
   _autoCompactTimer: null,
+  _initialAutoCompactMs: 8000,
+  _expandedAutoCompactMs: 15000,
   _eventMeta: null,
   _participantsByPhone: {},
   _thankYouEl: null,
@@ -307,7 +309,7 @@ ROOM.ListenAlong = {
     // Start countdown
     this._startCountdown(endsAt, duration);
 
-    this._scheduleAutoCompact();
+    this._scheduleAutoCompact(this._initialAutoCompactMs);
 
     // Confetti burst on start
     if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
@@ -609,12 +611,13 @@ ROOM.ListenAlong = {
     return window.innerWidth <= 768;
   },
 
-  _scheduleAutoCompact: function () {
+  _scheduleAutoCompact: function (delayMs) {
     var self = this;
+    var compactDelay = typeof delayMs === 'number' ? delayMs : this._initialAutoCompactMs;
     this._clearAutoCompactTimer();
     this._autoCompactTimer = setTimeout(function () {
       self._minimizeToCompact();
-    }, 4000);
+    }, compactDelay);
   },
 
   _clearAutoCompactTimer: function () {
@@ -655,7 +658,7 @@ ROOM.ListenAlong = {
       this._bubbleEl.classList.remove('room-listen-along-capsule-bubbles--visible');
     }
     // Re-schedule auto-compact after expanding
-    this._scheduleAutoCompact();
+    this._scheduleAutoCompact(this._expandedAutoCompactMs);
   },
 
   _ensureCompactCard: function () {
@@ -929,7 +932,7 @@ ROOM.ListenAlong = {
     overlay.innerHTML =
       '<div class="room-listen-along-ty-backdrop"></div>' +
       '<div class="room-listen-along-ty-modal">' +
-      '<div class="room-listen-along-ty-icon"><svg viewBox="0 0 24 24" fill="none" width="40" height="40"><path d="M9 18V5l12-2v13" stroke="#1DB954" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="#1DB954"/><circle cx="18" cy="16" r="3" fill="#1DB954"/></svg></div>' +
+      '<div class="room-listen-along-ty-icon"><img src="assets/logo/Music result.png" alt="Listen Along" width="56" height="56" style="object-fit:contain;"></div>' +
       '<div class="room-listen-along-ty-title">Listen Along Complete!</div>' +
       '<div class="room-listen-along-ty-points-big">+' + (data.pointsEach || 0) + ' points earned!</div>' +
       '<div class="room-listen-along-ty-desc">Thanks for vibing together!</div>' +
