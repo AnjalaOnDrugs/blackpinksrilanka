@@ -6062,7 +6062,7 @@
 }
 
 .room-fill-map-svg {
-  width: 100%;
+  width: 60%;
   height: auto;
 }
 
@@ -6166,19 +6166,19 @@
 }
 
 .room-fill-map-label--waiting .room-fill-map-label-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #f7a6b9;
   animation: roomFillMapPulse 1.5s ease-in-out infinite;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .room-fill-map-label-name {
   font-family: 'Outfit', sans-serif;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7);
   line-height: 1.15;
   white-space: nowrap;
@@ -6189,12 +6189,12 @@
 
 .room-fill-map-label-name--filled {
   color: #fff;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .room-fill-map-label-user {
   font-family: 'Outfit', sans-serif;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 600;
   color: #25D366;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7);
@@ -6206,12 +6206,12 @@
 }
 
 .room-fill-map-label-avatar {
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 
 .room-fill-map-label-avatar--filled {
@@ -6228,7 +6228,7 @@
   color: #fff;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .room-fill-map-label-avatar img {

@@ -406,9 +406,8 @@ ROOM.FillMap = {
       var cy = bbox.y + bbox.height / 2;
 
       // Size the label container based on district size
-      var foWidth = Math.max(bbox.width * 0.8, 80);
-      var foHeight = username ? 70 : 50;
-      var avatarSize = 30;
+      var foWidth = Math.max(bbox.width * 0.9, 100);
+      var foHeight = username ? 90 : 55;
 
       var fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
       fo.setAttribute('x', cx - foWidth / 2);
