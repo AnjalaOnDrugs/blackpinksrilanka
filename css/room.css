@@ -4984,7 +4984,7 @@
   right: 20px;
   z-index: 190;
   width: 360px;
-  animation: roomListenAlongIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: roomListenAlongIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: auto;
 }
@@ -5011,11 +5011,12 @@
 }
 
 .room-listen-along-content {
-  background: linear-gradient(135deg, rgba(30, 215, 96, 0.08), rgba(247, 166, 185, 0.05), rgba(10, 10, 10, 0.95));
-  border: 1px solid rgba(30, 215, 96, 0.2);
+  background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 20px;
   padding: 20px;
   backdrop-filter: blur(16px);
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.6);
   position: relative;
   overflow: hidden;
 }
@@ -5283,6 +5284,24 @@
   object-fit: cover;
 }
 
+/* Points display */
+.room-listen-along-points {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.room-listen-along-points-label strong {
+  color: #ffd700;
+}
+
 /* Status / join instruction */
 .room-listen-along-status {
   display: flex;
@@ -5323,7 +5342,7 @@
   background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
   box-shadow: 0 24px 52px rgba(0, 0, 0, 0.6);
   padding: 10px 8px 14px;
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
@@ -5331,7 +5350,7 @@
   z-index: 191;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
@@ -5403,31 +5422,77 @@
   color: #fff;
 }
 
-.room-listen-along-capsule-people {
+/* Floating participant bubbles container — hovers above capsule */
+.room-listen-along-capsule-bubbles {
+  position: fixed;
+  right: 12px;
+  bottom: auto;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
+  gap: 4px;
+  z-index: 192;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, right 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.room-listen-along-capsule-person {
-  width: 24px;
-  height: 24px;
+.room-listen-along-capsule-bubbles--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.room-listen-along-capsule-bubble {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid rgba(8, 8, 8, 0.9);
-  margin-left: -6px;
+  border: 1.5px solid rgba(8, 8, 8, 0.9);
   color: #fff;
   font-family: 'Outfit', sans-serif;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), 0 0 6px rgba(30, 215, 96, 0.15);
+  position: relative;
+  animation: listenAlongBubbleFloat 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             listenAlongBubbleHover 2.4s ease-in-out infinite;
+  animation-delay: var(--bubble-delay, 0s), calc(var(--bubble-delay, 0s) + 0.5s);
+  opacity: 0;
 }
 
-.room-listen-along-capsule-person:first-child {
-  margin-left: 0;
+.room-listen-along-capsule-bubble--extra {
+  background: rgba(255, 255, 255, 0.12) !important;
+  font-size: 7px;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes listenAlongBubbleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.12);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes listenAlongBubbleHover {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .room-listen-along-capsule-glow {
@@ -5439,6 +5504,22 @@
   height: 52px;
   background: radial-gradient(circle at 50% 100%, rgba(30, 215, 96, 0.2), transparent 70%);
   pointer-events: none;
+}
+
+/* Capsule left-side position (swipe toggled) */
+.room-listen-along-capsule--left {
+  right: auto;
+  left: 12px;
+  transform: translateY(-50%) translateX(-18px) scale(0.95);
+}
+
+.room-listen-along-capsule--left.room-listen-along-capsule--visible {
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.room-listen-along-capsule-bubbles--left {
+  right: auto;
+  left: 12px;
 }
 
 /* ========== THANK YOU DIALOG ========== */
@@ -5590,6 +5671,7 @@
     opacity: 0;
     transform: translateY(40px) scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -5601,6 +5683,7 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translateY(40px) scale(0.9);
@@ -5608,9 +5691,12 @@
 }
 
 @keyframes roomListenAlongPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     border-color: rgba(30, 215, 96, 0.15);
   }
+
   50% {
     border-color: rgba(30, 215, 96, 0.35);
     box-shadow: 0 0 12px rgba(30, 215, 96, 0.1);
@@ -5618,13 +5704,23 @@
 }
 
 @keyframes roomListenAlongFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes roomListenAlongFadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes roomListenAlongModalIn {
@@ -5632,6 +5728,7 @@
     opacity: 0;
     transform: scale(0.8) translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -5650,8 +5747,8 @@
   }
 
   .room-listen-along-content {
-    background: linear-gradient(135deg, rgba(30, 215, 96, 0.2), rgba(247, 166, 185, 0.16), rgba(8, 8, 8, 0.98));
-    border-color: rgba(30, 215, 96, 0.34);
+    background: linear-gradient(180deg, rgba(25, 25, 25, 0.99) 0%, rgba(8, 8, 8, 0.99) 100%);
+    border-color: rgba(30, 215, 96, 0.3);
     backdrop-filter: blur(18px);
   }
 
@@ -5715,9 +5812,7 @@
     font-size: 18px;
   }
 
-  .room-listen-along-capsule {
-    display: flex;
-  }
+
 
   .room-listen-along-gif-media {
     max-height: 160px;
