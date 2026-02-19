@@ -469,15 +469,16 @@ ROOM.Animations = {
     var bongOverlay = document.createElement('div');
     bongOverlay.className = 'room-bong-overlay';
 
-    var initial = data.targetUsername ? data.targetUsername.charAt(0).toUpperCase() : '?';
     var targetAvatarColor = data.targetAvatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+    var bongPic = (ROOM.profilePicMap && data.targetPhoneNumber) ? ROOM.profilePicMap[data.targetPhoneNumber] : null;
+    var bongAv = ROOM.avatarInner({ profilePicture: bongPic, username: data.targetUsername });
 
     bongOverlay.innerHTML =
       '<div class="room-bong-backdrop"></div>' +
       '<div class="room-bong-scene">' +
         '<div class="room-bong-aura"></div>' +
-        '<div class="room-bong-avatar" style="background:' + targetAvatarColor + ';">' +
-          '<span>' + initial + '</span>' +
+        '<div class="room-bong-avatar" style="' + (bongAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + targetAvatarColor + ';') + '">' +
+          bongAv.html +
         '</div>' +
         '<div class="room-bong-lightstick">' +
           '<div class="room-bong-lightstick-trail"></div>' +
@@ -604,16 +605,17 @@ ROOM.Animations = {
     var bongOverlay = document.createElement('div');
     bongOverlay.className = 'room-bong-overlay room-bong-overlay--counter';
 
-    var initial = data.targetUsername ? data.targetUsername.charAt(0).toUpperCase() : '?';
     var targetAvatarColor = data.targetAvatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+    var cbPic = (ROOM.profilePicMap && data.targetPhoneNumber) ? ROOM.profilePicMap[data.targetPhoneNumber] : null;
+    var cbAv = ROOM.avatarInner({ profilePicture: cbPic, username: data.targetUsername });
 
     bongOverlay.innerHTML =
       '<div class="room-bong-backdrop"></div>' +
       '<div class="room-bong-scene room-bong-scene--counter">' +
         '<div class="room-bong-riposte-badge">COUNTER BONG</div>' +
         '<div class="room-bong-aura"></div>' +
-        '<div class="room-bong-avatar" style="background:' + targetAvatarColor + ';">' +
-          '<span>' + initial + '</span>' +
+        '<div class="room-bong-avatar" style="' + (cbAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + targetAvatarColor + ';') + '">' +
+          cbAv.html +
         '</div>' +
         '<div class="room-bong-lightstick room-bong-lightstick--counter">' +
           '<div class="room-bong-lightstick-trail"></div>' +

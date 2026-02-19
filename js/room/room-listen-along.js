@@ -459,8 +459,10 @@ ROOM.ListenAlong = {
     // Check if already rendered
     if (container.querySelector('[data-phone="' + data.phoneNumber + '"]')) return;
 
-    var initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
     var color = data.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+    // Look up profile picture from participants cache
+    var pic = (ROOM.profilePicMap && data.phoneNumber) ? ROOM.profilePicMap[data.phoneNumber] : null;
+    var av = ROOM.avatarInner({ profilePicture: pic, username: data.username });
 
     var entry = document.createElement('div');
     entry.className = 'room-listen-along-participant';
@@ -484,8 +486,8 @@ ROOM.ListenAlong = {
     }
 
     entry.innerHTML =
-      '<div class="room-listen-along-participant-avatar" style="background:' + color + ';">' +
-      '<span>' + initial + '</span>' +
+      '<div class="room-listen-along-participant-avatar" style="' + (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+      av.html +
       '</div>' +
       '<div class="room-listen-along-participant-info">' +
       '<div class="room-listen-along-participant-name">' + this._esc(data.username) + '</div>' +
@@ -497,7 +499,8 @@ ROOM.ListenAlong = {
     this._participantsByPhone[data.phoneNumber] = {
       phoneNumber: data.phoneNumber,
       username: data.username,
-      avatarColor: color
+      avatarColor: color,
+      profilePicture: pic
     };
     this._refreshCompactParticipants();
     this._updatePointsDisplay();
@@ -766,8 +769,14 @@ ROOM.ListenAlong = {
       var bubble = document.createElement('div');
       bubble.className = 'room-listen-along-capsule-bubble';
       bubble.setAttribute('data-phone', p.phoneNumber);
-      bubble.style.background = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
-      bubble.textContent = (p.username || '?').charAt(0).toUpperCase();
+      if (p.profilePicture) {
+        bubble.style.background = 'transparent';
+        bubble.style.overflow = 'hidden';
+        bubble.innerHTML = '<img src="' + p.profilePicture + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+      } else {
+        bubble.style.background = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+        bubble.textContent = (p.username || '?').charAt(0).toUpperCase();
+      }
       bubble.style.setProperty('--bubble-delay', (i * 0.12) + 's');
       container.appendChild(bubble);
     }
@@ -910,8 +919,10 @@ ROOM.ListenAlong = {
     if (data.participants) {
       for (var i = 0; i < data.participants.length; i++) {
         var p = data.participants[i];
-        var initial = p.username ? p.username.charAt(0).toUpperCase() : '?';
         var color = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+        // Look up profile picture
+        var tyPic = (ROOM.profilePicMap && p.phoneNumber) ? ROOM.profilePicMap[p.phoneNumber] : null;
+        var tyAv = ROOM.avatarInner({ profilePicture: tyPic, username: p.username });
         var albumHtml = '';
         if (p.albumArt) {
           albumHtml = '<img class="room-listen-along-ty-art" src="' + this._esc(p.albumArt) + '" alt="" loading="lazy">';
@@ -919,8 +930,8 @@ ROOM.ListenAlong = {
 
         participantsHtml +=
           '<div class="room-listen-along-ty-participant">' +
-          '<div class="room-listen-along-ty-avatar" style="background:' + color + ';">' +
-          '<span>' + initial + '</span>' +
+          '<div class="room-listen-along-ty-avatar" style="' + (tyAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+          tyAv.html +
           '</div>' +
           '<div class="room-listen-along-ty-name">' + this._esc(p.username) + '</div>' +
           albumHtml +

@@ -292,6 +292,14 @@ ROOM.Firebase = {
       return processed;
     });
 
+    // Build profile picture lookup map (phone -> dataURL)
+    ROOM.profilePicMap = {};
+    this.participantsCache.forEach(function (p) {
+      if (p.data.profilePicture) {
+        ROOM.profilePicMap[p.id] = p.data.profilePicture;
+      }
+    });
+
     // Update online count
     var onlineCount = this.participantsCache.filter(function (p) {
       return p.data.isOnline;

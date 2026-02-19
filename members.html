@@ -93,32 +93,17 @@
         <!-- Content -->
         <div class="mh-room-featured-content">
 
-          <!-- Top Row: Tag + Avatars -->
+          <!-- Top Row: Tag + Avatars (populated by JS) -->
           <div class="mh-room-top-row">
-            <div class="mh-room-tag">
+            <div class="mh-room-tag" id="roomStatusTag">
               <span class="mh-room-tag-dot"></span>
-              Live Now
+              <span id="roomStatusText">Loading...</span>
             </div>
             <div class="mh-room-top-users">
               <div class="mh-room-users" id="roomAvatars">
-                <div class="mh-room-avatar mh-room-avatar--online"
-                  style="background: linear-gradient(135deg, #f7a6b9, #e8758a);">
-                  <span>D</span>
-                </div>
-                <div class="mh-room-avatar mh-room-avatar--online"
-                  style="background: linear-gradient(135deg, #25D366, #1da851);">
-                  <span>S</span>
-                </div>
-                <div class="mh-room-avatar" style="background: linear-gradient(135deg, #FA5BFF, #c44fd4);">
-                  <span>K</span>
-                </div>
-                <div class="mh-room-avatar mh-room-avatar--online"
-                  style="background: linear-gradient(135deg, #ffc107, #e0a800);">
-                  <span>R</span>
-                </div>
-                <div class="mh-room-avatar mh-room-avatar--more">+5</div>
+                <!-- Populated dynamically -->
               </div>
-              <span class="mh-room-count"><strong>9</strong> streaming</span>
+              <span class="mh-room-count" id="roomOnlineCount"></span>
             </div>
           </div>
 
@@ -166,7 +151,7 @@
           <!-- Divider -->
           <div class="mh-room-divider"></div>
 
-          <!-- Top Streamers Leaderboard -->
+          <!-- Top Streamers Leaderboard (populated by JS) -->
           <div class="mh-room-leaders">
             <div class="mh-room-leaders-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -177,60 +162,8 @@
               </svg>
               <span>Top Streamers</span>
             </div>
-            <div class="mh-room-leaders-list">
-              <!-- 1st Place -->
-              <div class="mh-leader mh-leader--1st">
-                <div class="mh-leader-rank">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                    <path
-                      d="M12 2L9.19 8.63L2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z" />
-                  </svg>
-                </div>
-                <div class="mh-leader-avatar" style="background: linear-gradient(135deg, #ffc107, #ff9800);">
-                  <span>D</span>
-                </div>
-                <div class="mh-leader-info">
-                  <div class="mh-leader-name">Dinara</div>
-                  <div class="mh-leader-score">2,847 mins streamed</div>
-                </div>
-                <div class="mh-leader-badge mh-leader-badge--gold">
-                  <span>#1</span>
-                </div>
-              </div>
-
-              <!-- 2nd Place -->
-              <div class="mh-leader mh-leader--2nd">
-                <div class="mh-leader-rank mh-leader-rank--silver">
-                  <span>2</span>
-                </div>
-                <div class="mh-leader-avatar" style="background: linear-gradient(135deg, #25D366, #1da851);">
-                  <span>S</span>
-                </div>
-                <div class="mh-leader-info">
-                  <div class="mh-leader-name">Sachini</div>
-                  <div class="mh-leader-score">2,134 mins streamed</div>
-                </div>
-                <div class="mh-leader-badge mh-leader-badge--silver">
-                  <span>#2</span>
-                </div>
-              </div>
-
-              <!-- 3rd Place -->
-              <div class="mh-leader mh-leader--3rd">
-                <div class="mh-leader-rank mh-leader-rank--bronze">
-                  <span>3</span>
-                </div>
-                <div class="mh-leader-avatar" style="background: linear-gradient(135deg, #FA5BFF, #c44fd4);">
-                  <span>K</span>
-                </div>
-                <div class="mh-leader-info">
-                  <div class="mh-leader-name">Kaveesha</div>
-                  <div class="mh-leader-score">1,892 mins streamed</div>
-                </div>
-                <div class="mh-leader-badge mh-leader-badge--bronze">
-                  <span>#3</span>
-                </div>
-              </div>
+            <div class="mh-room-leaders-list" id="roomLeadersList">
+              <!-- Populated dynamically -->
             </div>
           </div>
 

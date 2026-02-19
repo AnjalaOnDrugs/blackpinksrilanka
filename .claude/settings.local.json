@@ -30,7 +30,9 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "WebFetch(domain:klipy.com)",
-      "WebFetch(domain:docs.klipy.com)"
+      "WebFetch(domain:docs.klipy.com)",
+      "Bash(find:*)",
+      "Bash(npx convex push:*)"
     ]
   }
 }

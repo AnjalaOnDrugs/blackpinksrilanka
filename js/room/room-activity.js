@@ -176,7 +176,7 @@ ROOM.Activity = {
   renderCard: function (participant) {
     var d = participant.data;
     var color = d.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
-    var initial = d.username ? d.username.charAt(0).toUpperCase() : '?';
+    var av = ROOM.avatarInner({ profilePicture: d.profilePicture, username: d.username });
     var isOnline = d.isOnline;
     var isOfflineTracked = !isOnline && d.offlineTracking && d.lastCheckIn &&
       (Date.now() - d.lastCheckIn) < (CONFIG.checkInInterval || 3600000);
@@ -270,8 +270,8 @@ ROOM.Activity = {
 
     return '<div class="room-activity-card" data-id="' + participant.id + '">' +
       '<div class="room-activity-card-main">' +
-        '<div class="room-activity-avatar" style="background:' + color + ';">' +
-          '<span>' + initial + '</span>' +
+        '<div class="room-activity-avatar" style="' + (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+          av.html +
           '<div class="room-activity-status ' + statusClass + '"></div>' +
         '</div>' +
         '<div class="room-activity-info">' +

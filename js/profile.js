@@ -1,6 +1,9 @@
 /**
  * Profile Page Logic
  * Handles loading user data, inline editing, avatar upload, and Google Sheets integration.
+ * Uses shared compressProfileImage from auth.js for avatar uploads (10MB limit).
+ * Reads bias from column J and BLINK since from column H.
+ * Image-based bias picker writes changes back to Google Sheet.
  */
 
 // ========== STATE ==========
@@ -22,15 +25,6 @@ function showToast(message, type) {
 }
 
 // ========== BIAS DISPLAY HELPERS ==========
-var biasEmoji = {
-    'Jisoo': '💖',
-    'Jennie': '🐻',
-    'Rosé': '🌹',
-    'Rose': '🌹',
-    'Lisa': '🐱',
-    'OT4': '🖤💗'
-};
-
 var biasClass = {
     'Jisoo': 'bias-jisoo',
     'Jennie': 'bias-jennie',
@@ -42,8 +36,7 @@ var biasClass = {
 
 function formatBias(bias) {
     if (!bias) return null;
-    var emoji = biasEmoji[bias] || '';
-    return bias + ' ' + emoji;
+    return bias;
 }
 
 // ========== MASK PHONE NUMBER ==========
@@ -77,13 +70,31 @@ async function fetchSheetMemberData(phone) {
         if (data.status === 'success' && data.found) {
             return {
                 bias: data.bias || null,
-                joinedDate: data.joinedDate || null
+                blinkSince: data.blinkSince || null
             };
         }
     } catch (err) {
         console.warn('[Profile] Could not fetch sheet data:', err);
     }
     return null;
+}
+
+// ========== UPDATE BIAS IN GOOGLE SHEET ==========
+async function updateBiasInSheet(phone, bias) {
+    try {
+        await fetch(CONFIG.googleSheetsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+                action: 'updateBias',
+                phone: phone,
+                bias: bias
+            })
+        });
+        console.log('[Profile] Bias updated in Google Sheet');
+    } catch (err) {
+        console.warn('[Profile] Could not update bias in sheet:', err);
+    }
 }
 
 // ========== DISTRICT COOLDOWN CHECK ==========
@@ -184,7 +195,7 @@ function populateProfileDistrictDropdown() {
     });
 }
 
-// ========== AVATAR UPLOAD ==========
+// ========== AVATAR UPLOAD (10MB limit + compression) ==========
 function setupAvatarUpload() {
     var input = document.getElementById('avatarInput');
     var avatarEl = document.getElementById('profileAvatar');
@@ -195,21 +206,16 @@ function setupAvatarUpload() {
         var file = this.files[0];
         if (!file) return;
 
-        // Validate file size (max 500KB for Convex string storage)
-        if (file.size > 500 * 1024) {
-            showToast('Image too large. Max 500KB.', 'error');
-            return;
-        }
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            showToast('Please select an image file', 'error');
+        // Use shared validation (10MB limit)
+        var validation = validateProfileImageFile(file);
+        if (!validation.valid) {
+            showToast(validation.message, 'error');
             return;
         }
 
         try {
-            // Resize and compress the image
-            var dataUrl = await resizeImage(file, 200, 200, 0.8);
+            // Compress using shared function from auth.js
+            var dataUrl = await compressProfileImage(file);
 
             // Show preview immediately
             renderAvatar(dataUrl);
@@ -225,51 +231,6 @@ function setupAvatarUpload() {
             console.error('Avatar upload error:', err);
             showToast('Failed to upload picture', 'error');
         }
-    });
-}
-
-function resizeImage(file, maxWidth, maxHeight, quality) {
-    return new Promise(function (resolve, reject) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            var img = new Image();
-            img.onload = function () {
-                var canvas = document.createElement('canvas');
-                var w = img.width;
-                var h = img.height;
-
-                // Calculate new dimensions
-                if (w > h) {
-                    if (w > maxWidth) {
-                        h = Math.round(h * maxWidth / w);
-                        w = maxWidth;
-                    }
-                } else {
-                    if (h > maxHeight) {
-                        w = Math.round(w * maxHeight / h);
-                        h = maxHeight;
-                    }
-                }
-
-                // Crop to square
-                var size = Math.min(w, h);
-                canvas.width = size;
-                canvas.height = size;
-
-                var ctx = canvas.getContext('2d');
-                var sx = (img.width - Math.min(img.width, img.height)) / 2;
-                var sy = (img.height - Math.min(img.width, img.height)) / 2;
-                var sSize = Math.min(img.width, img.height);
-
-                ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, size, size);
-
-                resolve(canvas.toDataURL('image/jpeg', quality));
-            };
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
     });
 }
 
@@ -296,6 +257,171 @@ function renderAvatar(profilePicture) {
     }
 }
 
+// ========== BIAS IMAGE PICKER ==========
+function setupBiasPicker() {
+    var overlay = document.getElementById('biasPickerOverlay');
+    var closeBtn = document.getElementById('biasPickerClose');
+    var editBtn = document.getElementById('biasEditBtn');
+    var cards = overlay ? overlay.querySelectorAll('.bias-picker-card') : [];
+
+    if (!overlay || !closeBtn || !editBtn || cards.length === 0) return;
+
+    editBtn.addEventListener('click', function () {
+        // Highlight current bias
+        cards.forEach(function (card) {
+            card.classList.remove('selected');
+            if (profileData && profileData.bias && card.dataset.bias === profileData.bias) {
+                card.classList.add('selected');
+            }
+        });
+        overlay.classList.add('active');
+    });
+
+    closeBtn.addEventListener('click', function () {
+        overlay.classList.remove('active');
+    });
+
+    // Close on overlay click
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+            overlay.classList.remove('active');
+        }
+    });
+
+    cards.forEach(function (card) {
+        card.addEventListener('click', async function () {
+            var newBias = this.dataset.bias;
+            overlay.classList.remove('active');
+
+            // Show loading immediately
+            var biasVal = document.getElementById('biasValue');
+            biasVal.textContent = 'Saving...';
+            biasVal.className = 'profile-row-value';
+
+            try {
+                // Update Convex
+                await ConvexService.mutation('users:updateBias', {
+                    phoneNumber: phoneNumber,
+                    bias: newBias
+                });
+
+                // Update Google Sheet (fire and forget)
+                updateBiasInSheet(phoneNumber, newBias);
+
+                // Update local state
+                profileData.bias = newBias;
+
+                // Update UI
+                biasVal.textContent = formatBias(newBias);
+                biasVal.className = 'profile-row-value ' + (biasClass[newBias] || '');
+
+                showToast('Bias updated!', 'success');
+            } catch (err) {
+                console.error('[Profile] Bias update error:', err);
+                // Restore previous value
+                if (profileData.bias) {
+                    biasVal.textContent = formatBias(profileData.bias);
+                    biasVal.className = 'profile-row-value ' + (biasClass[profileData.bias] || '');
+                } else {
+                    biasVal.textContent = 'Not set';
+                    biasVal.className = 'profile-row-value profile-row-value--muted';
+                }
+                showToast('Failed to update bias', 'error');
+            }
+        });
+    });
+}
+
+// ========== PFP UPLOAD DIALOG (from profile page) ==========
+function setupProfilePfpDialog() {
+    var overlay = document.getElementById('pfpUploadOverlay');
+    if (!overlay) return;
+
+    var fileInput = document.getElementById('pfpFileInput');
+    var previewWrap = document.getElementById('pfpUploadPreview');
+    var previewImg = document.getElementById('pfpPreviewImg');
+    var saveBtn = document.getElementById('pfpSaveBtn');
+    var skipBtn = document.getElementById('pfpSkipBtn');
+    var uploadBtn = document.getElementById('pfpUploadBtn');
+
+    // The avatar area can also trigger this dialog
+    var avatarEl = document.getElementById('profileAvatar');
+    if (avatarEl) {
+        avatarEl.addEventListener('dblclick', function () {
+            overlay.classList.add('active');
+        });
+    }
+
+    var pendingDataUrl = null;
+
+    fileInput.addEventListener('change', async function () {
+        var file = this.files[0];
+        if (!file) return;
+
+        var validation = validateProfileImageFile(file);
+        if (!validation.valid) {
+            showToast(validation.message, 'error');
+            return;
+        }
+
+        uploadBtn.innerHTML = '<span class="auth-loading"></span>Compressing...';
+        uploadBtn.style.pointerEvents = 'none';
+
+        try {
+            var dataUrl = await compressProfileImage(file);
+            pendingDataUrl = dataUrl;
+
+            previewImg.src = dataUrl;
+            previewWrap.style.display = '';
+            saveBtn.style.display = '';
+            uploadBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Change Photo';
+            uploadBtn.style.pointerEvents = '';
+        } catch (err) {
+            console.error('[PFP] Compression error:', err);
+            showToast('Failed to process image. Try a different photo.', 'error');
+            uploadBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Choose Photo';
+            uploadBtn.style.pointerEvents = '';
+        }
+    });
+
+    saveBtn.addEventListener('click', async function () {
+        if (!pendingDataUrl) return;
+
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+
+        try {
+            await ConvexService.mutation('users:updateProfilePicture', {
+                phoneNumber: phoneNumber,
+                profilePicture: pendingDataUrl
+            });
+
+            renderAvatar(pendingDataUrl);
+            overlay.classList.remove('active');
+            showToast('Profile picture updated!', 'success');
+
+            // Reset dialog state
+            pendingDataUrl = null;
+            previewWrap.style.display = 'none';
+            saveBtn.style.display = 'none';
+            saveBtn.textContent = 'Save Profile Picture';
+            saveBtn.disabled = false;
+        } catch (err) {
+            console.error('[PFP] Save error:', err);
+            showToast('Failed to save profile picture', 'error');
+            saveBtn.textContent = 'Save Profile Picture';
+            saveBtn.disabled = false;
+        }
+    });
+
+    skipBtn.addEventListener('click', function () {
+        overlay.classList.remove('active');
+        pendingDataUrl = null;
+        previewWrap.style.display = 'none';
+        saveBtn.style.display = 'none';
+    });
+}
+
 // ========== MAIN INITIALIZATION ==========
 checkAuthState().then(async function (user) {
     if (!user) {
@@ -318,7 +444,7 @@ checkAuthState().then(async function (user) {
         // Populate district dropdown
         populateProfileDistrictDropdown();
 
-        // Fetch additional data from Google Sheet (bias & join date)
+        // Fetch additional data from Google Sheet (bias & BLINK since)
         fetchSheetDataAndFill(phoneNumber);
 
         // Setup avatar upload
@@ -326,6 +452,12 @@ checkAuthState().then(async function (user) {
 
         // Setup inline editors
         setupEditors(profileData);
+
+        // Setup bias image picker
+        setupBiasPicker();
+
+        // Setup PFP upload dialog
+        setupProfilePfpDialog();
 
         // Show content, hide loading
         document.getElementById('profileLoading').style.display = 'none';
@@ -352,7 +484,6 @@ function populateProfilePage(data) {
 
     // Phone
     document.getElementById('phoneValue').textContent = maskPhone(data.phoneNumber);
-    document.getElementById('profilePhoneDisplay').textContent = maskPhone(data.phoneNumber);
 
     // Username
     document.getElementById('usernameValue').textContent = data.username || '—';
@@ -396,12 +527,12 @@ function populateProfilePage(data) {
         cooldownEl.style.display = '';
     }
 
-    // Registration date from Convex (join date for the website)
-    var joinText = document.getElementById('joinDateText');
+    // BLINK since in header (from Convex registeredAt fallback)
+    var blinkText = document.getElementById('blinkSinceText');
     if (data.registeredAt) {
-        joinText.textContent = 'Member since ' + formatDate(data.registeredAt);
+        blinkText.textContent = 'Registered user since ' + formatDate(data.registeredAt);
     } else {
-        joinText.textContent = 'Member';
+        blinkText.textContent = 'BLINK';
     }
 }
 
@@ -410,14 +541,18 @@ async function fetchSheetDataAndFill(phone) {
     var sheetData = await fetchSheetMemberData(phone);
     if (!sheetData) return;
 
-    // Joined community date from sheet
-    var joinedVal = document.getElementById('joinedCommunityValue');
-    if (sheetData.joinedDate) {
-        joinedVal.textContent = sheetData.joinedDate;
-        joinedVal.classList.remove('profile-row-value--muted');
+    // BLINK since date from sheet (column H)
+    var blinkSinceVal = document.getElementById('blinkSinceValue');
+    if (sheetData.blinkSince) {
+        blinkSinceVal.textContent = sheetData.blinkSince;
+        blinkSinceVal.classList.remove('profile-row-value--muted');
         document.getElementById('sheetBadge').style.display = '';
+
+        // Also update header
+        var blinkText = document.getElementById('blinkSinceText');
+        blinkText.textContent = 'BPSL Member since ' + sheetData.blinkSince;
     } else {
-        joinedVal.innerHTML = '<span class="profile-row-value--muted">Not available</span>';
+        blinkSinceVal.innerHTML = '<span class="profile-row-value--muted">Not available</span>';
     }
 
     // If bias is from sheet and user hasn't set one in Convex yet, display it
@@ -471,28 +606,6 @@ function setupEditors(data) {
             document.getElementById('profileDisplayName').textContent = newValue;
             document.getElementById('profileAvatarInitial').textContent = newValue.charAt(0).toUpperCase();
             showToast('Username updated!', 'success');
-        }
-    });
-
-    // Bias editor
-    setupInlineEdit({
-        editBtnId: 'biasEditBtn',
-        valueId: 'biasValue',
-        editSectionId: 'biasEdit',
-        saveBtnId: 'biasSave',
-        cancelBtnId: 'biasCancel',
-        inputId: 'biasSelect',
-        getCurrentValue: function () { return data.bias; },
-        onSave: async function (newValue) {
-            await ConvexService.mutation('users:updateBias', {
-                phoneNumber: phoneNumber,
-                bias: newValue
-            });
-            data.bias = newValue;
-            var biasVal = document.getElementById('biasValue');
-            biasVal.textContent = formatBias(newValue);
-            biasVal.className = 'profile-row-value ' + (biasClass[newValue] || '');
-            showToast('Bias updated! ' + (biasEmoji[newValue] || ''), 'success');
         }
     });
 

@@ -132,14 +132,15 @@ ROOM.Leaderboard = {
     var compactClass = compact ? ' room-leader--compact' : '';
     var selfClass = isSelf ? ' room-leader--self' : '';
     var color = d.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
-    var initial = d.username ? d.username.charAt(0).toUpperCase() : '?';
+    var av = ROOM.avatarInner({ profilePicture: d.profilePicture, username: d.username });
     var points = d.totalPoints || 0;
     var score = this.formatPoints(points);
+    var avatarBg = av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';';
 
     return '<div class="room-leader ' + rankClass + compactClass + selfClass + '" data-id="' + participant.id + '">' +
       '<div class="room-leader-rank">' + rankContent + '</div>' +
-      '<div class="room-leader-avatar" style="background:' + color + ';">' +
-        '<span>' + initial + '</span>' +
+      '<div class="room-leader-avatar" style="' + avatarBg + '">' +
+        av.html +
         streakHtml +
       '</div>' +
       '<div class="room-leader-info">' +

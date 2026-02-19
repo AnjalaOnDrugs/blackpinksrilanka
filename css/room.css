@@ -1641,6 +1641,52 @@
   color: #555;
 }
 
+.room-send-btn-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.room-lightstick-wave-btn {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(247, 166, 185, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.room-lightstick-wave-btn img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(247, 166, 185, 0.5));
+  pointer-events: none;
+}
+
+.room-lightstick-wave-btn:hover {
+  background: rgba(247, 166, 185, 0.15);
+  border-color: rgba(247, 166, 185, 0.4);
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 0 12px rgba(247, 166, 185, 0.25);
+}
+
+.room-lightstick-wave-btn:active {
+  transform: translateX(-50%) scale(0.9);
+}
+
 .room-chat-send-btn {
   width: 46px;
   height: 46px;
@@ -1786,6 +1832,47 @@
   100% {
     opacity: 0;
     transform: translateY(-300px) translateX(var(--burst-x, 0px)) scale(0.6) rotate(30deg);
+  }
+}
+
+/* ========== LIGHTSTICK WAVE EFFECT ========== */
+.room-lightstick-wave {
+  position: absolute;
+  bottom: 150px;
+  pointer-events: none;
+  z-index: 41;
+  animation: roomLightstickWave var(--wave-duration, 3s) ease-out forwards;
+  animation-delay: var(--wave-delay, 0s);
+}
+
+.room-lightstick-wave img {
+  width: var(--wave-size, 36px);
+  height: var(--wave-size, 36px);
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(247, 166, 185, 0.7))
+          drop-shadow(0 0 16px rgba(255, 165, 216, 0.4));
+}
+
+@keyframes roomLightstickWave {
+  0% {
+    opacity: 0.9;
+    transform: translateY(0) translateX(0) scale(0.4) rotate(var(--wave-rot-start, -15deg));
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-40px) translateX(var(--wave-drift-x, 0px)) scale(1) rotate(var(--wave-rot-mid, 10deg));
+  }
+  40% {
+    opacity: 0.85;
+    transform: translateY(-140px) translateX(calc(var(--wave-drift-x, 0px) * 1.5)) scale(var(--wave-peak-scale, 1.1)) rotate(var(--wave-rot-start, -15deg));
+  }
+  70% {
+    opacity: 0.4;
+    transform: translateY(-260px) translateX(calc(var(--wave-drift-x, 0px) * 0.8)) scale(0.7) rotate(var(--wave-rot-mid, 10deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-400px) translateX(var(--wave-drift-x, 0px)) scale(0.3) rotate(var(--wave-rot-end, 25deg));
   }
 }
 

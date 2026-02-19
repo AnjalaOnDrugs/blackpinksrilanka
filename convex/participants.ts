@@ -28,6 +28,7 @@ export const listByRoom = query({
         milestones: p.milestones,
         currentTrack: p.currentTrack ?? null,
         avatarColor: p.avatarColor,
+        profilePicture: p.profilePicture ?? null,
         streakMinutes: p.streakMinutes,
         offlineTracking: p.offlineTracking ?? false,
         lastCheckIn: p.lastCheckIn ?? null,
@@ -47,6 +48,13 @@ export const joinRoom = mutation({
     avatarColor: v.string(),
   },
   handler: async (ctx, args) => {
+    // Look up user's profile picture from users table
+    const userDoc = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+    const profilePicture = userDoc?.profilePicture ?? undefined;
+
     const existing = await ctx.db
       .query("participants")
       .withIndex("by_room_phone", (q) =>
@@ -63,6 +71,7 @@ export const joinRoom = mutation({
         isOnline: true,
         lastfmUsername: args.lastfmUsername ?? existing.lastfmUsername,
         avatarColor: args.avatarColor,
+        profilePicture: profilePicture,
       });
     } else {
       await ctx.db.insert("participants", {
@@ -79,6 +88,7 @@ export const joinRoom = mutation({
         milestones: [],
         currentTrack: null,
         avatarColor: args.avatarColor,
+        profilePicture: profilePicture,
         streakMinutes: 0,
       });
     }

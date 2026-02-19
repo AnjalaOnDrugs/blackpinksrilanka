@@ -13,6 +13,8 @@ ROOM.Chat = {
   MAX_BUBBLES: 30,
   lastSendTime: 0,
   SEND_COOLDOWN: 1500, // 1.5s between messages
+  lastWaveTime: 0,
+  WAVE_COOLDOWN: 10000, // 10s between lightstick waves
 
   init: function () {
     this.bubbleLayer = document.getElementById('chatBubbleLayer');
@@ -44,6 +46,14 @@ ROOM.Chat = {
         self.sendReaction(btn.dataset.emoji, btn.textContent.trim());
       });
     });
+
+    // Lightstick wave button
+    var lightstickBtn = document.getElementById('lightstickWaveBtn');
+    if (lightstickBtn) {
+      lightstickBtn.addEventListener('click', function () {
+        self.sendLightstickWave();
+      });
+    }
 
     // Chat log toggle
     var toggle = document.getElementById('chatLogToggle');
@@ -111,7 +121,85 @@ ROOM.Chat = {
     this.displayMessage(msgData);
   },
 
+  sendLightstickWave: function () {
+    var now = Date.now();
+    if (now - this.lastWaveTime < this.WAVE_COOLDOWN) return;
+    this.lastWaveTime = now;
+
+    var msgData = {
+      type: 'lightstick_wave',
+      username: ROOM.currentUser.username,
+      color: ROOM.currentUser.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)',
+      timestamp: now
+    };
+
+    if (ROOM.Agora.channel) {
+      ROOM.Agora.sendMessage(msgData);
+    } else {
+      ROOM.Firebase.sendChatMessage(msgData);
+    }
+    this.displayMessage(msgData);
+  },
+
+  displayLightstickWave: function (msg) {
+    if (!this.bubbleLayer) return;
+
+    var count = 10 + Math.floor(Math.random() * 6); // 10-15 lightsticks
+
+    for (var i = 0; i < count; i++) {
+      var el = document.createElement('div');
+      el.className = 'room-lightstick-wave';
+
+      var img = document.createElement('img');
+      img.src = 'assets/logo/lightstick.png';
+      img.alt = 'lightstick';
+      el.appendChild(img);
+
+      // Spread across 15%-85% of screen width
+      el.style.left = (15 + Math.random() * 70) + '%';
+
+      // Varied size (28-48px)
+      var size = 28 + Math.floor(Math.random() * 20);
+      el.style.setProperty('--wave-size', size + 'px');
+
+      // Staggered delay (0 - 0.8s)
+      el.style.setProperty('--wave-delay', (Math.random() * 0.8) + 's');
+
+      // Varied duration (2.5 - 4s)
+      el.style.setProperty('--wave-duration', (2.5 + Math.random() * 1.5) + 's');
+
+      // Random horizontal drift
+      el.style.setProperty('--wave-drift-x', (Math.random() * 120 - 60) + 'px');
+
+      // Random rotation phases for a natural swaying feel
+      el.style.setProperty('--wave-rot-start', (Math.random() * 30 - 15) + 'deg');
+      el.style.setProperty('--wave-rot-mid', (Math.random() * 20 - 10) + 'deg');
+      el.style.setProperty('--wave-rot-end', (Math.random() * 40 - 20) + 'deg');
+
+      // Slight peak scale variation
+      el.style.setProperty('--wave-peak-scale', (0.9 + Math.random() * 0.4).toFixed(2));
+
+      this.bubbleLayer.appendChild(el);
+
+      (function (element) {
+        setTimeout(function () {
+          if (element.parentNode) element.remove();
+        }, 5000);
+      })(el);
+    }
+
+    this.addToLog({
+      username: msg.username,
+      text: '🔦 lightstick wave',
+      type: 'reaction'
+    });
+  },
+
   displayMessage: function (msg) {
+    if (msg.type === 'lightstick_wave') {
+      this.displayLightstickWave(msg);
+      return;
+    }
     if (msg.type === 'reaction') {
       this.displayReaction(msg);
       return;
@@ -138,12 +226,17 @@ ROOM.Chat = {
     bubble.style.left = xPos + '%';
     bubble.style.setProperty('--sway', (Math.random() * 40 - 20) + 'px');
 
-    var initial = msg.username ? msg.username.charAt(0).toUpperCase() : '?';
     var color = msg.color || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+    // Look up profile picture from participants cache
+    var pic = (ROOM.profilePicMap && msg.userId) ? ROOM.profilePicMap[msg.userId] : null;
+    if (!pic && ROOM.currentUser && msg.userId === ROOM.currentUser.phoneNumber) {
+      pic = ROOM.currentUser.profilePicture;
+    }
+    var av = ROOM.avatarInner({ profilePicture: pic, username: msg.username });
 
     bubble.innerHTML =
-      '<div class="room-chat-bubble-avatar" style="background:' + color + ';">' +
-        initial +
+      '<div class="room-chat-bubble-avatar" style="' + (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+        av.html +
       '</div>' +
       '<div class="room-chat-bubble-content">' +
         '<span class="room-chat-bubble-name">' + this.escapeHtml(msg.username || 'Anon') + '</span>' +

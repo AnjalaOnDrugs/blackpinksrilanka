@@ -48,6 +48,7 @@ export default defineSchema({
       )
     ),
     avatarColor: v.string(),
+    profilePicture: v.optional(v.string()),
     streakMinutes: v.number(),
     offlineTracking: v.optional(v.boolean()),
     lastCheckIn: v.optional(v.number()),

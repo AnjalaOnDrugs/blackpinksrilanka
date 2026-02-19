@@ -7,6 +7,29 @@ window.ROOM = window.ROOM || {};
 
 ROOM.currentUser = null;
 
+/**
+ * Shared avatar HTML helper.
+ * Returns inner HTML for an avatar element — either a profile picture <img> or an initial <span>.
+ * The parent element should have: style="background:{avatarColor}" with border-radius:50%, overflow:hidden.
+ * @param {object} opts - { profilePicture, username, avatarColor }
+ * @returns {{ html: string, hasImage: boolean }}
+ */
+ROOM.avatarInner = function (opts) {
+  var pic = opts.profilePicture || opts.profilePic || null;
+  var name = opts.username || '?';
+  var initial = name.charAt(0).toUpperCase();
+  if (pic) {
+    return {
+      html: '<img src="' + pic + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">',
+      hasImage: true
+    };
+  }
+  return {
+    html: '<span>' + initial + '</span>',
+    hasImage: false
+  };
+};
+
 // ========== AUTH GUARD & INIT ==========
 checkAuthState().then(async function (user) {
   if (!user) {
@@ -27,12 +50,21 @@ checkAuthState().then(async function (user) {
       username: userData.username || 'BLINK',
       lastfmUsername: userData.lastfmUsername || null,
       avatarColor: userData.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)',
+      profilePicture: userData.profilePicture || null,
       district: userData.district || null
     };
 
-    // Set profile initial
+    // Set profile initial or picture
     var profileInitial = document.getElementById('roomProfileInitial');
-    if (profileInitial) {
+    var profileAvatarWrap = profileInitial ? profileInitial.parentElement : null;
+    if (profileAvatarWrap && ROOM.currentUser.profilePicture) {
+      profileInitial.style.display = 'none';
+      var img = document.createElement('img');
+      img.src = ROOM.currentUser.profilePicture;
+      img.alt = '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      profileAvatarWrap.appendChild(img);
+    } else if (profileInitial) {
       profileInitial.textContent = ROOM.currentUser.username.charAt(0).toUpperCase();
     }
 

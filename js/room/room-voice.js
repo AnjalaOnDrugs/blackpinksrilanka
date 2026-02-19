@@ -133,16 +133,17 @@ ROOM.Voice = {
     var html = '';
 
     messages.forEach(function (msg) {
-      var initial = msg.username ? msg.username.charAt(0).toUpperCase() : '?';
       var color = msg.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+      var voicePic = (ROOM.profilePicMap && msg.phoneNumber) ? ROOM.profilePicMap[msg.phoneNumber] : null;
+      var voiceAv = ROOM.avatarInner({ profilePicture: voicePic, username: msg.username });
       var durationStr = Math.round(msg.duration) + 's';
       var isPlaying = self.playingMessageId === msg._id;
       var playingClass = isPlaying ? ' room-voice-bubble--playing' : '';
 
       html +=
         '<button class="room-voice-bubble' + playingClass + '" data-id="' + msg._id + '" title="' + self.escapeAttr(msg.username) + ' - Voice message">' +
-          '<div class="room-voice-bubble-avatar" style="background:' + color + ';">' +
-            '<span>' + initial + '</span>' +
+          '<div class="room-voice-bubble-avatar" style="' + (voiceAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+            voiceAv.html +
             '<div class="room-voice-bubble-rank">#' + msg.rank + '</div>' +
           '</div>' +
           '<div class="room-voice-bubble-wave">' +
