@@ -280,29 +280,29 @@ ROOM.FillMap = {
     container.innerHTML =
       '<div class="room-fill-map-backdrop"></div>' +
       '<div class="room-fill-map-card">' +
-        '<div class="room-fill-map-header">' +
-          '<div class="room-fill-map-badge">' +
-            '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>' +
-            ' FILL THE MAP' +
-          '</div>' +
-          '<div class="room-fill-map-header-actions">' +
-            '<span class="room-fill-map-countdown" id="fillMapCountdown">--:--</span>' +
-            '<button class="room-fill-map-close-btn" id="fillMapMinimizeBtn" type="button" aria-label="Minimize">-</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="room-fill-map-svg-container" id="fillMapSvgContainer"></div>' +
-        '<div class="room-fill-map-footer">' +
-          '<div class="room-fill-map-progress">' +
-            '<div class="room-fill-map-progress-bar">' +
-              '<div class="room-fill-map-progress-fill" id="fillMapProgressFill"></div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="room-fill-map-status" id="fillMapStatus">' +
-            '<span class="room-fill-map-status-icon">🎧</span>' +
-            '<span>Play <strong>' + songName + '</strong> to fill your district!</span>' +
-            '<span class="room-fill-map-footer-pts">8 pts</span>' +
-          '</div>' +
-        '</div>' +
+      '<div class="room-fill-map-header">' +
+      '<div class="room-fill-map-badge">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>' +
+      ' FILL THE MAP' +
+      '</div>' +
+      '<div class="room-fill-map-header-actions">' +
+      '<span class="room-fill-map-countdown" id="fillMapCountdown">--:--</span>' +
+      '<button class="room-fill-map-close-btn" id="fillMapMinimizeBtn" type="button" aria-label="Minimize">-</button>' +
+      '</div>' +
+      '</div>' +
+      '<div class="room-fill-map-svg-container" id="fillMapSvgContainer"></div>' +
+      '<div class="room-fill-map-footer">' +
+      '<div class="room-fill-map-progress">' +
+      '<div class="room-fill-map-progress-bar">' +
+      '<div class="room-fill-map-progress-fill" id="fillMapProgressFill"></div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="room-fill-map-status" id="fillMapStatus">' +
+      '<span class="room-fill-map-status-icon">🎧</span>' +
+      '<span>Play <strong>' + songName + '</strong> to fill your district!</span>' +
+      '<span class="room-fill-map-footer-pts">8 pts</span>' +
+      '</div>' +
+      '</div>' +
       '</div>';
 
     overlay.appendChild(container);
@@ -336,14 +336,15 @@ ROOM.FillMap = {
         }
       }
 
+      // Append SVG to DOM BEFORE adding labels so getBBox() works correctly
+      svgContainer.appendChild(svgClone);
+
       // Add district name labels inside the SVG for chosen districts
       if (this._eventData.chosenDistricts) {
         for (var k = 0; k < this._eventData.chosenDistricts.length; k++) {
           this._addDistrictLabel(svgClone, this._eventData.chosenDistricts[k], null, null);
         }
       }
-
-      svgContainer.appendChild(svgClone);
     }
 
     // Minimize button
@@ -406,8 +407,8 @@ ROOM.FillMap = {
       var cy = bbox.y + bbox.height / 2;
 
       // Size the foreignObject large enough for the label content
-      var foWidth = Math.max(bbox.width * 1.2, 140);
-      var foHeight = username ? 130 : 70;
+      var foWidth = Math.max(bbox.width * 1.2, 280);
+      var foHeight = username ? 260 : 140;
 
       var fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
       fo.setAttribute('x', cx - foWidth / 2);
@@ -428,11 +429,11 @@ ROOM.FillMap = {
         if (profilePicture) {
           avatarHtml = '<div class="room-fill-map-label-avatar room-fill-map-label-avatar--filled">' +
             '<img src="' + this._esc(profilePicture) + '" alt="">' +
-          '</div>';
+            '</div>';
         } else {
           avatarHtml = '<div class="room-fill-map-label-avatar room-fill-map-label-avatar--filled room-fill-map-label-avatar--initial">' +
             (username || '?').charAt(0).toUpperCase() +
-          '</div>';
+            '</div>';
         }
         wrapper.innerHTML =
           avatarHtml +
@@ -580,9 +581,9 @@ ROOM.FillMap = {
 
         fillersHtml +=
           '<div class="room-fill-map-ty-participant">' +
-            '<div class="room-fill-map-ty-avatar">' + avatarHtml + '</div>' +
-            '<div class="room-fill-map-ty-name">' + this._esc(f.username) + '</div>' +
-            '<div class="room-fill-map-ty-points">+' + (data.pointsEach || 8) + ' pts</div>' +
+          '<div class="room-fill-map-ty-avatar">' + avatarHtml + '</div>' +
+          '<div class="room-fill-map-ty-name">' + this._esc(f.username) + '</div>' +
+          '<div class="room-fill-map-ty-points">+' + (data.pointsEach || 8) + ' pts</div>' +
           '</div>';
       }
     }
@@ -592,12 +593,12 @@ ROOM.FillMap = {
     overlay.innerHTML =
       '<div class="room-fill-map-ty-backdrop"></div>' +
       '<div class="room-fill-map-ty-modal">' +
-        '<div class="room-fill-map-ty-icon">🗺️</div>' +
-        '<div class="room-fill-map-ty-title">Map Complete!</div>' +
-        '<div class="room-fill-map-ty-points-big">+' + (data.pointsEach || 8) + ' points earned!</div>' +
-        '<div class="room-fill-map-ty-desc">All districts were filled! Amazing teamwork!</div>' +
-        '<div class="room-fill-map-ty-list">' + fillersHtml + '</div>' +
-        '<button class="room-fill-map-ty-close" id="fillMapCloseBtn">Close</button>' +
+      '<div class="room-fill-map-ty-icon">🗺️</div>' +
+      '<div class="room-fill-map-ty-title">Map Complete!</div>' +
+      '<div class="room-fill-map-ty-points-big">+' + (data.pointsEach || 8) + ' points earned!</div>' +
+      '<div class="room-fill-map-ty-desc">All districts were filled! Amazing teamwork!</div>' +
+      '<div class="room-fill-map-ty-list">' + fillersHtml + '</div>' +
+      '<button class="room-fill-map-ty-close" id="fillMapCloseBtn">Close</button>' +
       '</div>';
 
     document.body.appendChild(overlay);
