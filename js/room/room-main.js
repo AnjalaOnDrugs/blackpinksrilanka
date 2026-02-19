@@ -99,13 +99,18 @@ async function initRoom(roomId) {
     await showLastfmModal();
   }
 
-  // 5. Agora RTM (chat)
+  // 5. Ask for notification permission (if not yet decided)
+  if ('Notification' in window && Notification.permission === 'default') {
+    await showNotifModal();
+  }
+
+  // 6. Agora RTM (chat)
   await ROOM.Agora.init(ROOM.currentUser.phoneNumber, roomId);
 
-  // 6. Last.fm polling
+  // 7. Last.fm polling
   ROOM.LastFM.init();
 
-  // 7. Initialize UI modules
+  // 8. Initialize UI modules
   ROOM.Leaderboard.init();
   ROOM.Activity.init();
   ROOM.Chat.init();
@@ -116,11 +121,11 @@ async function initRoom(roomId) {
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 
-  // 8. Setup mobile tabs and heat map toggle
+  // 9. Setup mobile tabs and heat map toggle
   setupMobileTabs();
   setupHeatMapToggle();
 
-  // 9. Hide loading, show room
+  // 10. Hide loading, show room
   document.getElementById('roomLoading').style.display = 'none';
   document.getElementById('roomTopbar').style.display = '';
   document.getElementById('roomLayout').style.display = '';
@@ -132,17 +137,17 @@ async function initRoom(roomId) {
     switchMobilePanel('panelStage');
   }
 
-  // 10. Stream counter expand/collapse toggle
+  // 11. Stream counter expand/collapse toggle
   setupStreamCounterToggle();
 
-  // 11. Check-in system (offline tracking)
+  // 12. Check-in system (offline tracking)
   // Small delay to let participants cache populate from Convex
   setTimeout(function () { initCheckIn(); }, 2000);
 
-  // 12. Heartbeat (every 30s)
+  // 13. Heartbeat (every 30s)
   startHeartbeat();
 
-  // 13. Cleanup on page unload
+  // 14. Cleanup on page unload
   setupCleanup();
 }
 
@@ -196,6 +201,45 @@ function showLastfmModal() {
     });
 
     input.focus();
+  });
+}
+
+// ========== NOTIFICATION PERMISSION MODAL ==========
+function showNotifModal() {
+  return new Promise(function (resolve) {
+    var modal = document.getElementById('notifModal');
+    if (!modal) { resolve(); return; }
+
+    // Hide loading while showing modal
+    document.getElementById('roomLoading').style.display = 'none';
+    modal.style.display = 'flex';
+
+    var enableBtn = document.getElementById('notifEnableBtn');
+    var skipBtn = document.getElementById('notifSkipBtn');
+
+    function onEnable() {
+      Notification.requestPermission().then(function () {
+        modal.style.display = 'none';
+        document.getElementById('roomLoading').style.display = 'flex';
+        cleanup();
+        resolve();
+      });
+    }
+
+    function onSkip() {
+      modal.style.display = 'none';
+      document.getElementById('roomLoading').style.display = 'flex';
+      cleanup();
+      resolve();
+    }
+
+    function cleanup() {
+      enableBtn.removeEventListener('click', onEnable);
+      skipBtn.removeEventListener('click', onSkip);
+    }
+
+    enableBtn.addEventListener('click', onEnable);
+    skipBtn.addEventListener('click', onSkip);
   });
 }
 
@@ -415,10 +459,7 @@ function performCheckIn() {
       ROOM.Animations.showToast('join', '✅', 'Checked in! +2 pts. Offline tracking is <strong>active</strong> for the next hour.');
     }
 
-    // Request notification permission for check-in reminders
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    // Notification permission is now requested via the notif modal on room entry
   });
 }
 

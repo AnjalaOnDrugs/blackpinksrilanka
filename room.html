@@ -85,6 +85,25 @@
     </div>
   </div>
 
+  <!-- Notification Permission Modal -->
+  <div class="room-modal-backdrop" id="notifModal" style="display:none;">
+    <div class="room-modal">
+      <div class="room-modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+      </div>
+      <div class="room-modal-title">Stay in the loop!</div>
+      <div class="room-modal-desc">Would you like us to notify you about events and check-ins? You'll get alerts for Listen Along events, check-in reminders, and more.</div>
+      <div class="room-modal-actions">
+        <button class="room-modal-btn room-modal-btn--secondary" id="notifSkipBtn">Not now</button>
+        <button class="room-modal-btn room-modal-btn--primary" id="notifEnableBtn">Enable notifications</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading Screen -->
   <div class="room-loading" id="roomLoading">
     <div class="room-loading-video-wrap">

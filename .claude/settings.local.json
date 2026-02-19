@@ -32,7 +32,8 @@
       "WebFetch(domain:klipy.com)",
       "WebFetch(domain:docs.klipy.com)",
       "Bash(find:*)",
-      "Bash(npx convex push:*)"
+      "Bash(npx convex push:*)",
+      "Bash(git -C \"C:\\\\Users\\\\haris\\\\Documents\\\\Projects\\\\blackpinksrilanka.org\\\\blackpinksrilanka.org\" log --oneline -20)"
     ]
   }
 }

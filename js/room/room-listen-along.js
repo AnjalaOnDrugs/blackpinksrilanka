@@ -88,6 +88,13 @@ ROOM.ListenAlong = {
       ROOM.Animations.showToast('energy', '🎵',
         '<strong>' + this._esc(data.member) + '\'s Listen Along</strong> just started! Play <strong>' + this._esc(data.songName) + '</strong> to join!');
     }
+
+    // Browser push notification (works when tab is in background)
+    this._sendPushNotification(
+      data.member + '\'s Listen Along!',
+      'Play ' + data.songName + ' by ' + data.songArtist + ' to join and earn points!',
+      'listen-along-start'
+    );
   },
 
   handleJoin: function (data) {
@@ -985,6 +992,22 @@ ROOM.ListenAlong = {
   },
 
   // ========== UTILITIES ==========
+
+  _sendPushNotification: function (title, body, tag) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      var n = new Notification(title, {
+        body: body,
+        icon: 'assets/logo/lightstick.png',
+        tag: tag || 'listen-along',
+        renotify: true
+      });
+      n.onclick = function () {
+        window.focus();
+        n.close();
+      };
+    } catch (e) { /* silent fail on unsupported env */ }
+  },
 
   _esc: function (text) {
     var div = document.createElement('div');
