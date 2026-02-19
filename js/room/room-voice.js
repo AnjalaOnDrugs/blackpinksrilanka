@@ -142,7 +142,7 @@ ROOM.Voice = {
 
       html +=
         '<button class="room-voice-bubble' + playingClass + '" data-id="' + msg._id + '" title="' + self.escapeAttr(msg.username) + ' - Voice message">' +
-          '<div class="room-voice-bubble-avatar" style="' + (voiceAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+          '<div class="room-voice-bubble-avatar" style="' + (voiceAv.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
             voiceAv.html +
             '<div class="room-voice-bubble-rank">#' + msg.rank + '</div>' +
           '</div>' +

@@ -270,7 +270,7 @@ ROOM.Activity = {
 
     return '<div class="room-activity-card" data-id="' + participant.id + '">' +
       '<div class="room-activity-card-main">' +
-        '<div class="room-activity-avatar" style="' + (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+        '<div class="room-activity-avatar" style="' + (av.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
           av.html +
           '<div class="room-activity-status ' + statusClass + '"></div>' +
         '</div>' +
