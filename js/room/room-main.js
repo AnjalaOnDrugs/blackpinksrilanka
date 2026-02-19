@@ -414,6 +414,11 @@ function performCheckIn() {
     if (ROOM.Animations && ROOM.Animations.showToast) {
       ROOM.Animations.showToast('join', '✅', 'Checked in! +2 pts. Offline tracking is <strong>active</strong> for the next hour.');
     }
+
+    // Request notification permission for check-in reminders
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   });
 }
 
@@ -438,6 +443,7 @@ function startCheckInCountdown(durationMs) {
       clearInterval(checkInTimerInterval);
       checkInTimerInterval = null;
       showCheckInButton();
+      notifyCheckInReady();
       return;
     }
 
@@ -467,6 +473,29 @@ function showCheckInButton() {
     setTimeout(function () {
       btn.classList.remove('room-checkin-btn--pulse');
     }, 3000);
+  }
+}
+
+function notifyCheckInReady() {
+  // In-app toast
+  if (ROOM.Animations && ROOM.Animations.showToast) {
+    ROOM.Animations.showToast('join', '📋', 'Your check-in has expired. <strong>Check in again</strong> to keep tracking!');
+  }
+
+  // Browser push notification (works even when tab is in background)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      var n = new Notification('BLACKPINK SL Room', {
+        body: 'Your check-in has expired! Check in again to keep tracking your streams.',
+        icon: 'assets/logo/lightstick.png',
+        tag: 'checkin-ready',
+        renotify: true
+      });
+      n.onclick = function () {
+        window.focus();
+        n.close();
+      };
+    } catch (e) { /* silent fail on unsupported env */ }
   }
 }
 
