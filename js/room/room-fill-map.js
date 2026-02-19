@@ -405,9 +405,9 @@ ROOM.FillMap = {
       var cx = bbox.x + bbox.width / 2;
       var cy = bbox.y + bbox.height / 2;
 
-      // Size the label container based on district size
-      var foWidth = Math.max(bbox.width * 0.9, 100);
-      var foHeight = username ? 90 : 55;
+      // Size the foreignObject large enough for the label content
+      var foWidth = Math.max(bbox.width * 1.2, 140);
+      var foHeight = username ? 130 : 70;
 
       var fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
       fo.setAttribute('x', cx - foWidth / 2);
@@ -419,6 +419,7 @@ ROOM.FillMap = {
       fo.style.overflow = 'visible';
 
       var wrapper = document.createElement('div');
+      wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
       wrapper.className = 'room-fill-map-label';
 
       if (username) {
