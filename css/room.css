@@ -5476,8 +5476,79 @@
   .room-listen-along-card {
     right: 10px;
     left: 10px;
-    bottom: 80px;
+    bottom: calc(122px + env(safe-area-inset-bottom, 0px));
     width: auto;
+    max-height: calc(100dvh - 260px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .room-listen-along-content {
+    padding: 14px 14px 12px;
+    border-radius: 16px;
+  }
+
+  .room-listen-along-glow {
+    display: none;
+  }
+
+  .room-listen-along-header {
+    margin-bottom: 8px;
+  }
+
+  .room-listen-along-badge {
+    font-size: 10px;
+    letter-spacing: 0.9px;
+    padding: 3px 10px;
+  }
+
+  .room-listen-along-countdown {
+    font-size: 16px;
+  }
+
+  .room-listen-along-title {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .room-listen-along-gif,
+  .room-listen-along-participants {
+    display: none;
+  }
+
+  .room-listen-along-song {
+    padding: 10px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .room-listen-along-song-art {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+
+  .room-listen-along-song-name {
+    font-size: 14px;
+  }
+
+  .room-listen-along-song-artist {
+    font-size: 11px;
+  }
+
+  .room-listen-along-progress {
+    margin-bottom: 10px;
+  }
+
+  .room-listen-along-status {
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .room-listen-along-status-icon {
+    font-size: 15px;
   }
 
   .room-listen-along-gif-media {
