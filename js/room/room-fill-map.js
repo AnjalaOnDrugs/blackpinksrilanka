@@ -290,21 +290,19 @@ ROOM.FillMap = {
             '<button class="room-fill-map-close-btn" id="fillMapMinimizeBtn" type="button" aria-label="Minimize">-</button>' +
           '</div>' +
         '</div>' +
-        '<div class="room-fill-map-title">Fill the Map!</div>' +
-        '<div class="room-fill-map-subtitle">Play <strong>' + songName + '</strong>' +
-          (songArtist ? ' by ' + songArtist : '') + ' to claim your district</div>' +
         '<div class="room-fill-map-svg-container" id="fillMapSvgContainer"></div>' +
-        '<div class="room-fill-map-districts" id="fillMapDistrictsList"></div>' +
-        '<div class="room-fill-map-progress">' +
-          '<div class="room-fill-map-progress-bar">' +
-            '<div class="room-fill-map-progress-fill" id="fillMapProgressFill"></div>' +
+        '<div class="room-fill-map-footer">' +
+          '<div class="room-fill-map-progress">' +
+            '<div class="room-fill-map-progress-bar">' +
+              '<div class="room-fill-map-progress-fill" id="fillMapProgressFill"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="room-fill-map-status" id="fillMapStatus">' +
+            '<span class="room-fill-map-status-icon">🎧</span>' +
+            '<span>Play <strong>' + songName + '</strong> to fill your district!</span>' +
+            '<span class="room-fill-map-footer-pts">8 pts</span>' +
           '</div>' +
         '</div>' +
-        '<div class="room-fill-map-status" id="fillMapStatus">' +
-          '<div class="room-fill-map-status-icon">🎧</div>' +
-          '<span>Play <strong>' + songName + '</strong> to fill your district!</span>' +
-        '</div>' +
-        '<div class="room-fill-map-points">All fillers earn <strong>8 points</strong> if all districts are filled!</div>' +
       '</div>';
 
     overlay.appendChild(container);
@@ -338,11 +336,15 @@ ROOM.FillMap = {
         }
       }
 
+      // Add district name labels inside the SVG for chosen districts
+      if (this._eventData.chosenDistricts) {
+        for (var k = 0; k < this._eventData.chosenDistricts.length; k++) {
+          this._addDistrictLabel(svgClone, this._eventData.chosenDistricts[k], null, null);
+        }
+      }
+
       svgContainer.appendChild(svgClone);
     }
-
-    // Render district status cards
-    this._renderDistrictCards();
 
     // Minimize button
     var minimizeBtn = document.getElementById('fillMapMinimizeBtn');
@@ -363,53 +365,7 @@ ROOM.FillMap = {
     }
   },
 
-  _renderDistrictCards: function () {
-    var container = document.getElementById('fillMapDistrictsList');
-    if (!container || !this._eventData) return;
-    container.innerHTML = '';
-
-    var chosen = this._eventData.chosenDistricts || [];
-    var filled = this._eventData.filledDistricts || {};
-
-    for (var i = 0; i < chosen.length; i++) {
-      var district = chosen[i];
-      var filler = filled[district];
-
-      var card = document.createElement('div');
-      card.className = 'room-fill-map-district-card';
-      card.setAttribute('data-district', district);
-
-      if (filler) {
-        card.classList.add('room-fill-map-district-card--filled');
-        var pic = filler.profilePicture;
-        var avatarHtml = pic
-          ? '<img src="' + this._esc(pic) + '" alt="" class="room-fill-map-district-avatar-img">'
-          : '<span class="room-fill-map-district-avatar-initial">' + (filler.username || '?').charAt(0).toUpperCase() + '</span>';
-
-        card.innerHTML =
-          '<div class="room-fill-map-district-avatar">' + avatarHtml + '</div>' +
-          '<div class="room-fill-map-district-info">' +
-            '<div class="room-fill-map-district-name">' + this._esc(district) + '</div>' +
-            '<div class="room-fill-map-district-user">✅ ' + this._esc(filler.username) + '</div>' +
-          '</div>';
-      } else {
-        card.classList.add('room-fill-map-district-card--waiting');
-        card.innerHTML =
-          '<div class="room-fill-map-district-avatar room-fill-map-district-avatar--empty">' +
-            '<span class="room-fill-map-district-avatar-pulse"></span>' +
-          '</div>' +
-          '<div class="room-fill-map-district-info">' +
-            '<div class="room-fill-map-district-name">' + this._esc(district) + '</div>' +
-            '<div class="room-fill-map-district-user room-fill-map-district-user--waiting">Waiting for a BLINK...</div>' +
-          '</div>';
-      }
-
-      container.appendChild(card);
-    }
-  },
-
   _fillDistrictVisual: function (district, username, profilePicture) {
-    // Update SVG
     var svg = document.getElementById('fillMapSvg');
     if (svg) {
       var path = svg.querySelector('[data-district="' + district + '"]');
@@ -419,54 +375,82 @@ ROOM.FillMap = {
         path.style.fill = 'rgba(37, 211, 102, 0.45)';
         path.style.stroke = 'rgba(37, 211, 102, 0.7)';
 
-        // Add avatar foreignObject inside SVG
-        this._addAvatarToSvgDistrict(svg, path, username, profilePicture);
+        // Remove old waiting label, add filled avatar + username label
+        var oldLabel = svg.querySelector('[data-label-district="' + district + '"]');
+        if (oldLabel) oldLabel.remove();
+        this._addDistrictLabel(svg, district, username, profilePicture);
       }
     }
 
-    // Update district card
     if (this._eventData) {
       this._eventData.filledDistricts[district] = {
-        phoneNumber: '', // Don't need it for rendering
+        phoneNumber: '',
         username: username,
         profilePicture: profilePicture
       };
     }
-    this._renderDistrictCards();
   },
 
-  _addAvatarToSvgDistrict: function (svg, path, username, profilePicture) {
-    // Get bounding box of the district path
+  /**
+   * Adds a label (district name + avatar or "waiting" dot) inside the SVG
+   * at the centroid of the given district path.
+   * If username is null → waiting state. If username is set → filled state.
+   */
+  _addDistrictLabel: function (svg, district, username, profilePicture) {
+    var path = svg.querySelector('[data-district="' + district + '"]');
+    if (!path) return;
+
     try {
       var bbox = path.getBBox();
       var cx = bbox.x + bbox.width / 2;
       var cy = bbox.y + bbox.height / 2;
-      var size = Math.min(bbox.width, bbox.height) * 0.35;
-      size = Math.max(size, 30);
-      size = Math.min(size, 60);
+
+      // Size the label container based on district size
+      var foWidth = Math.max(bbox.width * 0.8, 80);
+      var foHeight = username ? 70 : 50;
+      var avatarSize = 30;
 
       var fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-      fo.setAttribute('x', cx - size / 2);
-      fo.setAttribute('y', cy - size / 2);
-      fo.setAttribute('width', size);
-      fo.setAttribute('height', size);
-      fo.classList.add('room-fill-map-avatar-fo');
+      fo.setAttribute('x', cx - foWidth / 2);
+      fo.setAttribute('y', cy - foHeight / 2);
+      fo.setAttribute('width', foWidth);
+      fo.setAttribute('height', foHeight);
+      fo.setAttribute('data-label-district', district);
+      fo.style.pointerEvents = 'none';
+      fo.style.overflow = 'visible';
 
-      var div = document.createElement('div');
-      div.className = 'room-fill-map-svg-avatar';
-      div.style.width = size + 'px';
-      div.style.height = size + 'px';
+      var wrapper = document.createElement('div');
+      wrapper.className = 'room-fill-map-label';
 
-      if (profilePicture) {
-        div.innerHTML = '<img src="' + this._esc(profilePicture) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      if (username) {
+        // Filled state: avatar + district + username
+        var avatarHtml;
+        if (profilePicture) {
+          avatarHtml = '<div class="room-fill-map-label-avatar room-fill-map-label-avatar--filled">' +
+            '<img src="' + this._esc(profilePicture) + '" alt="">' +
+          '</div>';
+        } else {
+          avatarHtml = '<div class="room-fill-map-label-avatar room-fill-map-label-avatar--filled room-fill-map-label-avatar--initial">' +
+            (username || '?').charAt(0).toUpperCase() +
+          '</div>';
+        }
+        wrapper.innerHTML =
+          avatarHtml +
+          '<div class="room-fill-map-label-name room-fill-map-label-name--filled">' + this._esc(district) + '</div>' +
+          '<div class="room-fill-map-label-user">' + this._esc(username) + '</div>';
+        wrapper.classList.add('room-fill-map-label--filled');
       } else {
-        div.textContent = (username || '?').charAt(0).toUpperCase();
+        // Waiting state: pulsing dot + district name
+        wrapper.innerHTML =
+          '<div class="room-fill-map-label-dot"></div>' +
+          '<div class="room-fill-map-label-name">' + this._esc(district) + '</div>';
+        wrapper.classList.add('room-fill-map-label--waiting');
       }
 
-      fo.appendChild(div);
+      fo.appendChild(wrapper);
       svg.appendChild(fo);
     } catch (e) {
-      // getBBox may fail if SVG is not rendered
+      // getBBox may fail if SVG not in DOM yet
     }
   },
 
