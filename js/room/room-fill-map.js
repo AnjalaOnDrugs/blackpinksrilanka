@@ -15,6 +15,14 @@ ROOM.FillMap = {
   _hasFilled: false,
   _eventData: null,
   _overlayEl: null,
+  _compactEl: null,
+  _bubbleEl: null,
+  _autoCompactTimer: null,
+  _initialAutoCompactMs: 8000,
+  _expandedAutoCompactMs: 15000,
+  _capsuleSide: 'right',
+  _swipeStartX: null,
+  _swipeStartY: null,
   _thankYouEl: null,
   _requiredSong: null,
 
@@ -131,6 +139,8 @@ ROOM.FillMap = {
     }
 
     // Show success state on map briefly, then show thank you
+    this._expandFromCompact();
+    this._clearAutoCompactTimer();
     this._showMapSuccess();
 
     var self = this;
@@ -147,6 +157,8 @@ ROOM.FillMap = {
     this._stopJoinCheck();
     this._stopCountdown();
 
+    this._expandFromCompact();
+    this._clearAutoCompactTimer();
     this._showMapFailed();
 
     var self = this;
@@ -360,6 +372,8 @@ ROOM.FillMap = {
     // Start countdown
     this._startCountdown(this._eventData.endsAt, this._eventData.duration);
 
+    this._scheduleAutoCompact(this._initialAutoCompactMs);
+
     // Confetti burst
     if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
       ROOM.Animations.spawnConfetti(15);
@@ -390,6 +404,7 @@ ROOM.FillMap = {
         profilePicture: profilePicture
       };
     }
+    this._refreshCompactParticipants();
   },
 
   /**
@@ -488,13 +503,275 @@ ROOM.FillMap = {
   },
 
   _minimizeOverlay: function () {
+    var self = this;
+    if (!this._overlayEl || !this._activeEventId) return;
+    this._clearAutoCompactTimer();
+    this._ensureCompactCard();
+    this._refreshCompactFromState();
+    this._overlayEl.classList.add('room-fill-map-overlay--minimized');
+    if (this._compactEl) {
+      this._compactEl.classList.add('room-fill-map-capsule--visible');
+    }
+    if (this._bubbleEl) {
+      this._bubbleEl.classList.add('room-fill-map-capsule-bubbles--visible');
+    }
+    // Position bubbles after layout settles
+    requestAnimationFrame(function () {
+      self._positionBubblesAboveCapsule();
+    });
+  },
+
+  _expandFromCompact: function () {
+    this._clearAutoCompactTimer();
     if (this._overlayEl) {
-      this._overlayEl.classList.add('room-fill-map-overlay--minimized');
+      this._overlayEl.classList.remove('room-fill-map-overlay--minimized');
+    }
+    if (this._compactEl) {
+      this._compactEl.classList.remove('room-fill-map-capsule--visible');
+    }
+    if (this._bubbleEl) {
+      this._bubbleEl.classList.remove('room-fill-map-capsule-bubbles--visible');
+    }
+    this._scheduleAutoCompact(this._expandedAutoCompactMs);
+  },
+
+  _scheduleAutoCompact: function (delayMs) {
+    var self = this;
+    var compactDelay = typeof delayMs === 'number' ? delayMs : this._initialAutoCompactMs;
+    this._clearAutoCompactTimer();
+    this._autoCompactTimer = setTimeout(function () {
+      self._minimizeOverlay();
+    }, compactDelay);
+  },
+
+  _clearAutoCompactTimer: function () {
+    if (this._autoCompactTimer) {
+      clearTimeout(this._autoCompactTimer);
+      this._autoCompactTimer = null;
     }
   },
 
+  _ensureCompactCard: function () {
+    var self = this;
+    if (this._compactEl) return;
+
+    var overlay = document.getElementById('eventOverlay');
+    if (!overlay) return;
+
+    var capsule = document.createElement('button');
+    capsule.type = 'button';
+    capsule.className = 'room-fill-map-capsule';
+    capsule.setAttribute('aria-label', 'Open Fill the Map');
+    capsule.innerHTML =
+      '<div class="room-fill-map-capsule-glare"></div>' +
+      '<div class="room-fill-map-capsule-icon">🗺️</div>' +
+      '<div class="room-fill-map-capsule-label">FILL THE MAP</div>' +
+      '<div class="room-fill-map-capsule-title" id="fillMapCapsuleTitle">...</div>' +
+      '<div class="room-fill-map-capsule-countdown" id="fillMapCapsuleCountdown">--:--</div>' +
+      '<div class="room-fill-map-capsule-glow"></div>';
+
+    var peopleBubbles = document.createElement('div');
+    peopleBubbles.className = 'room-fill-map-capsule-bubbles';
+    peopleBubbles.id = 'fillMapCapsuleParticipants';
+    capsule._bubbleContainer = peopleBubbles;
+
+    capsule.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (self._overlayEl && !self._overlayEl.classList.contains('room-fill-map-overlay--minimized')) {
+        self._minimizeOverlay();
+      } else {
+        self._expandFromCompact();
+      }
+    });
+
+    this._attachSwipeListeners(capsule);
+
+    overlay.appendChild(capsule);
+    overlay.appendChild(peopleBubbles);
+    this._compactEl = capsule;
+    this._bubbleEl = peopleBubbles;
+
+    if (this._capsuleSide === 'left') {
+      capsule.classList.add('room-fill-map-capsule--left');
+      peopleBubbles.classList.add('room-fill-map-capsule-bubbles--left');
+    }
+  },
+
+  _removeCompactCard: function () {
+    if (this._bubbleEl) {
+      this._bubbleEl.remove();
+      this._bubbleEl = null;
+    }
+    if (!this._compactEl) return;
+    this._compactEl.remove();
+    this._compactEl = null;
+  },
+
+  _refreshCompactFromState: function () {
+    var titleEl = document.getElementById('fillMapCapsuleTitle');
+    if (titleEl && this._eventData) {
+      var songTitle = this._eventData.songName ? this._eventData.songName : 'BLACKPINK';
+      titleEl.textContent = songTitle;
+    }
+
+    var fullCountdown = document.getElementById('fillMapCountdown');
+    var compactCountdown = document.getElementById('fillMapCapsuleCountdown');
+    if (compactCountdown && fullCountdown) {
+      compactCountdown.textContent = fullCountdown.textContent || '--:--';
+    }
+
+    this._refreshCompactParticipants();
+  },
+
+  _refreshCompactParticipants: function () {
+    var container = document.getElementById('fillMapCapsuleParticipants');
+    if (!container || !this._eventData) return;
+    container.innerHTML = '';
+
+    var dists = this._eventData.filledDistricts || {};
+    var keys = Object.keys(dists);
+    var maxToShow = 4;
+    var filledCount = 0;
+
+    for (var i = 0; i < keys.length; i++) {
+      var p = dists[keys[i]];
+      if (!p || (!p.username && !p.profilePicture)) continue;
+      filledCount++;
+
+      if (filledCount <= maxToShow) {
+        var bubble = document.createElement('div');
+        bubble.className = 'room-fill-map-capsule-bubble';
+        if (p.profilePicture) {
+          bubble.style.background = 'transparent';
+          bubble.style.overflow = 'hidden';
+          bubble.innerHTML = '<img src="' + this._esc(p.profilePicture) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        } else {
+          bubble.style.background = 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+          bubble.textContent = (p.username || '?').charAt(0).toUpperCase();
+        }
+        bubble.style.setProperty('--bubble-delay', ((filledCount - 1) * 0.12) + 's');
+        container.appendChild(bubble);
+      }
+    }
+
+    if (filledCount > maxToShow) {
+      var extra = document.createElement('div');
+      extra.className = 'room-fill-map-capsule-bubble room-fill-map-capsule-bubble--extra';
+      extra.textContent = '+' + (filledCount - maxToShow);
+      extra.style.setProperty('--bubble-delay', (maxToShow * 0.12) + 's');
+      container.appendChild(extra);
+    }
+
+    if (this._bubbleEl) {
+      if (this._compactEl && this._compactEl.classList.contains('room-fill-map-capsule--visible')) {
+        this._bubbleEl.classList.add('room-fill-map-capsule-bubbles--visible');
+      }
+    }
+    this._positionBubblesAboveCapsule();
+  },
+
+  _positionBubblesAboveCapsule: function () {
+    if (!this._compactEl || !this._bubbleEl) return;
+    var rect = this._compactEl.getBoundingClientRect();
+    this._bubbleEl.style.top = (rect.top - 10) + 'px';
+
+    if (this._capsuleSide === 'left') {
+      this._bubbleEl.style.left = '12px';
+      this._bubbleEl.style.right = 'auto';
+      this._bubbleEl.style.justifyContent = 'center';
+    } else {
+      this._bubbleEl.style.right = '12px';
+      this._bubbleEl.style.left = 'auto';
+      this._bubbleEl.style.justifyContent = 'center';
+    }
+  },
+
+  _attachSwipeListeners: function (el) {
+    var self = this;
+
+    el.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      self._swipeStartX = e.touches[0].clientX;
+      self._swipeStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    el.addEventListener('touchend', function (e) {
+      if (self._swipeStartX === null) return;
+      var touch = e.changedTouches[0];
+      var dx = touch.clientX - self._swipeStartX;
+      var dy = touch.clientY - self._swipeStartY;
+      self._swipeStartX = null;
+      self._swipeStartY = null;
+
+      if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (dx < 0 && self._capsuleSide === 'right') {
+        self._setCapsuleSide('left');
+      } else if (dx > 0 && self._capsuleSide === 'left') {
+        self._setCapsuleSide('right');
+      }
+    });
+
+    el.addEventListener('mousedown', function (e) {
+      self._swipeStartX = e.clientX;
+      self._swipeStartY = e.clientY;
+    });
+
+    el.addEventListener('mouseup', function (e) {
+      if (self._swipeStartX === null) return;
+      var dx = e.clientX - self._swipeStartX;
+      var dy = e.clientY - self._swipeStartY;
+      self._swipeStartX = null;
+      self._swipeStartY = null;
+
+      if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return;
+
+      if (dx < 0 && self._capsuleSide === 'right') {
+        self._setCapsuleSide('left');
+      } else if (dx > 0 && self._capsuleSide === 'left') {
+        self._setCapsuleSide('right');
+      }
+    });
+  },
+
+  _setCapsuleSide: function (side) {
+    this._capsuleSide = side;
+
+    if (this._compactEl) {
+      if (side === 'left') {
+        this._compactEl.classList.add('room-fill-map-capsule--left');
+      } else {
+        this._compactEl.classList.remove('room-fill-map-capsule--left');
+      }
+    }
+
+    if (this._bubbleEl) {
+      if (side === 'left') {
+        this._bubbleEl.classList.add('room-fill-map-capsule-bubbles--left');
+      } else {
+        this._bubbleEl.classList.remove('room-fill-map-capsule-bubbles--left');
+      }
+    }
+
+    this._positionBubblesAboveCapsule();
+  },
+
   _removeOverlay: function () {
-    if (!this._overlayEl) return;
+    this._clearAutoCompactTimer();
+    if (!this._overlayEl) {
+      this._removeCompactCard();
+      this._eventData = null;
+      if (this._countdownInterval) {
+        clearInterval(this._countdownInterval);
+        this._countdownInterval = null;
+      }
+      return;
+    }
+
     var el = this._overlayEl;
     this._overlayEl = null;
 
@@ -502,6 +779,14 @@ ROOM.FillMap = {
     setTimeout(function () {
       if (el.parentNode) el.remove();
     }, 500);
+
+    if (this._countdownInterval) {
+      clearInterval(this._countdownInterval);
+      this._countdownInterval = null;
+    }
+
+    this._removeCompactCard();
+    this._eventData = null;
   },
 
   _resetState: function () {
@@ -531,6 +816,11 @@ ROOM.FillMap = {
       var countdownEl = document.getElementById('fillMapCountdown');
       if (countdownEl) {
         countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      }
+
+      var compactCountdownEl = document.getElementById('fillMapCapsuleCountdown');
+      if (compactCountdownEl) {
+        compactCountdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
       }
 
       var fillEl = document.getElementById('fillMapProgressFill');
@@ -657,9 +947,12 @@ ROOM.FillMap = {
 
   destroy: function () {
     if (this._checkInterval) clearInterval(this._checkInterval);
+    if (this._countdownInterval) clearInterval(this._countdownInterval);
+    this._clearAutoCompactTimer();
     this._stopCountdown();
     this._stopJoinCheck();
     this._removeOverlay();
+    this._removeCompactCard();
     if (this._thankYouEl) {
       this._thankYouEl.remove();
       this._thankYouEl = null;

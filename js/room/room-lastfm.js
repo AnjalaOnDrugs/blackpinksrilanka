@@ -382,7 +382,7 @@ ROOM.LastFM = {
         ConvexService.mutation('streams:stopListening', {
           roomId: ROOM.Firebase.roomId,
           phoneNumber: p.id
-        }).catch(function () {});
+        }).catch(function () { });
         ConvexService.mutation('participants:disableOfflineTracking', {
           roomId: ROOM.Firebase.roomId,
           phoneNumber: p.id
@@ -400,7 +400,7 @@ ROOM.LastFM = {
             ConvexService.mutation('streams:stopListening', {
               roomId: ROOM.Firebase.roomId,
               phoneNumber: userId
-            }).catch(function () {});
+            }).catch(function () { });
           }
           return ROOM.Firebase.updateParticipantTrack(userId, null);
         }
@@ -411,7 +411,7 @@ ROOM.LastFM = {
             ConvexService.mutation('streams:stopListening', {
               roomId: ROOM.Firebase.roomId,
               phoneNumber: userId
-            }).catch(function () {});
+            }).catch(function () { });
           }
           return ROOM.Firebase.updateParticipantTrack(userId, null);
         }
@@ -423,7 +423,7 @@ ROOM.LastFM = {
               ConvexService.mutation('streams:stopListening', {
                 roomId: ROOM.Firebase.roomId,
                 phoneNumber: userId
-              }).catch(function () {});
+              }).catch(function () { });
             }
             return ROOM.Firebase.updateParticipantTrack(userId, null);
           }
@@ -442,13 +442,13 @@ ROOM.LastFM = {
                 trackName: trackData.name,
                 trackArtist: trackData.artist,
                 trackAlbumArt: trackData.albumArt || undefined
-              }).catch(function () {});
+              }).catch(function () { });
             }
             // Try counting the stream (idempotent — won't double-count)
             ConvexService.mutation('streams:tryCountStream', {
               roomId: ROOM.Firebase.roomId,
               phoneNumber: userId
-            }).catch(function () {});
+            }).catch(function () { });
           } else {
             // Not currently playing — end session
             if (self._offlineLastTrack[userId]) {
@@ -456,7 +456,7 @@ ROOM.LastFM = {
               ConvexService.mutation('streams:stopListening', {
                 roomId: ROOM.Firebase.roomId,
                 phoneNumber: userId
-              }).catch(function () {});
+              }).catch(function () { });
             }
           }
         });

@@ -6368,6 +6368,191 @@
   background: linear-gradient(135deg, rgba(247, 166, 185, 0.25), rgba(232, 117, 138, 0.3));
 }
 
+/* Compact capsule */
+.room-fill-map-capsule {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) translateX(18px) scale(0.95);
+  width: 94px;
+  min-height: 180px;
+  border-radius: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.6);
+  padding: 10px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 191;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.room-fill-map-capsule--visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.room-fill-map-capsule-glare {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.room-fill-map-capsule-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 1px solid rgba(247, 166, 185, 0.2);
+  background: rgba(247, 166, 185, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  color: #f7a6b9;
+  font-size: 32px;
+}
+
+.room-fill-map-capsule-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: #f7a6b9;
+  opacity: 0.9;
+}
+
+.room-fill-map-capsule-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  min-height: 28px;
+}
+
+.room-fill-map-capsule-countdown {
+  font-family: 'Outfit', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.room-fill-map-capsule-glow {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 84px;
+  height: 52px;
+  background: radial-gradient(circle at 50% 100%, rgba(247, 166, 185, 0.2), transparent 70%);
+  pointer-events: none;
+}
+
+/* Floating bubbles container */
+.room-fill-map-capsule-bubbles {
+  position: fixed;
+  right: 12px;
+  bottom: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 192;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, right 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.room-fill-map-capsule-bubbles--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.room-fill-map-capsule-bubble {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(8, 8, 8, 0.9);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), 0 0 6px rgba(247, 166, 185, 0.15);
+  position: relative;
+  animation: roomFillMapBubbleFloat 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    roomFillMapBubbleHover 2.4s ease-in-out infinite;
+  animation-delay: var(--bubble-delay, 0s), calc(var(--bubble-delay, 0s) + 0.5s);
+  opacity: 0;
+}
+
+.room-fill-map-capsule-bubble--extra {
+  background: rgba(255, 255, 255, 0.12) !important;
+  font-size: 7px;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes roomFillMapBubbleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.12);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes roomFillMapBubbleHover {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.room-fill-map-capsule--left {
+  right: auto;
+  left: 12px;
+  transform: translateY(-50%) translateX(-18px) scale(0.95);
+}
+
+.room-fill-map-capsule--left.room-fill-map-capsule--visible {
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.room-fill-map-capsule-bubbles--left {
+  right: auto;
+  left: 12px;
+}
+
 /* ── Fill the Map Keyframes ── */
 
 @keyframes roomFillMapBlink {

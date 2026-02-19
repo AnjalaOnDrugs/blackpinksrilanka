@@ -73,27 +73,27 @@ ROOM.Animations = {
         '<div class="room-surpass-notif-glow"></div>' +
         '<div class="room-surpass-notif-crown">' + crownEmoji + '</div>' +
         '<div class="room-surpass-notif-content">' +
-          '<div class="room-surpass-notif-title">RANK UP</div>' +
-          '<div class="room-surpass-notif-names">' +
-            '<strong>' + this.esc(data.username) + '</strong>' +
-            '<span class="room-surpass-notif-arrow">→</span>' +
-            '<span class="room-surpass-notif-rank">' + rankLabel + '</span>' +
-          '</div>' +
-          '<div class="room-surpass-notif-overtaken">passed ' + this.esc(data.overtakenUsername) + '</div>' +
+        '<div class="room-surpass-notif-title">RANK UP</div>' +
+        '<div class="room-surpass-notif-names">' +
+        '<strong>' + this.esc(data.username) + '</strong>' +
+        '<span class="room-surpass-notif-arrow">→</span>' +
+        '<span class="room-surpass-notif-rank">' + rankLabel + '</span>' +
+        '</div>' +
+        '<div class="room-surpass-notif-overtaken">passed ' + this.esc(data.overtakenUsername) + '</div>' +
         '</div>' +
         '<div class="room-surpass-notif-sparkles">' +
-          '<span class="room-surpass-sparkle room-surpass-sparkle--1">✦</span>' +
-          '<span class="room-surpass-sparkle room-surpass-sparkle--2">✦</span>' +
-          '<span class="room-surpass-sparkle room-surpass-sparkle--3">✦</span>' +
-          '<span class="room-surpass-sparkle room-surpass-sparkle--4">✦</span>' +
+        '<span class="room-surpass-sparkle room-surpass-sparkle--1">✦</span>' +
+        '<span class="room-surpass-sparkle room-surpass-sparkle--2">✦</span>' +
+        '<span class="room-surpass-sparkle room-surpass-sparkle--3">✦</span>' +
+        '<span class="room-surpass-sparkle room-surpass-sparkle--4">✦</span>' +
         '</div>';
     } else {
       // Normal surpass notification
       notif.innerHTML =
         '<div class="room-surpass-notif-content">' +
-          '<span class="room-surpass-notif-icon">⚡</span>' +
-          '<span><strong>' + this.esc(data.username) + '</strong> surpassed ' +
-          this.esc(data.overtakenUsername) + ' → #' + data.newRank + '</span>' +
+        '<span class="room-surpass-notif-icon">⚡</span>' +
+        '<span><strong>' + this.esc(data.username) + '</strong> surpassed ' +
+        this.esc(data.overtakenUsername) + ' → #' + data.newRank + '</span>' +
         '</div>';
     }
 
@@ -268,20 +268,20 @@ ROOM.Animations = {
 
       html +=
         '<div class="room-twin-card" data-twin-key="' + this.esc(key) + '">' +
-          '<div class="room-twin-card-eq">' +
-            '<div class="room-twin-eq-bar" style="--teq-speed:0.3s;--teq-max:12px;"></div>' +
-            '<div class="room-twin-eq-bar" style="--teq-speed:0.45s;--teq-max:16px;"></div>' +
-            '<div class="room-twin-eq-bar" style="--teq-speed:0.25s;--teq-max:10px;"></div>' +
-            '<div class="room-twin-eq-bar" style="--teq-speed:0.4s;--teq-max:14px;"></div>' +
-          '</div>' +
-          '<div class="room-twin-card-info">' +
-            '<div class="room-twin-card-title">' +
-              '<span class="room-twin-card-badge">x' + t.count + '</span>' +
-              '<span class="room-twin-card-label">' + streakLabel + '</span>' +
-            '</div>' +
-            '<div class="room-twin-card-song">' + this.esc(t.track) + '</div>' +
-            '<div class="room-twin-card-names">' + namesShort + '</div>' +
-          '</div>' +
+        '<div class="room-twin-card-eq">' +
+        '<div class="room-twin-eq-bar" style="--teq-speed:0.3s;--teq-max:12px;"></div>' +
+        '<div class="room-twin-eq-bar" style="--teq-speed:0.45s;--teq-max:16px;"></div>' +
+        '<div class="room-twin-eq-bar" style="--teq-speed:0.25s;--teq-max:10px;"></div>' +
+        '<div class="room-twin-eq-bar" style="--teq-speed:0.4s;--teq-max:14px;"></div>' +
+        '</div>' +
+        '<div class="room-twin-card-info">' +
+        '<div class="room-twin-card-title">' +
+        '<span class="room-twin-card-badge">x' + t.count + '</span>' +
+        '<span class="room-twin-card-label">' + streakLabel + '</span>' +
+        '</div>' +
+        '<div class="room-twin-card-song">' + this.esc(t.track) + '</div>' +
+        '<div class="room-twin-card-names">' + namesShort + '</div>' +
+        '</div>' +
         '</div>';
     }
 
@@ -400,30 +400,30 @@ ROOM.Animations = {
     banner.innerHTML =
       '<div class="room-twin-glow"></div>' +
       '<div class="room-twin-content">' +
-        '<div class="room-twin-notes">' +
-          '<span class="room-twin-note room-twin-note--1">🎉</span>' +
-          '<span class="room-twin-note room-twin-note--2">🔥</span>' +
-          '<span class="room-twin-note room-twin-note--3">🎉</span>' +
-          '<span class="room-twin-note room-twin-note--4">🔥</span>' +
-        '</div>' +
-        '<div class="room-twin-streak">' +
-          '<span class="room-twin-streak-x">' + totalStreams.toLocaleString() + '</span>' +
-          '<span class="room-twin-streak-label">STREAMS</span>' +
-        '</div>' +
-        '<div class="room-twin-label">🎊 MILESTONE REACHED 🎊</div>' +
-        '<div class="room-twin-song">' +
-          '<span class="room-twin-song-title">Keep streaming! Next milestone at ' +
-            (totalStreams + 100).toLocaleString() + '</span>' +
-        '</div>' +
-        '<div class="room-twin-eq">' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.3s;--teq-max:24px;"></div>' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.45s;--teq-max:32px;"></div>' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.25s;--teq-max:20px;"></div>' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.5s;--teq-max:28px;"></div>' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.35s;--teq-max:36px;"></div>' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.4s;--teq-max:22px;"></div>' +
-          '<div class="room-twin-eq-bar" style="--teq-speed:0.28s;--teq-max:30px;"></div>' +
-        '</div>' +
+      '<div class="room-twin-notes">' +
+      '<span class="room-twin-note room-twin-note--1">🎉</span>' +
+      '<span class="room-twin-note room-twin-note--2">🔥</span>' +
+      '<span class="room-twin-note room-twin-note--3">🎉</span>' +
+      '<span class="room-twin-note room-twin-note--4">🔥</span>' +
+      '</div>' +
+      '<div class="room-twin-streak">' +
+      '<span class="room-twin-streak-x">' + totalStreams.toLocaleString() + '</span>' +
+      '<span class="room-twin-streak-label">STREAMS</span>' +
+      '</div>' +
+      '<div class="room-twin-label">🎊 MILESTONE REACHED 🎊</div>' +
+      '<div class="room-twin-song">' +
+      '<span class="room-twin-song-title">Keep streaming! Next milestone at ' +
+      (totalStreams + 100).toLocaleString() + '</span>' +
+      '</div>' +
+      '<div class="room-twin-eq">' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.3s;--teq-max:24px;"></div>' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.45s;--teq-max:32px;"></div>' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.25s;--teq-max:20px;"></div>' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.5s;--teq-max:28px;"></div>' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.35s;--teq-max:36px;"></div>' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.4s;--teq-max:22px;"></div>' +
+      '<div class="room-twin-eq-bar" style="--teq-speed:0.28s;--teq-max:30px;"></div>' +
+      '</div>' +
       '</div>';
 
     this.overlay.appendChild(banner);
@@ -476,29 +476,29 @@ ROOM.Animations = {
     bongOverlay.innerHTML =
       '<div class="room-bong-backdrop"></div>' +
       '<div class="room-bong-scene">' +
-        '<div class="room-bong-aura"></div>' +
-        '<div class="room-bong-avatar" style="' + (bongAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + targetAvatarColor + ';') + '">' +
-          bongAv.html +
-        '</div>' +
-        '<div class="room-bong-lightstick">' +
-          '<div class="room-bong-lightstick-trail"></div>' +
-          '<img class="room-bong-lightstick-img" src="assets/logo/lightstick.png" alt="BLACKPINK lightstick">' +
-        '</div>' +
-        '<div class="room-bong-impact"></div>' +
-        '<div class="room-bong-shockwave"></div>' +
-        '<div class="room-bong-sparks">' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-        '</div>' +
-        '<div class="room-bong-text">' +
-          '<strong>' + this.esc(data.senderUsername) + '</strong> bonged you!' +
-        '</div>' +
+      '<div class="room-bong-aura"></div>' +
+      '<div class="room-bong-avatar" style="' + (bongAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + targetAvatarColor + ';') + '">' +
+      bongAv.html +
+      '</div>' +
+      '<div class="room-bong-lightstick">' +
+      '<div class="room-bong-lightstick-trail"></div>' +
+      '<img class="room-bong-lightstick-img" src="assets/logo/lightstick.png" alt="BLACKPINK lightstick">' +
+      '</div>' +
+      '<div class="room-bong-impact"></div>' +
+      '<div class="room-bong-shockwave"></div>' +
+      '<div class="room-bong-sparks">' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '</div>' +
+      '<div class="room-bong-text">' +
+      '<strong>' + this.esc(data.senderUsername) + '</strong> bonged you!' +
+      '</div>' +
       '</div>';
 
     this.overlay.appendChild(bongOverlay);
@@ -541,14 +541,14 @@ ROOM.Animations = {
     prompt.className = 'room-bong-back-prompt';
     prompt.innerHTML =
       '<div class="room-bong-back-card">' +
-        '<div class="room-bong-back-title">Bong <strong>' + safeName + '</strong> back?</div>' +
-        '<div class="room-bong-back-actions">' +
-          '<button class="room-bong-back-btn room-bong-back-btn--mercy">I will show mercy</button>' +
-          '<button class="room-bong-back-btn room-bong-back-btn--bong">' +
-            '<img src="assets/logo/lightstick.png" alt="Lightstick">' +
-            '<span>Bong</span>' +
-          '</button>' +
-        '</div>' +
+      '<div class="room-bong-back-title">Bong <strong>' + safeName + '</strong> back?</div>' +
+      '<div class="room-bong-back-actions">' +
+      '<button class="room-bong-back-btn room-bong-back-btn--mercy">I will show mercy</button>' +
+      '<button class="room-bong-back-btn room-bong-back-btn--bong">' +
+      '<img src="assets/logo/lightstick.png" alt="Lightstick">' +
+      '<span>Bong</span>' +
+      '</button>' +
+      '</div>' +
       '</div>';
 
     document.body.appendChild(prompt);
@@ -612,30 +612,30 @@ ROOM.Animations = {
     bongOverlay.innerHTML =
       '<div class="room-bong-backdrop"></div>' +
       '<div class="room-bong-scene room-bong-scene--counter">' +
-        '<div class="room-bong-riposte-badge">COUNTER BONG</div>' +
-        '<div class="room-bong-aura"></div>' +
-        '<div class="room-bong-avatar" style="' + (cbAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + targetAvatarColor + ';') + '">' +
-          cbAv.html +
-        '</div>' +
-        '<div class="room-bong-lightstick room-bong-lightstick--counter">' +
-          '<div class="room-bong-lightstick-trail"></div>' +
-          '<img class="room-bong-lightstick-img" src="assets/logo/Jennie_lightstick.png" alt="BLACKPINK lightstick">' +
-        '</div>' +
-        '<div class="room-bong-impact room-bong-impact--counter"></div>' +
-        '<div class="room-bong-shockwave room-bong-shockwave--counter"></div>' +
-        '<div class="room-bong-sparks">' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-          '<span class="room-bong-spark"></span>' +
-        '</div>' +
-        '<div class="room-bong-text room-bong-text--counter">' +
-          'you got bonged back!' +
-        '</div>' +
+      '<div class="room-bong-riposte-badge">COUNTER BONG</div>' +
+      '<div class="room-bong-aura"></div>' +
+      '<div class="room-bong-avatar" style="' + (cbAv.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + targetAvatarColor + ';') + '">' +
+      cbAv.html +
+      '</div>' +
+      '<div class="room-bong-lightstick room-bong-lightstick--counter">' +
+      '<div class="room-bong-lightstick-trail"></div>' +
+      '<img class="room-bong-lightstick-img" src="assets/logo/Jennie_lightstick.png" alt="BLACKPINK lightstick">' +
+      '</div>' +
+      '<div class="room-bong-impact room-bong-impact--counter"></div>' +
+      '<div class="room-bong-shockwave room-bong-shockwave--counter"></div>' +
+      '<div class="room-bong-sparks">' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '<span class="room-bong-spark"></span>' +
+      '</div>' +
+      '<div class="room-bong-text room-bong-text--counter">' +
+      'you got bonged back!' +
+      '</div>' +
       '</div>';
 
     this.overlay.appendChild(bongOverlay);
