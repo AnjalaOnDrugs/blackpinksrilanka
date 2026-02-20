@@ -27,8 +27,6 @@ export default defineSchema({
     phoneNumber: v.string(),
     username: v.string(),
     joinedAt: v.number(),
-    lastSeen: v.number(),
-    isOnline: v.boolean(),
     lastfmUsername: v.optional(v.string()),
     totalMinutes: v.number(),
     totalPoints: v.optional(v.number()),

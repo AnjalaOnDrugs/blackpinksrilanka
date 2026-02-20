@@ -36,20 +36,19 @@ export const startFillTheMap = mutation({
     }
     console.log("[FillMap Server] ✅ Cooldown check passed.", recent ? `Last event was ${now - recent.startedAt}ms ago` : "No previous events");
 
-    // Check 2+ online participants in the room
+    // The client already verifies 2+ online users (via Firebase presence) 
+    // before calling this mutation. Here we just ensure there are enough participants total
     const participants = await ctx.db
       .query("participants")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const onlineCount = participants.filter((p) => p.isOnline).length;
-
-    console.log("[FillMap Server] Participants:", participants.length, "| Online:", onlineCount);
-    if (onlineCount < 2) {
-      console.log("[FillMap Server] ⛔ BLOCKED by online count. Need 2+, have", onlineCount);
+    console.log("[FillMap Server] Participants:", participants.length);
+    if (participants.length < 2) {
+      console.log("[FillMap Server] ⛔ BLOCKED by participant count. Need 2+, have", participants.length);
       return null;
     }
-    console.log("[FillMap Server] ✅ Online count check passed.");
+    console.log("[FillMap Server] ✅ Participant count check passed.");
 
     // Get all unique districts from ALL participants (online + offline)
     // Offline users' districts are eligible to encourage online users to

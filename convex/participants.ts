@@ -68,8 +68,6 @@ export const joinRoom = mutation({
     if (existing) {
       await ctx.db.patch(existing._id, {
         username: args.username,
-        lastSeen: now,
-        isOnline: true,
         lastfmUsername: args.lastfmUsername ?? existing.lastfmUsername,
         avatarColor: args.avatarColor,
         profilePicture: profilePicture,
@@ -80,8 +78,6 @@ export const joinRoom = mutation({
         phoneNumber: args.phoneNumber,
         username: args.username,
         joinedAt: now,
-        lastSeen: now,
-        isOnline: true,
         lastfmUsername: args.lastfmUsername ?? undefined,
         totalMinutes: 0,
         currentRank: 0,
@@ -115,8 +111,6 @@ export const leaveRoom = mutation({
       // If not, behave as before — stop tracking entirely
       const keepTracking = participant.offlineTracking === true;
       await ctx.db.patch(participant._id, {
-        isOnline: false,
-        lastSeen: Date.now(),
         streakMinutes: keepTracking ? participant.streakMinutes : 0,
       });
     }
