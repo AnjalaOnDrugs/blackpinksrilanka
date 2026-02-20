@@ -44,28 +44,43 @@ ROOM.FillMap = {
   },
 
   _tryTrigger: function () {
-    if (this._activeEventId) return;
+    console.log('[FillMap] _tryTrigger called');
+    if (this._activeEventId) { console.log('[FillMap] ⛔ Skipped: active event already exists:', this._activeEventId); return; }
 
     var participants = ROOM.Firebase.getParticipants();
     var onlineUsers = participants.filter(function (p) { return p.data.isOnline; });
+    console.log('[FillMap] Online users:', onlineUsers.length, '/ Total participants:', participants.length);
 
-    if (onlineUsers.length < 2) return;
-    if (!ROOM.currentUser) return;
+    if (onlineUsers.length < 2) { console.log('[FillMap] ⛔ Skipped: need 2+ online users, have', onlineUsers.length); return; }
+    if (!ROOM.currentUser) { console.log('[FillMap] ⛔ Skipped: no ROOM.currentUser'); return; }
 
     var chance = CONFIG.fillMapTriggerChance || 0.15;
-    if (Math.random() > chance) return;
+    var roll = Math.random();
+    console.log('[FillMap] Chance check: roll=' + roll.toFixed(3) + ', threshold=' + chance);
+    if (roll > chance) { console.log('[FillMap] ⛔ Skipped: chance roll failed'); return; }
 
     // Pick a random song from the catalog
     var songs = CONFIG.listenAlongSongs || [];
-    if (songs.length === 0) return;
+    if (songs.length === 0) { console.log('[FillMap] ⛔ Skipped: no songs in catalog'); return; }
     var song = songs[Math.floor(Math.random() * songs.length)];
 
+    console.log('[FillMap] ✅ All client checks passed! Calling Convex mutation with song:', song.name, 'by', song.artist);
     ConvexService.mutation('fillTheMap:startFillTheMap', {
       roomId: ROOM.Firebase.roomId,
       songName: song.name,
       songArtist: song.artist,
       cooldownMs: CONFIG.fillMapCooldown,
       durationMs: CONFIG.fillMapDuration
+    }).then(function (result) {
+      console.log('[FillMap] Convex mutation result:', result);
+      if (result === null) {
+        console.warn('[FillMap] ⚠️ Convex returned null — event was NOT created. Possible causes:');
+        console.warn('  1. Cooldown not elapsed (check fillTheMapEvents table)');
+        console.warn('  2. Less than 2 participants with nowPlaying=true in Convex');
+        console.warn('  3. Less than 3 unique districts among participants');
+      }
+    }).catch(function (err) {
+      console.error('[FillMap] ❌ Convex mutation error:', err);
     });
   },
 
