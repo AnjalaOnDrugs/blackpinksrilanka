@@ -23,8 +23,8 @@ ROOM.RunPlaylist = {
   _bubbleEl: null,
   _thankYouEl: null,
   _autoCompactTimer: null,
-  _initialAutoCompactMs: 30000,
-  _expandedAutoCompactMs: 8000,
+  _initialAutoCompactMs: 8000,
+  _expandedAutoCompactMs: 20000,
   _capsuleSide: 'right',
   _swipeStartX: null,
   _swipeStartY: null,
@@ -821,7 +821,7 @@ ROOM.RunPlaylist = {
 
     setTimeout(function () {
       self._dismissThankYou();
-    }, 30000);
+    }, 8000);
 
     if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
       ROOM.Animations.spawnConfetti(40);
