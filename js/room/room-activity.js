@@ -159,9 +159,9 @@ ROOM.Activity = {
       var bPlaying = b.data.currentTrack && b.data.currentTrack.nowPlaying;
       if (aPlaying && !bPlaying) return -1;
       if (!aPlaying && bPlaying) return 1;
-      // Then by last seen
-      var aTime = a.data.lastSeen ? a.data.lastSeen.seconds : 0;
-      var bTime = b.data.lastSeen ? b.data.lastSeen.seconds : 0;
+      // Then by last seen (plain ms timestamp from Firebase RTDB presence)
+      var aTime = a.data.lastSeen || 0;
+      var bTime = b.data.lastSeen || 0;
       return bTime - aTime;
     });
 

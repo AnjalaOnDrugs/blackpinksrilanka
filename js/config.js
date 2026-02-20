@@ -33,7 +33,7 @@ const CONFIG = {
 
   // Room settings
   roomPollInterval: 2000,     // Last.fm polling interval per user (ms)
-  heartbeatInterval: 30000,   // Presence heartbeat interval (ms)
+  // heartbeatInterval removed — presence now handled by Firebase RTDB onDisconnect()
   chatBubbleLifetime: 8000,   // How long chat bubbles stay visible (ms)
   maxChatBubbles: 30,         // Max simultaneous bubbles on screen
 

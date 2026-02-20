@@ -1,6 +1,6 @@
 /**
  * Room Main - Entry Point
- * Auth guard, initialization orchestrator, heartbeat, cleanup
+ * Auth guard, initialization orchestrator, presence, cleanup
  */
 
 window.ROOM = window.ROOM || {};
@@ -86,6 +86,9 @@ async function initRoom(roomId) {
   // 1. Firebase (real-time data)
   ROOM.Firebase.init(roomId);
 
+  // 1b. Initialize Firebase RTDB presence (instant online/offline detection)
+  ROOM.Presence.init(roomId, ROOM.currentUser.phoneNumber);
+
   // 2. Join the room
   await ROOM.Firebase.joinRoom(ROOM.currentUser);
 
@@ -145,8 +148,7 @@ async function initRoom(roomId) {
   // Small delay to let participants cache populate from Convex
   setTimeout(function () { initCheckIn(); }, 2000);
 
-  // 13. Heartbeat (every 30s)
-  startHeartbeat();
+  // 13. Presence is handled by Firebase RTDB (room-presence.js) — no heartbeat needed
 
   // 14. Cleanup on page unload
   setupCleanup();
@@ -554,16 +556,9 @@ function setupStreamCounterToggle() {
   });
 }
 
-// ========== HEARTBEAT ==========
-var heartbeatInterval = null;
-
-function startHeartbeat() {
-  heartbeatInterval = setInterval(function () {
-    if (ROOM.currentUser) {
-      ROOM.Firebase.heartbeat(ROOM.currentUser.phoneNumber);
-    }
-  }, CONFIG.heartbeatInterval || 30000);
-}
+// ========== HEARTBEAT (REMOVED) ==========
+// Presence is now handled by Firebase RTDB onDisconnect() — see room-presence.js
+// No polling needed; connection-level detection is instant.
 
 // ========== CLEANUP ==========
 function setupCleanup() {
@@ -571,6 +566,8 @@ function setupCleanup() {
     if (ROOM.currentUser) {
       ROOM.Firebase.leaveRoom(ROOM.currentUser.phoneNumber);
     }
+    // Presence: explicitly go offline (onDisconnect is backup)
+    ROOM.Presence.goOffline();
     ROOM.Agora.destroy();
     ROOM.Voice.destroy();
     ROOM.LastFM.destroy();
@@ -579,18 +576,18 @@ function setupCleanup() {
     ROOM.FillMap.destroy();
     ROOM.HeatMap.destroy();
     ROOM.Firebase.destroy();
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    ROOM.Presence.destroy();
     if (checkInTimerInterval) clearInterval(checkInTimerInterval);
   });
 
   // Also handle visibility change (mobile tab switch)
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') {
-      if (ROOM.currentUser) {
-        // Use sendBeacon-style update for reliability
-        ROOM.Firebase.heartbeat(ROOM.currentUser.phoneNumber);
-      }
+      // Firebase RTDB onDisconnect handles offline automatically —
+      // no explicit action needed when tab is hidden.
     } else if (document.visibilityState === 'visible') {
+      // Re-assert online presence when tab becomes visible again
+      ROOM.Presence.goOnline();
       // Immediately poll and check streams to catch up after mobile throttling
       if (ROOM.LastFM) {
         ROOM.LastFM.pollCurrentUser();

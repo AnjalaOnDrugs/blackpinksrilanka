@@ -139,8 +139,20 @@ var MembersRoom = {
   _nowPlayingTracks: [],
   _currentTrackIdx: 0,
 
+  _rawParticipants: [],
+  _presenceHandler: null,
+
   init: function () {
     var self = this;
+
+    // 0. Initialize Firebase RTDB presence (read-only — just listen, don't write)
+    ROOM.Presence.init(this._roomId, null, { readOnly: true });
+
+    // Listen for presence changes and re-merge
+    this._presenceHandler = function () {
+      self._mergeAndRender();
+    };
+    ROOM.Presence.onPresenceChange(this._presenceHandler);
 
     // 1. Watch participants in real time
     var unsub1 = ConvexService.watch(
@@ -148,10 +160,8 @@ var MembersRoom = {
       { roomId: this._roomId },
       function (participants) {
         if (!participants) return;
-        self._participants = participants;
-        self._renderAvatars();
-        self._renderLeaderboard();
-        self._buildNowPlayingList();
+        self._rawParticipants = participants;
+        self._mergeAndRender();
       }
     );
     this._unsubs.push(unsub1);
@@ -166,6 +176,24 @@ var MembersRoom = {
       }
     );
     this._unsubs.push(unsub2);
+  },
+
+  // ---- Merge Convex participants with Firebase RTDB presence ----
+  _mergeAndRender: function () {
+    this._participants = (this._rawParticipants || []).map(function (p) {
+      var merged = Object.assign({}, p);
+      merged.data = Object.assign({}, p.data);
+      // Override isOnline from Firebase RTDB presence
+      merged.data.isOnline = ROOM.Presence.isOnline(p.id);
+      var presenceLastSeen = ROOM.Presence.getLastSeen(p.id);
+      if (presenceLastSeen) {
+        merged.data.lastSeen = presenceLastSeen;
+      }
+      return merged;
+    });
+    this._renderAvatars();
+    this._renderLeaderboard();
+    this._buildNowPlayingList();
   },
 
   // ---- Render online user avatars ----
@@ -448,6 +476,11 @@ var MembersRoom = {
   },
 
   destroy: function () {
+    if (this._presenceHandler) {
+      ROOM.Presence.offPresenceChange(this._presenceHandler);
+      this._presenceHandler = null;
+    }
+    ROOM.Presence.destroy();
     for (var i = 0; i < this._unsubs.length; i++) {
       if (typeof this._unsubs[i] === 'function') this._unsubs[i]();
     }

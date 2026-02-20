@@ -568,9 +568,10 @@
     </button>
   </div>
 
-  <!-- Firebase SDK (Auth only - Firestore removed, replaced by Convex) -->
+  <!-- Firebase SDK (Auth + Realtime Database for presence) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <!-- Convex Browser SDK -->
   <script src="https://unpkg.com/convex@1.3.1/dist/browser.bundle.js"></script>
@@ -585,6 +586,7 @@
   <script src="js/auth.js"></script>
 
   <!-- Room Scripts (order matters) -->
+  <script src="js/room/room-presence.js"></script>
   <script src="js/room/room-firebase.js"></script>
   <script src="js/room/room-agora.js"></script>
   <script src="js/room/room-lastfm.js"></script>

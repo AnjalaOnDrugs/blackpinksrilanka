@@ -13,13 +13,14 @@ export const listByRoom = query({
     // Sort by totalPoints descending (fallback to totalMinutes for legacy)
     participants.sort((a, b) => (b.totalPoints ?? 0) - (a.totalPoints ?? 0) || b.totalMinutes - a.totalMinutes);
 
+    // NOTE: isOnline and lastSeen are no longer returned from this query.
+    // Presence is now handled by Firebase Realtime Database (client-side merge).
+    // This means heartbeat writes no longer invalidate this subscription.
     return participants.map((p) => ({
       id: p.phoneNumber,
       data: {
         username: p.username,
         joinedAt: p.joinedAt,
-        lastSeen: p.lastSeen,
-        isOnline: p.isOnline,
         lastfmUsername: p.lastfmUsername,
         totalMinutes: p.totalMinutes,
         totalPoints: p.totalPoints ?? 0,
@@ -122,38 +123,9 @@ export const leaveRoom = mutation({
   },
 });
 
-// Heartbeat — only writes if lastSeen is stale (>20s old) to reduce
-// unnecessary mutations that invalidate all listByRoom subscriptions.
-// Client sends heartbeats every 30s; the 20s threshold ensures we
-// write at most once per heartbeat cycle while keeping presence accurate.
-export const heartbeat = mutation({
-  args: {
-    roomId: v.string(),
-    phoneNumber: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const participant = await ctx.db
-      .query("participants")
-      .withIndex("by_room_phone", (q) =>
-        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
-      )
-      .first();
-
-    if (participant) {
-      const now = Date.now();
-      const timeSinceLastSeen = now - (participant.lastSeen || 0);
-
-      // Only write if lastSeen is stale (>20s) to avoid redundant mutations.
-      // Also write if user was marked offline, to bring them back online.
-      if (timeSinceLastSeen > 20000 || !participant.isOnline) {
-        await ctx.db.patch(participant._id, {
-          lastSeen: now,
-          isOnline: true,
-        });
-      }
-    }
-  },
-});
+// Heartbeat REMOVED — presence is now handled by Firebase Realtime Database.
+// Firebase RTDB uses onDisconnect() for instant offline detection at the
+// connection level. No polling/heartbeat mutations needed.
 
 // Update track with change detection (only writes if track actually changed)
 export const updateTrack = mutation({
@@ -191,7 +163,6 @@ export const updateTrack = mutation({
     if (args.trackData === null) {
       await ctx.db.patch(participant._id, {
         currentTrack: null,
-        lastSeen: Date.now(),
       });
       return { changed: true, wasIdle: true };
     }
@@ -205,7 +176,6 @@ export const updateTrack = mutation({
     if (trackChanged) {
       await ctx.db.patch(participant._id, {
         currentTrack: args.trackData,
-        lastSeen: Date.now(),
       });
     }
 
@@ -279,7 +249,6 @@ export const checkIn = mutation({
       await ctx.db.patch(participant._id, {
         offlineTracking: true,
         lastCheckIn: Date.now(),
-        lastSeen: Date.now(),
       });
     }
 

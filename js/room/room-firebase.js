@@ -1,6 +1,7 @@
 /**
- * Room Data Service (Convex Backend)
- * Replaces Firestore with Convex for room data, participants, and events.
+ * Room Data Service (Convex Backend + Firebase RTDB Presence)
+ * Convex handles room data, participants, and events.
+ * Firebase RTDB handles real-time presence (online/offline) via onDisconnect().
  * Maintains the same ROOM.Firebase API surface so other modules work unchanged.
  */
 
@@ -9,12 +10,12 @@ window.ROOM = window.ROOM || {};
 ROOM.Firebase = {
   participantsCache: [],
   rawParticipantsCache: [],
-  cleanupInterval: null,
   unsubscribers: [],
   roomId: null,
   _initTimestamp: null,
   _lastfmDebounceTimer: null,
   _processedEventIds: {},
+  _presenceChangeHandler: null,
 
   init: function (roomId) {
     this.roomId = roomId;
@@ -38,10 +39,12 @@ ROOM.Firebase = {
       }
     );
 
-    // Start periodic cleanup (every 5s) to check for stale users who closed browser
-    this.cleanupInterval = setInterval(function () {
+    // 1b. Listen for presence changes from Firebase RTDB
+    // When any user's online status changes, re-merge and refresh UI
+    this._presenceChangeHandler = function () {
       self.refreshUI();
-    }, 5000);
+    };
+    ROOM.Presence.onPresenceChange(this._presenceChangeHandler);
 
     // 2. Subscribe to events (drives mini event animations)
     var eventSince = this._initTimestamp;
@@ -209,12 +212,7 @@ ROOM.Firebase = {
     });
   },
 
-  heartbeat: function (phoneNumber) {
-    return ConvexService.mutation('participants:heartbeat', {
-      roomId: this.roomId,
-      phoneNumber: phoneNumber
-    });
-  },
+  // heartbeat removed — presence is now handled by Firebase RTDB (room-presence.js)
 
   updateParticipantTrack: function (phoneNumber, trackData) {
     return ConvexService.mutation('participants:updateTrack', {
@@ -277,7 +275,11 @@ ROOM.Firebase = {
   },
 
   destroy: function () {
-    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
+    // Unregister presence change listener
+    if (this._presenceChangeHandler) {
+      ROOM.Presence.offPresenceChange(this._presenceChangeHandler);
+      this._presenceChangeHandler = null;
+    }
     this.unsubscribers.forEach(function (unsub) {
       if (typeof unsub === 'function') unsub();
     });
@@ -287,21 +289,21 @@ ROOM.Firebase = {
 
   refreshUI: function () {
     var self = this;
-    var now = Date.now();
 
-    // Process raw participants to handle timeouts
+    // Merge Convex participant data with Firebase RTDB presence
     this.participantsCache = (this.rawParticipantsCache || []).map(function (p) {
       // Clone participant data to avoid mutating raw cache directly
       var processed = Object.assign({}, p); // Shallow clone participant object
       processed.data = Object.assign({}, p.data); // Shallow clone data object
 
-      // Check for stale heartbeat (allow 45s grace period, heartbeat is 30s)
-      if (processed.data.isOnline) {
-        var timeSinceLastSeen = now - (processed.data.lastSeen || 0);
-        if (timeSinceLastSeen > 45000) {
-          processed.data.isOnline = false;
-        }
+      // Override isOnline and lastSeen from Firebase RTDB presence
+      var presenceOnline = ROOM.Presence.isOnline(p.id);
+      var presenceLastSeen = ROOM.Presence.getLastSeen(p.id);
+      processed.data.isOnline = presenceOnline;
+      if (presenceLastSeen) {
+        processed.data.lastSeen = presenceLastSeen;
       }
+
       return processed;
     });
 
@@ -332,7 +334,7 @@ ROOM.Firebase = {
       ROOM.Voice.refreshVoiceAccess();
     }
 
-    // Debounce twinning detection (doesn't need to run on every heartbeat)
+    // Debounce twinning detection (doesn't need to run on every presence/data update)
     clearTimeout(this._lastfmDebounceTimer);
     this._lastfmDebounceTimer = setTimeout(function () {
       if (ROOM.LastFM && ROOM.LastFM.detectSameSong) {

@@ -3,7 +3,6 @@ import { v } from "convex/values";
 
 const DEFAULT_DURATION_MS = 180000; // 3 minutes
 const DEFAULT_COOLDOWN_MS = 3600000; // 1 hour
-const STALE_THRESHOLD_MS = 45000; // 45s heartbeat grace
 const FILL_POINTS = 8; // Points awarded to all participants on success
 const NUM_DISTRICTS = 3; // Number of districts chosen per event
 
@@ -33,17 +32,19 @@ export const startFillTheMap = mutation({
       return null;
     }
 
-    // Check 2+ online users (don't need to be from different districts)
+    // Check 2+ active users (presence is handled by Firebase RTDB on the client;
+    // server-side we use nowPlaying tracks as a proxy for active engagement).
+    // The client already verifies 2+ online users before calling this mutation.
     const participants = await ctx.db
       .query("participants")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const onlineCount = participants.filter(
-      (p) => p.isOnline && now - p.lastSeen < STALE_THRESHOLD_MS
+    const activeCount = participants.filter(
+      (p) => p.currentTrack && (p.currentTrack as any).nowPlaying
     ).length;
 
-    if (onlineCount < 2) return null;
+    if (activeCount < 2) return null;
 
     // Get all unique districts from ALL participants (online + offline)
     // Offline users' districts are eligible to encourage online users to

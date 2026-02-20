@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "presence": {
+      "$roomId": {
+        ".read": "auth != null",
+        "$phoneNumber": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['online', 'lastSeen'])",
+          "online": {
+            ".validate": "newData.isBoolean()"
+          },
+          "lastSeen": {
+            ".validate": "newData.val() === now || newData.isNumber()"
+          }
+        }
+      }
+    },
+    ".read": false,
+    ".write": false
+  }
+}
