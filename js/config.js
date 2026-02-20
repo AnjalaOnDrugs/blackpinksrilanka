@@ -43,7 +43,7 @@ const CONFIG = {
 
   // Listen Along event settings
   listenAlongCheckInterval: 60000,    // Check every 60s if we should trigger
-  listenAlongCooldown: 10000,       // 1 hour between events
+  listenAlongCooldown: 3600000,       // 1 hour between events
   listenAlongDuration: 180000,        // 3 minute event duration
   listenAlongTriggerChance: 1,     // 15% chance per check once cooldown elapsed
   listenAlongJoinCheckInterval: 5000, // Check every 5s if current user is playing
@@ -72,9 +72,9 @@ const CONFIG = {
 
   // Fill the Map event settings
   fillMapCheckInterval: 60000,       // Check every 60s if we should trigger
-  fillMapCooldown: 10000,          // 1 hour between events
+  fillMapCooldown: 3600000,          // 1 hour between events
   fillMapDuration: 180000,           // 3 minute event duration
-  fillMapTriggerChance: 1,        // 15% chance per check once cooldown elapsed
+  fillMapTriggerChance: 0.15,        // 15% chance per check once cooldown elapsed
   fillMapJoinCheckInterval: 5000,    // Check every 5s if current user is playing the song
 
   // Klipy GIF API
