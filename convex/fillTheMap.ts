@@ -21,6 +21,8 @@ export const startFillTheMap = mutation({
     const cooldownMs = Math.max(0, args.cooldownMs ?? DEFAULT_COOLDOWN_MS);
     const durationMs = Math.max(1000, args.durationMs ?? DEFAULT_DURATION_MS);
 
+    console.log("[FillMap Server] startFillTheMap called. cooldownMs:", cooldownMs, "durationMs:", durationMs);
+
     // Dedup: reject if last event was less than cooldown ago
     const recent = await ctx.db
       .query("fillTheMapEvents")
@@ -29,8 +31,10 @@ export const startFillTheMap = mutation({
       .first();
 
     if (recent && now - recent.startedAt < cooldownMs) {
+      console.log("[FillMap Server] ⛔ BLOCKED by cooldown. Last event was", now - recent.startedAt, "ms ago, cooldown is", cooldownMs, "ms");
       return null;
     }
+    console.log("[FillMap Server] ✅ Cooldown check passed.", recent ? `Last event was ${now - recent.startedAt}ms ago` : "No previous events");
 
     // Check 2+ active users (presence is handled by Firebase RTDB on the client;
     // server-side we use nowPlaying tracks as a proxy for active engagement).
@@ -44,7 +48,12 @@ export const startFillTheMap = mutation({
       (p) => p.currentTrack && (p.currentTrack as any).nowPlaying
     ).length;
 
-    if (activeCount < 2) return null;
+    console.log("[FillMap Server] Participants:", participants.length, "| Active (nowPlaying):", activeCount);
+    if (activeCount < 2) {
+      console.log("[FillMap Server] ⛔ BLOCKED by active count. Need 2+, have", activeCount);
+      return null;
+    }
+    console.log("[FillMap Server] ✅ Active count check passed.");
 
     // Get all unique districts from ALL participants (online + offline)
     // Offline users' districts are eligible to encourage online users to
@@ -55,13 +64,19 @@ export const startFillTheMap = mutation({
         .query("users")
         .withIndex("by_phone", (q) => q.eq("phoneNumber", p.phoneNumber))
         .first();
+      console.log("[FillMap Server] Participant", p.phoneNumber, "→ district:", user?.district ?? "NONE");
       if (user?.district) {
         districtSet.add(user.district);
       }
     }
 
     const availableDistricts = Array.from(districtSet);
-    if (availableDistricts.length < NUM_DISTRICTS) return null; // Not enough districts represented
+    console.log("[FillMap Server] Available districts:", availableDistricts, "| Need:", NUM_DISTRICTS);
+    if (availableDistricts.length < NUM_DISTRICTS) {
+      console.log("[FillMap Server] ⛔ BLOCKED by districts. Have", availableDistricts.length, "unique districts, need", NUM_DISTRICTS);
+      return null;
+    }
+    console.log("[FillMap Server] ✅ District check passed.");
 
     // Randomly pick 3 districts
     const shuffled = availableDistricts.sort(() => Math.random() - 0.5);
