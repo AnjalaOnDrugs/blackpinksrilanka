@@ -320,12 +320,16 @@ ROOM.Firebase = {
     var countEl = document.getElementById('onlineCount');
     if (countEl) countEl.textContent = onlineCount + ' online';
 
-    // Notify leaderboard and activity
+    // Notify leaderboard, activity, and voice module
     if (ROOM.Leaderboard && ROOM.Leaderboard.update) {
       ROOM.Leaderboard.update(this.participantsCache);
     }
     if (ROOM.Activity && ROOM.Activity.update) {
       ROOM.Activity.update(this.participantsCache);
+    }
+    // Refresh voice module's isTop5 status (computed client-side)
+    if (ROOM.Voice && ROOM.Voice.refreshVoiceAccess) {
+      ROOM.Voice.refreshVoiceAccess();
     }
 
     // Debounce twinning detection (doesn't need to run on every heartbeat)

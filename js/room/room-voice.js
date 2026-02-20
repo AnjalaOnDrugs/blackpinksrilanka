@@ -20,8 +20,11 @@ ROOM.Voice = {
   unsubscribers: [],
   currentAudio: null,
   playingMessageId: null,
-  canSendCache: { canSend: false, isTop5: false, cooldownRemaining: 0 },
+  // Cooldown derived client-side from listByRoom data; isTop5 derived from participants cache
+  _cooldownEndTime: 0, // timestamp when cooldown expires
+  _isTop5: false,
   cooldownTimer: null,
+  VOICE_COOLDOWN_MS: 10 * 60 * 1000, // 10 minutes, must match server
 
   init: function () {
     this.bubbleBar = document.getElementById('voiceBubbleBar');
@@ -38,33 +41,86 @@ ROOM.Voice = {
       });
     }
 
-    // Subscribe to voice messages
+    // Subscribe to voice messages (also drives client-side cooldown)
     var unsub1 = ConvexService.watch(
       'voiceMessages:listByRoom',
       { roomId: ROOM.Firebase.roomId },
       function (messages) {
-        if (messages) self.renderBubbles(messages);
+        if (messages) {
+          self.renderBubbles(messages);
+          self._updateCooldownFromMessages(messages);
+        }
       }
     );
     this.unsubscribers.push(unsub1);
 
-    // Subscribe to canSend status
-    if (ROOM.currentUser) {
-      var unsub2 = ConvexService.watch(
-        'voiceMessages:canSend',
-        {
-          roomId: ROOM.Firebase.roomId,
-          phoneNumber: ROOM.currentUser.phoneNumber
-        },
-        function (status) {
-          if (status) {
-            self.canSendCache = status;
-            self.updateRecordButton(status);
-          }
-        }
-      );
-      this.unsubscribers.push(unsub2);
+    // Compute initial isTop5 from participants cache
+    this._isTop5 = this._computeIsTop5();
+  },
+
+  /**
+   * Derive cooldown state client-side from the listByRoom messages.
+   * Finds current user's message and computes remaining cooldown.
+   * Eliminates the need for a separate canSend subscription (saves ~1.2 GB bandwidth).
+   */
+  _updateCooldownFromMessages: function (messages) {
+    if (!ROOM.currentUser) return;
+
+    var myPhone = ROOM.currentUser.phoneNumber;
+    var myMessage = null;
+    for (var i = 0; i < messages.length; i++) {
+      if (messages[i].phoneNumber === myPhone) {
+        myMessage = messages[i];
+        break;
+      }
     }
+
+    if (myMessage) {
+      this._cooldownEndTime = myMessage.createdAt + this.VOICE_COOLDOWN_MS;
+    } else {
+      this._cooldownEndTime = 0;
+    }
+
+    this._refreshVoiceState();
+  },
+
+  /**
+   * Compute isTop5 from the already-subscribed participants cache.
+   * Avoids the need for the server canSend query to read the participants table.
+   */
+  _computeIsTop5: function () {
+    if (!ROOM.currentUser || !ROOM.Firebase || !ROOM.Firebase.participantsCache) return false;
+    var participants = ROOM.Firebase.participantsCache;
+    // participantsCache is already sorted by totalPoints desc (from participants:listByRoom)
+    for (var i = 0; i < Math.min(5, participants.length); i++) {
+      if (participants[i].id === ROOM.currentUser.phoneNumber) return true;
+    }
+    return false;
+  },
+
+  /**
+   * Called when participants data changes (from room-firebase refreshUI).
+   * Re-evaluates isTop5 and updates the voice UI.
+   */
+  refreshVoiceAccess: function () {
+    this._isTop5 = this._computeIsTop5();
+    this._refreshVoiceState();
+  },
+
+  /**
+   * Combines local isTop5 + client-side cooldown to update the UI.
+   * No server subscription needed — cooldown is derived from listByRoom data.
+   */
+  _refreshVoiceState: function () {
+    var now = Date.now();
+    var cooldownRemaining = Math.max(0, this._cooldownEndTime - now);
+    var canSend = cooldownRemaining === 0;
+
+    this.updateRecordButton({
+      isTop5: this._isTop5,
+      canSend: canSend && this._isTop5,
+      cooldownRemaining: cooldownRemaining
+    });
   },
 
   updateRecordButton: function (status) {
@@ -142,21 +198,21 @@ ROOM.Voice = {
 
       html +=
         '<button class="room-voice-bubble' + playingClass + '" data-id="' + msg._id + '" title="' + self.escapeAttr(msg.username) + ' - Voice message">' +
-          '<div class="room-voice-bubble-avatar" style="' + (voiceAv.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
-            voiceAv.html +
-            '<div class="room-voice-bubble-rank">#' + msg.rank + '</div>' +
-          '</div>' +
-          '<div class="room-voice-bubble-wave">' +
-            '<div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div>' +
-          '</div>' +
-          '<div class="room-voice-bubble-info">' +
-            '<span class="room-voice-bubble-name">' + self.escapeHtml(msg.username) + '</span>' +
-            '<span class="room-voice-bubble-dur">' + durationStr + '</span>' +
-          '</div>' +
+        '<div class="room-voice-bubble-avatar" style="' + (voiceAv.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
+        voiceAv.html +
+        '<div class="room-voice-bubble-rank">#' + msg.rank + '</div>' +
+        '</div>' +
+        '<div class="room-voice-bubble-wave">' +
+        '<div class="room-voice-wave-bar"></div>' +
+        '<div class="room-voice-wave-bar"></div>' +
+        '<div class="room-voice-wave-bar"></div>' +
+        '<div class="room-voice-wave-bar"></div>' +
+        '<div class="room-voice-wave-bar"></div>' +
+        '</div>' +
+        '<div class="room-voice-bubble-info">' +
+        '<span class="room-voice-bubble-name">' + self.escapeHtml(msg.username) + '</span>' +
+        '<span class="room-voice-bubble-dur">' + durationStr + '</span>' +
+        '</div>' +
         '</button>';
     });
 
@@ -175,7 +231,7 @@ ROOM.Voice = {
     var container = document.getElementById('voiceBubbleContainer');
     if (container) {
       var hasMessages = messages.length > 0;
-      var isTop5 = this.canSendCache.isTop5;
+      var isTop5 = this._isTop5;
       container.style.display = (hasMessages || isTop5) ? '' : 'none';
     }
   },
@@ -252,7 +308,9 @@ ROOM.Voice = {
   },
 
   showRecordModal: function () {
-    if (!this.canSendCache.canSend || !this.canSendCache.isTop5) return;
+    var now = Date.now();
+    var cooldownRemaining = Math.max(0, this._cooldownEndTime - now);
+    if (cooldownRemaining > 0 || !this._isTop5) return;
 
     var self = this;
 
@@ -261,46 +319,46 @@ ROOM.Voice = {
     modal.className = 'room-modal-backdrop room-voice-modal-backdrop';
     modal.innerHTML =
       '<div class="room-modal room-voice-modal">' +
-        '<div class="room-modal-icon room-voice-modal-icon">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>' +
-            '<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>' +
-            '<line x1="12" y1="19" x2="12" y2="23"/>' +
-            '<line x1="8" y1="23" x2="16" y2="23"/>' +
-          '</svg>' +
-        '</div>' +
-        '<div class="room-modal-title">Voice Message</div>' +
-        '<div class="room-modal-desc">Hold to record (max ' + this.MAX_DURATION + 's). Release to stop.</div>' +
-        '<div class="room-voice-recorder">' +
-          '<div class="room-voice-timer" id="voiceRecordTimer">0:00</div>' +
-          '<div class="room-voice-progress">' +
-            '<div class="room-voice-progress-fill" id="voiceProgressFill"></div>' +
-          '</div>' +
-          '<button class="room-voice-record-circle" id="voiceRecordCircle">' +
-            '<svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">' +
-              '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>' +
-            '</svg>' +
-          '</button>' +
-          '<div class="room-voice-record-hint" id="voiceRecordHint">Tap to start recording</div>' +
-        '</div>' +
-        '<div class="room-voice-preview" id="voicePreview" style="display:none;">' +
-          '<button class="room-voice-preview-play" id="voicePreviewPlay">' +
-            '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">' +
-              '<polygon points="5 3 19 12 5 21 5 3"></polygon>' +
-            '</svg>' +
-          '</button>' +
-          '<div class="room-voice-preview-wave">' +
-            '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
-            '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
-          '</div>' +
-          '<span class="room-voice-preview-dur" id="voicePreviewDur">0s</span>' +
-        '</div>' +
-        '<div class="room-modal-actions">' +
-          '<button class="room-modal-btn room-modal-btn--secondary" id="voiceCancelBtn">Cancel</button>' +
-          '<button class="room-modal-btn room-modal-btn--primary" id="voiceSendBtn" disabled>Send</button>' +
-        '</div>' +
+      '<div class="room-modal-icon room-voice-modal-icon">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>' +
+      '<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>' +
+      '<line x1="12" y1="19" x2="12" y2="23"/>' +
+      '<line x1="8" y1="23" x2="16" y2="23"/>' +
+      '</svg>' +
+      '</div>' +
+      '<div class="room-modal-title">Voice Message</div>' +
+      '<div class="room-modal-desc">Hold to record (max ' + this.MAX_DURATION + 's). Release to stop.</div>' +
+      '<div class="room-voice-recorder">' +
+      '<div class="room-voice-timer" id="voiceRecordTimer">0:00</div>' +
+      '<div class="room-voice-progress">' +
+      '<div class="room-voice-progress-fill" id="voiceProgressFill"></div>' +
+      '</div>' +
+      '<button class="room-voice-record-circle" id="voiceRecordCircle">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">' +
+      '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>' +
+      '</svg>' +
+      '</button>' +
+      '<div class="room-voice-record-hint" id="voiceRecordHint">Tap to start recording</div>' +
+      '</div>' +
+      '<div class="room-voice-preview" id="voicePreview" style="display:none;">' +
+      '<button class="room-voice-preview-play" id="voicePreviewPlay">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">' +
+      '<polygon points="5 3 19 12 5 21 5 3"></polygon>' +
+      '</svg>' +
+      '</button>' +
+      '<div class="room-voice-preview-wave">' +
+      '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
+      '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
+      '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
+      '<div class="room-voice-wave-bar"></div><div class="room-voice-wave-bar"></div>' +
+      '</div>' +
+      '<span class="room-voice-preview-dur" id="voicePreviewDur">0s</span>' +
+      '</div>' +
+      '<div class="room-modal-actions">' +
+      '<button class="room-modal-btn room-modal-btn--secondary" id="voiceCancelBtn">Cancel</button>' +
+      '<button class="room-modal-btn room-modal-btn--primary" id="voiceSendBtn" disabled>Send</button>' +
+      '</div>' +
       '</div>';
 
     document.body.appendChild(modal);

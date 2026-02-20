@@ -90,34 +90,23 @@ export const send = mutation({
 
 /**
  * List active voice messages for a room.
- * Returns messages from current top 5 players only.
+ * Decoupled from participants table to avoid reactive cascades.
+ * Rank is validated at send time; at most 5 messages exist at once.
  */
 export const listByRoom = query({
   args: {
     roomId: v.string(),
   },
   handler: async (ctx, args) => {
-    // Get current top 5 participants
-    const participants = await ctx.db
-      .query("participants")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .collect();
-
-    participants.sort((a, b) => b.totalMinutes - a.totalMinutes);
-    const top5Phones = new Set(
-      participants.slice(0, 5).map((p) => p.phoneNumber)
-    );
-
-    // Get all voice messages for this room
+    // Only reads voiceMessages table — no participants dependency.
+    // This prevents heartbeat/track-update writes from invalidating this query.
     const messages = await ctx.db
       .query("voiceMessages")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    // Filter: only show messages from users currently in top 5
     // Return without audioData to keep the subscription lightweight
     return messages
-      .filter((m) => top5Phones.has(m.phoneNumber))
       .map((m) => ({
         _id: m._id,
         phoneNumber: m.phoneNumber,
@@ -147,8 +136,12 @@ export const getAudio = query({
 });
 
 /**
- * Check if current user can send a voice message.
- * Returns { canSend, isTop5, cooldownRemaining }
+ * @deprecated No longer subscribed to by clients — cooldown is computed client-side
+ * from listByRoom data (message.createdAt + VOICE_COOLDOWN_MS).
+ * Kept for backward compatibility only. Safe to remove once all clients are updated.
+ *
+ * Previous issue: This query used Date.now() which prevented Convex from caching
+ * results deterministically, causing excessive re-evaluations and ~1.2 GB bandwidth.
  */
 export const canSend = query({
   args: {
@@ -158,24 +151,6 @@ export const canSend = query({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Check rank
-    const participants = await ctx.db
-      .query("participants")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .collect();
-
-    participants.sort((a, b) => b.totalMinutes - a.totalMinutes);
-    const userIndex = participants.findIndex(
-      (p) => p.phoneNumber === args.phoneNumber
-    );
-
-    const isTop5 = userIndex >= 0 && userIndex < 5;
-
-    if (!isTop5) {
-      return { canSend: false, isTop5: false, cooldownRemaining: 0 };
-    }
-
-    // Check cooldown
     const existing = await ctx.db
       .query("voiceMessages")
       .withIndex("by_room_phone", (q) =>
@@ -193,7 +168,6 @@ export const canSend = query({
 
     return {
       canSend: cooldownRemaining === 0,
-      isTop5: true,
       cooldownRemaining: cooldownRemaining,
     };
   },

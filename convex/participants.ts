@@ -122,7 +122,10 @@ export const leaveRoom = mutation({
   },
 });
 
-// Heartbeat + optional track update (combined to reduce writes)
+// Heartbeat — only writes if lastSeen is stale (>20s old) to reduce
+// unnecessary mutations that invalidate all listByRoom subscriptions.
+// Client sends heartbeats every 30s; the 20s threshold ensures we
+// write at most once per heartbeat cycle while keeping presence accurate.
 export const heartbeat = mutation({
   args: {
     roomId: v.string(),
@@ -137,9 +140,17 @@ export const heartbeat = mutation({
       .first();
 
     if (participant) {
-      await ctx.db.patch(participant._id, {
-        lastSeen: Date.now(),
-      });
+      const now = Date.now();
+      const timeSinceLastSeen = now - (participant.lastSeen || 0);
+
+      // Only write if lastSeen is stale (>20s) to avoid redundant mutations.
+      // Also write if user was marked offline, to bring them back online.
+      if (timeSinceLastSeen > 20000 || !participant.isOnline) {
+        await ctx.db.patch(participant._id, {
+          lastSeen: now,
+          isOnline: true,
+        });
+      }
     }
   },
 });
