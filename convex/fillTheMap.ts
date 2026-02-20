@@ -36,24 +36,20 @@ export const startFillTheMap = mutation({
     }
     console.log("[FillMap Server] ✅ Cooldown check passed.", recent ? `Last event was ${now - recent.startedAt}ms ago` : "No previous events");
 
-    // Check 2+ active users (presence is handled by Firebase RTDB on the client;
-    // server-side we use nowPlaying tracks as a proxy for active engagement).
-    // The client already verifies 2+ online users before calling this mutation.
+    // Check 2+ online participants in the room
     const participants = await ctx.db
       .query("participants")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const activeCount = participants.filter(
-      (p) => p.currentTrack && (p.currentTrack as any).nowPlaying
-    ).length;
+    const onlineCount = participants.filter((p) => p.isOnline).length;
 
-    console.log("[FillMap Server] Participants:", participants.length, "| Active (nowPlaying):", activeCount);
-    if (activeCount < 2) {
-      console.log("[FillMap Server] ⛔ BLOCKED by active count. Need 2+, have", activeCount);
+    console.log("[FillMap Server] Participants:", participants.length, "| Online:", onlineCount);
+    if (onlineCount < 2) {
+      console.log("[FillMap Server] ⛔ BLOCKED by online count. Need 2+, have", onlineCount);
       return null;
     }
-    console.log("[FillMap Server] ✅ Active count check passed.");
+    console.log("[FillMap Server] ✅ Online count check passed.");
 
     // Get all unique districts from ALL participants (online + offline)
     // Offline users' districts are eligible to encourage online users to
