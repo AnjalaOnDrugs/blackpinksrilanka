@@ -526,7 +526,7 @@ ROOM.FillMap = {
     this._overlayEl.classList.add('room-fill-map-overlay--minimized');
     if (this._compactEl) {
       this._compactEl.classList.add('room-fill-map-capsule--visible');
-      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.register('fill-map', this._compactEl, this._bubbleEl);
+      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.register('fill-map', this._compactEl, this._bubbleEl, this);
     }
     if (this._bubbleEl) {
       this._bubbleEl.classList.add('room-fill-map-capsule-bubbles--visible');
@@ -756,7 +756,7 @@ ROOM.FillMap = {
     });
   },
 
-  _setCapsuleSide: function (side) {
+  _setCapsuleSide: function (side, fromStack) {
     this._capsuleSide = side;
 
     if (this._compactEl) {
@@ -776,6 +776,11 @@ ROOM.FillMap = {
     }
 
     this._positionBubblesAboveCapsule();
+
+    // Sync with other stacked capsules
+    if (!fromStack && window.ROOM && ROOM.CapsuleStack && ROOM.CapsuleStack.setSide) {
+      ROOM.CapsuleStack.setSide(side);
+    }
   },
 
   _removeOverlay: function () {

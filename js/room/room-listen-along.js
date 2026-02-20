@@ -646,7 +646,7 @@ ROOM.ListenAlong = {
     this._cardEl.classList.add('room-listen-along-card--minimized');
     if (this._compactEl) {
       this._compactEl.classList.add('room-listen-along-capsule--visible');
-      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.register('listen-along', this._compactEl, this._bubbleEl);
+      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.register('listen-along', this._compactEl, this._bubbleEl, this);
     }
     if (this._bubbleEl) {
       this._bubbleEl.classList.add('room-listen-along-capsule-bubbles--visible');
@@ -890,7 +890,7 @@ ROOM.ListenAlong = {
     });
   },
 
-  _setCapsuleSide: function (side) {
+  _setCapsuleSide: function (side, fromStack) {
     this._capsuleSide = side;
 
     if (this._compactEl) {
@@ -910,6 +910,11 @@ ROOM.ListenAlong = {
     }
 
     this._positionBubblesAboveCapsule();
+
+    // Sync with other stacked capsules
+    if (!fromStack && window.ROOM && ROOM.CapsuleStack && ROOM.CapsuleStack.setSide) {
+      ROOM.CapsuleStack.setSide(side);
+    }
   },
 
   // ========== UI: THANK YOU DIALOG ==========

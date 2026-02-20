@@ -14,6 +14,11 @@
   inherits: false;
 }
 
+/* ========== GLOBAL RESET ========== */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ========== PAGE BASE ========== */
 .room-page {
   margin: 0;
@@ -2733,7 +2738,7 @@
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%);
-  z-index: 65;
+  z-index: 260;
   width: min(460px, calc(100vw - 24px));
   animation: roomBongBackPromptIn 0.25s ease-out;
 }
@@ -2849,7 +2854,7 @@
 .room-event-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 250;
   pointer-events: none;
   overflow: hidden;
 }
@@ -3050,7 +3055,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 200;
+  z-index: 255;
   pointer-events: none;
   animation: roomTwinBannerIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -5080,7 +5085,7 @@
   position: fixed;
   bottom: 100px;
   right: 20px;
-  z-index: 190;
+  z-index: 210;
   width: 360px;
   animation: roomListenAlongIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -5935,7 +5940,7 @@
 .room-fill-map-overlay {
   position: fixed;
   inset: 0;
-  z-index: 195;
+  z-index: 210;
   display: flex;
   align-items: center;
   justify-content: center;

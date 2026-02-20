@@ -1,13 +1,18 @@
 /* Import Outfit font for login button */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap');
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .body {
-    background-image: url("../assets/background.png");
-    background-repeat: no-repeat;
-background-attachment: fixed;
-	background-size: cover;
-	background-position: center;
-  }
+  background-image: url("../assets/background.png");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+}
+
 .carousel-item img {
   max-width: 70%;
   height: auto;
@@ -24,39 +29,47 @@ background-attachment: fixed;
   width: 100%;
   height: 100%;
   z-index: -1;
-  opacity: 0.5; /* Change the value as needed */
+  opacity: 0.5;
+  /* Change the value as needed */
 }
-.red{
-	color: #f7a6b9
+
+.red {
+  color: #f7a6b9
 }
-.red-link{
-	color: #f7a6b9
+
+.red-link {
+  color: #f7a6b9
 }
-.red-link:hover{
-	color: #FA5BFF
+
+.red-link:hover {
+  color: #FA5BFF
 }
+
 .circle-image {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    overflow: hidden;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
 }
-.long-button{
-	 width: 100%;
+
+.long-button {
+  width: 100%;
 }
+
 .larger-text {
-    font-size: 5em;
+  font-size: 5em;
 }
+
 @media (max-width: 768px) {
-    .larger-text {
-        font-size: 3em;
-    }
+  .larger-text {
+    font-size: 3em;
+  }
 }
 
 @media (max-width: 480px) {
-    .larger-text {
-        font-size: 2em;
-    }
+  .larger-text {
+    font-size: 2em;
+  }
 }
 
 .column {
@@ -64,14 +77,17 @@ background-attachment: fixed;
   width: 33.33%;
   padding: 5px;
 }
+
 @media screen and (max-width: 500px) {
   .column {
     width: 100%;
   }
 }
+
 .tag-class {
   font-family: 'Lato', sans-serif;
 }
+
 .row::after {
   content: "";
   clear: both;
@@ -85,8 +101,8 @@ background-attachment: fixed;
   overflow: hidden;
 }
 
-.video-container iframe,  
-.video-container object,  
+.video-container iframe,
+.video-container object,
 .video-container embed {
   position: absolute;
   top: 0;
@@ -102,56 +118,64 @@ background-attachment: fixed;
   text-align: center;
   text-decoration: none;
   border-radius: 50%;
-	margin: 0 auto;
-	-webkit-transition: all .3s ease-in-out;
+  margin: 0 auto;
+  -webkit-transition: all .3s ease-in-out;
   -moz-transition: all .3s ease-in-out;
   -ms-transition: all .3s ease-in-out;
   -o-transition: all .3s ease-in-out;
   transition: all .3s ease-in-out;
 }
+
 .fa:hover {
   opacity: 0.7;
-	color: white;
+  color: white;
 }
+
 .fa-facebook {
   background: #3B5998;
   color: white;
 }
+
 .fa-twitter {
   background: #55ACEE;
   color: white;
 }
+
 .fa-instagram {
   background: #962fbf;
   color: white;
 }
+
 .fa-youtube-play {
   background: #FF0000;
   color: white;
 }
 
-.footer{
-	color: #f7a6b9
+.footer {
+  color: #f7a6b9
 }
-.footer:hover{
-	color: #f7a6b9;
-	opacity: 0.7;
-		-webkit-transition: all .3s ease-in-out;
+
+.footer:hover {
+  color: #f7a6b9;
+  opacity: 0.7;
+  -webkit-transition: all .3s ease-in-out;
   -moz-transition: all .3s ease-in-out;
   -ms-transition: all .3s ease-in-out;
   -o-transition: all .3s ease-in-out;
   transition: all .3s ease-in-out;
 }
-.container{
-	background-color: black;
-	border-color: black;
+
+.container {
+  background-color: black;
+  border-color: black;
 }
-.container-new{
-}
+
+.container-new {}
+
 .news-container {
   display: flex;
   flex-wrap: wrap;
-	max-width: 1200px;
+  max-width: 1200px;
   margin: auto;
   padding: 0 20px;
 }
@@ -161,19 +185,19 @@ background-attachment: fixed;
   flex-wrap: wrap;
   margin-bottom: 1rem;
   width: 100%;
-	
+
 }
 
 .news-image {
   flex: 1;
   margin-right: 1rem;
-	
+
 }
 
 .news-image img {
   max-width: 100%;
   height: auto;
-	
+
 }
 
 .news-content {
@@ -187,7 +211,7 @@ background-attachment: fixed;
 
 .news-text {
   font-size: 1rem;
-	
+
 }
 
 @media (max-width: 767px) {
@@ -196,6 +220,7 @@ background-attachment: fixed;
     align-items: center;
     text-align: center;
   }
+
   .card-img-top {
     width: 100%;
     height: auto;
@@ -234,6 +259,13 @@ background-attachment: fixed;
 }
 
 @keyframes navBtnGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(247, 166, 185, 0.2); }
-  50% { box-shadow: 0 0 30px rgba(247, 166, 185, 0.35), 0 0 60px rgba(250, 91, 255, 0.1); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(247, 166, 185, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(247, 166, 185, 0.35), 0 0 60px rgba(250, 91, 255, 0.1);
+  }
 }

@@ -7,13 +7,15 @@ window.ROOM = window.ROOM || {};
 
 ROOM.CapsuleStack = {
   stack: [],
-  register: function (capsuleId, el, bubbleEl) {
+  side: 'right', // 'right' or 'left'
+  register: function (capsuleId, el, bubbleEl, instance) {
     var existing = this.stack.find(function (c) { return c.id === capsuleId; });
     if (existing) {
       existing.el = el;
       existing.bubbleEl = bubbleEl;
+      existing.instance = instance;
     } else {
-      this.stack.push({ id: capsuleId, el: el, bubbleEl: bubbleEl });
+      this.stack.push({ id: capsuleId, el: el, bubbleEl: bubbleEl, instance: instance });
       var self = this;
       if (el) {
         el.addEventListener('click', function (e) {
@@ -28,6 +30,12 @@ ROOM.CapsuleStack = {
         }, true); // Use capture phase to intercept before normal button click
       }
     }
+
+    // Sync the newly registered capsule with current side
+    if (instance && typeof instance._setCapsuleSide === 'function') {
+      instance._setCapsuleSide(this.side, true);
+    }
+
     this.render();
   },
   unregister: function (capsuleId) {
@@ -41,6 +49,16 @@ ROOM.CapsuleStack = {
       this.stack.push(capsule);
       this.render();
     }
+  },
+  setSide: function (side) {
+    if (this.side === side) return;
+    this.side = side;
+    var self = this;
+    this.stack.forEach(function (item) {
+      if (item.instance && typeof item.instance._setCapsuleSide === 'function') {
+        item.instance._setCapsuleSide(self.side, true);
+      }
+    });
   },
   render: function () {
     var total = this.stack.length;

@@ -8,6 +8,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ========== PAGE BASE ========== */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .members-home {
   margin: 0;
   padding: 0;
@@ -64,18 +68,41 @@
 }
 
 @keyframes mhGlow1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, 30px) scale(1.1); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(40px, 30px) scale(1.1);
+  }
 }
 
 @keyframes mhGlow2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-30px, -40px) scale(1.15); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-30px, -40px) scale(1.15);
+  }
 }
 
 @keyframes mhGlow3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.03; }
-  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.05; }
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.03;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.05;
+  }
 }
 
 /* ========== TOP BAR ========== */
@@ -251,8 +278,17 @@
 }
 
 @keyframes mhLivePulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(37, 211, 102, 0); }
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+  }
+
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 6px rgba(37, 211, 102, 0);
+  }
 }
 
 /* ========== EVENT ROOMS GRID ========== */
@@ -289,13 +325,11 @@
   inset: -1px;
   border-radius: 25px;
   padding: 1px;
-  background: linear-gradient(
-    var(--border-angle, 0deg),
-    #f7a6b9,
-    transparent 40%,
-    transparent 60%,
-    #25D366
-  );
+  background: linear-gradient(var(--border-angle, 0deg),
+      #f7a6b9,
+      transparent 40%,
+      transparent 60%,
+      #25D366);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -310,7 +344,9 @@
 }
 
 @keyframes mhBorderSpin {
-  to { --border-angle: 360deg; }
+  to {
+    --border-angle: 360deg;
+  }
 }
 
 @property --border-angle {
@@ -368,8 +404,13 @@
 }
 
 @keyframes mhEqBounce {
-  from { height: var(--eq-min, 4px); }
-  to { height: var(--eq-max, 16px); }
+  from {
+    height: var(--eq-min, 4px);
+  }
+
+  to {
+    height: var(--eq-max, 16px);
+  }
 }
 
 /* ========== FLOATING MUSIC ICONS (scattered across card) ========== */
@@ -394,10 +435,23 @@
 }
 
 @keyframes mhIconDrift {
-  0%   { opacity: 0; transform: translateY(10px) rotate(0deg) scale(0.7); }
-  25%  { opacity: var(--fi-opacity, 0.5); }
-  75%  { opacity: var(--fi-opacity, 0.3); }
-  100% { opacity: 0; transform: translateY(-20px) rotate(15deg) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px) rotate(0deg) scale(0.7);
+  }
+
+  25% {
+    opacity: var(--fi-opacity, 0.5);
+  }
+
+  75% {
+    opacity: var(--fi-opacity, 0.3);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) rotate(15deg) scale(1);
+  }
 }
 
 /* ========== FEATURED ROOM CONTENT ========== */
@@ -443,8 +497,15 @@
 }
 
 @keyframes mhTagPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.3); }
-  50% { box-shadow: 0 0 12px 2px rgba(37, 211, 102, 0.15); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 12px 2px rgba(37, 211, 102, 0.15);
+  }
 }
 
 .mh-room-tag-dot {
@@ -498,34 +559,34 @@
   height: 120px;
   border-radius: 50%;
   background:
-    conic-gradient(
-      from 0deg,
-      rgba(0,0,0,0.35) 0deg,
-      rgba(40,40,40,0.25) 30deg,
-      rgba(0,0,0,0.35) 60deg,
-      rgba(30,30,30,0.28) 90deg,
-      rgba(0,0,0,0.35) 120deg,
-      rgba(40,40,40,0.25) 150deg,
-      rgba(0,0,0,0.35) 180deg,
-      rgba(30,30,30,0.28) 210deg,
-      rgba(0,0,0,0.35) 240deg,
-      rgba(40,40,40,0.25) 270deg,
-      rgba(0,0,0,0.35) 300deg,
-      rgba(30,30,30,0.28) 330deg,
-      rgba(0,0,0,0.35) 360deg
-    ),
+    conic-gradient(from 0deg,
+      rgba(0, 0, 0, 0.35) 0deg,
+      rgba(40, 40, 40, 0.25) 30deg,
+      rgba(0, 0, 0, 0.35) 60deg,
+      rgba(30, 30, 30, 0.28) 90deg,
+      rgba(0, 0, 0, 0.35) 120deg,
+      rgba(40, 40, 40, 0.25) 150deg,
+      rgba(0, 0, 0, 0.35) 180deg,
+      rgba(30, 30, 30, 0.28) 210deg,
+      rgba(0, 0, 0, 0.35) 240deg,
+      rgba(40, 40, 40, 0.25) 270deg,
+      rgba(0, 0, 0, 0.35) 300deg,
+      rgba(30, 30, 30, 0.28) 330deg,
+      rgba(0, 0, 0, 0.35) 360deg),
     url('https://img.youtube.com/vi/-f0MQzVMuUE/hqdefault.jpg');
   background-size: cover, cover;
   background-position: center, center;
   border: 6px solid #111;
   animation: mhVinylSpin 3s linear infinite;
   position: relative;
-  box-shadow: 0 0 30px rgba(247, 166, 185, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: 0 0 30px rgba(247, 166, 185, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
 @keyframes mhVinylSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .mh-vinyl-groove {
@@ -578,8 +639,17 @@
 }
 
 @keyframes mhVinylGlowPulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
 }
 
 .mh-vinyl-badge {
@@ -836,11 +906,25 @@
   transition: all 0.3s ease;
 }
 
-.mh-room-avatar:nth-child(1) { z-index: 5; }
-.mh-room-avatar:nth-child(2) { z-index: 4; }
-.mh-room-avatar:nth-child(3) { z-index: 3; }
-.mh-room-avatar:nth-child(4) { z-index: 2; }
-.mh-room-avatar:nth-child(5) { z-index: 1; }
+.mh-room-avatar:nth-child(1) {
+  z-index: 5;
+}
+
+.mh-room-avatar:nth-child(2) {
+  z-index: 4;
+}
+
+.mh-room-avatar:nth-child(3) {
+  z-index: 3;
+}
+
+.mh-room-avatar:nth-child(4) {
+  z-index: 2;
+}
+
+.mh-room-avatar:nth-child(5) {
+  z-index: 1;
+}
 
 .mh-room-avatar:first-child {
   margin-left: 0;
@@ -1090,6 +1174,7 @@
 .mh-room-card--quiz .mh-room-card-icon {
   background: rgba(250, 91, 255, 0.1);
 }
+
 .mh-room-card--quiz .mh-room-card-glow {
   background: #FA5BFF;
 }
@@ -1097,6 +1182,7 @@
 .mh-room-card--chat .mh-room-card-icon {
   background: rgba(37, 211, 102, 0.1);
 }
+
 .mh-room-card--chat .mh-room-card-glow {
   background: #25D366;
 }
@@ -1104,6 +1190,7 @@
 .mh-room-card--votes .mh-room-card-icon {
   background: rgba(247, 166, 185, 0.1);
 }
+
 .mh-room-card--votes .mh-room-card-glow {
   background: #f7a6b9;
 }
@@ -1111,6 +1198,7 @@
 .mh-room-card--karaoke .mh-room-card-icon {
   background: rgba(255, 193, 7, 0.1);
 }
+
 .mh-room-card--karaoke .mh-room-card-glow {
   background: #ffc107;
 }
@@ -1165,10 +1253,23 @@
 }
 
 @keyframes mhParticleDrift {
-  0% { opacity: 0; transform: translateY(100vh) scale(0.5); }
-  20% { opacity: var(--p-opacity, 0.3); }
-  80% { opacity: var(--p-opacity, 0.3); }
-  100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(100vh) scale(0.5);
+  }
+
+  20% {
+    opacity: var(--p-opacity, 0.3);
+  }
+
+  80% {
+    opacity: var(--p-opacity, 0.3);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-10vh) scale(1);
+  }
 }
 
 /* ========== RESPONSIVE ========== */
