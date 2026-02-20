@@ -191,7 +191,20 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6);
+    // 7. Subscribe to active Run the Playlist events for this user (personal event)
+    var unsub7 = ConvexService.watch(
+      'runPlaylist:getActiveRunPlaylist',
+      { roomId: roomId, phoneNumber: ROOM.currentUser.phoneNumber },
+      function (event) {
+        if (event && event.status === 'active') {
+          if (ROOM.RunPlaylist && ROOM.RunPlaylist._handleActiveEvent) {
+            ROOM.RunPlaylist._handleActiveEvent(event);
+          }
+        }
+      }
+    );
+
+    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7);
   },
 
   getParticipants: function () {

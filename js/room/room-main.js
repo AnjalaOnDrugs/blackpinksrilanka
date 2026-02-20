@@ -122,6 +122,7 @@ async function initRoom(roomId) {
   ROOM.Animations.init();
   ROOM.ListenAlong.init();
   ROOM.FillMap.init();
+  ROOM.RunPlaylist.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 

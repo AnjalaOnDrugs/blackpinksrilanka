@@ -158,6 +158,30 @@ export default defineSchema({
     .index("by_room", ["roomId"])
     .index("by_room_status", ["roomId", "status"]),
 
+  runPlaylistEvents: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    username: v.string(),
+    songs: v.array(
+      v.object({
+        name: v.string(),
+        artist: v.string(),
+        status: v.string(), // "pending" | "active" | "completed"
+        platform: v.optional(v.string()), // "spotify" | "youtube" | "other"
+        listenedSeconds: v.optional(v.number()),
+        requiredSeconds: v.optional(v.number()),
+        listenStartedAt: v.optional(v.number()),
+        completedAt: v.optional(v.number()),
+      })
+    ),
+    currentSongIndex: v.number(),
+    startedAt: v.number(),
+    status: v.string(), // "active" | "completed" | "quit"
+    pointsAwarded: v.optional(v.boolean()),
+  })
+    .index("by_room_phone", ["roomId", "phoneNumber"])
+    .index("by_room_phone_status", ["roomId", "phoneNumber", "status"]),
+
   rooms: defineTable({
     roomId: v.string(),
     name: v.string(),

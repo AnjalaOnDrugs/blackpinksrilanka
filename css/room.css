@@ -6676,3 +6676,542 @@
     font-size: 24px;
   }
 }
+
+
+/* ========== RUN THE PLAYLIST ========== */
+
+.room-run-playlist-card {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  z-index: 210;
+  width: 360px;
+  animation: roomRunPlaylistIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: auto;
+}
+
+.room-run-playlist-card--minimized {
+  opacity: 0;
+  transform: translateX(24px) scale(0.95);
+  pointer-events: none;
+}
+
+.room-run-playlist-card--exit {
+  animation: roomRunPlaylistOut 0.5s ease-in forwards !important;
+}
+
+@keyframes roomRunPlaylistIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes roomRunPlaylistOut {
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
+
+.room-run-playlist-glow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(250, 91, 255, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.room-run-playlist-content {
+  background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.room-run-playlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.room-run-playlist-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #FA5BFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.room-run-playlist-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-run-playlist-quit {
+  background: rgba(255, 100, 100, 0.15);
+  border: 1px solid rgba(255, 100, 100, 0.25);
+  color: #ff6b6b;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.room-run-playlist-quit:hover {
+  background: rgba(255, 100, 100, 0.25);
+}
+
+.room-run-playlist-minimize {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.room-run-playlist-minimize:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.room-run-playlist-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+/* Song list */
+.room-run-playlist-songs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.room-run-playlist-song {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+  flex-wrap: wrap;
+}
+
+.room-run-playlist-song--active {
+  background: rgba(250, 91, 255, 0.08);
+  border-color: rgba(250, 91, 255, 0.25);
+  box-shadow: 0 0 20px rgba(250, 91, 255, 0.1);
+}
+
+.room-run-playlist-song--completed {
+  opacity: 0.55;
+}
+
+.room-run-playlist-song--pending {
+  opacity: 0.35;
+}
+
+.room-run-playlist-song-number {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  width: 18px;
+  text-align: center;
+  padding-top: 1px;
+}
+
+.room-run-playlist-song--active .room-run-playlist-song-number {
+  color: #FA5BFF;
+}
+
+.room-run-playlist-song-status {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.room-run-playlist-song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-run-playlist-song-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-run-playlist-song-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Song progress bar */
+.room-run-playlist-song-progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.room-run-playlist-song-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.room-run-playlist-song-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FA5BFF, #f7a6b9);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.room-run-playlist-song-timer {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status bar */
+.room-run-playlist-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  transition: background 0.3s;
+}
+
+.room-run-playlist-status--listening {
+  background: rgba(250, 91, 255, 0.1);
+}
+
+.room-run-playlist-status--completed {
+  background: rgba(37, 211, 102, 0.1);
+}
+
+.room-run-playlist-status-icon {
+  font-size: 16px;
+}
+
+.room-run-playlist-points {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.room-run-playlist-points-label strong {
+  color: #FA5BFF;
+}
+
+
+/* ===== RUN PLAYLIST CAPSULE ===== */
+
+.room-run-playlist-capsule {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) translateX(18px) scale(0.95);
+  width: 94px;
+  min-height: 180px;
+  border-radius: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.6);
+  padding: 14px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 191;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.room-run-playlist-capsule--visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.room-run-playlist-capsule--left {
+  right: auto;
+  left: 12px;
+}
+
+.room-run-playlist-capsule-glare {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 30px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.room-run-playlist-capsule-icon {
+  color: #FA5BFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-run-playlist-capsule-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #FA5BFF;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.room-run-playlist-capsule-progress {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.room-run-playlist-capsule-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.room-run-playlist-capsule-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.3s;
+}
+
+.room-run-playlist-capsule-dot--completed {
+  background: #25D366;
+}
+
+.room-run-playlist-capsule-dot--active {
+  background: #FA5BFF;
+  animation: runPlaylistDotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes runPlaylistDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.room-run-playlist-capsule-glow {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 40px;
+  background: radial-gradient(ellipse at center, rgba(250, 91, 255, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.room-run-playlist-capsule-bubbles {
+  position: fixed;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.room-run-playlist-capsule-bubbles--visible {
+  opacity: 1;
+}
+
+.room-run-playlist-capsule-bubbles--left {
+  right: auto;
+  left: 12px;
+}
+
+
+/* ===== RUN PLAYLIST THANK YOU ===== */
+
+.room-run-playlist-thankyou {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: roomRunPlaylistTyIn 0.4s ease;
+}
+
+.room-run-playlist-thankyou--exit {
+  animation: roomRunPlaylistTyOut 0.4s ease forwards;
+}
+
+@keyframes roomRunPlaylistTyIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes roomRunPlaylistTyOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.room-run-playlist-ty-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.room-run-playlist-ty-modal {
+  position: relative;
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 32px 28px;
+  width: 340px;
+  max-width: 90vw;
+  text-align: center;
+  animation: roomRunPlaylistModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes roomRunPlaylistModalIn {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.room-run-playlist-ty-icon {
+  margin-bottom: 12px;
+}
+
+.room-run-playlist-ty-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.room-run-playlist-ty-points-big {
+  font-size: 28px;
+  font-weight: 800;
+  color: #FA5BFF;
+  margin-bottom: 6px;
+}
+
+.room-run-playlist-ty-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+}
+
+.room-run-playlist-ty-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.room-run-playlist-ty-song {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.room-run-playlist-ty-song-check {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.room-run-playlist-ty-song-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-run-playlist-ty-song-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+}
+
+.room-run-playlist-ty-close {
+  width: 100%;
+  padding: 10px;
+  background: rgba(250, 91, 255, 0.15);
+  border: 1px solid rgba(250, 91, 255, 0.3);
+  color: #FA5BFF;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.room-run-playlist-ty-close:hover {
+  background: rgba(250, 91, 255, 0.25);
+}
+
+
+/* ===== RUN PLAYLIST MOBILE ===== */
+
+@media (max-width: 768px) {
+  .room-run-playlist-card {
+    right: 10px;
+    left: 10px;
+    bottom: 80px;
+    width: auto;
+  }
+
+  .room-run-playlist-ty-modal {
+    padding: 24px 20px;
+  }
+
+  .room-run-playlist-ty-points-big {
+    font-size: 24px;
+  }
+}

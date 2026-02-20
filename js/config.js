@@ -77,6 +77,13 @@ const CONFIG = {
   fillMapTriggerChance: 0.15,        // 15% chance per check once cooldown elapsed
   fillMapJoinCheckInterval: 5000,    // Check every 5s if current user is playing the song
 
+  // Run the Playlist event settings (personal event)
+  runPlaylistCheckInterval: 60000,         // Check every 60s if we should trigger
+  runPlaylistCooldown: 3600000,            // 1 hour between events per user
+  runPlaylistTriggerChance: 0.15,          // 15% chance per check once cooldown elapsed
+  runPlaylistSongCheckInterval: 3000,      // Check every 3s if user is playing the correct song
+  runPlaylistProgressSaveInterval: 5000,   // Save listen progress to server every 5s
+
   // Klipy GIF API
   klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv'
 };

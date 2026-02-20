@@ -14,6 +14,7 @@ import type * as listenAlong from "../listenAlong.js";
 import type * as messages from "../messages.js";
 import type * as participants from "../participants.js";
 import type * as rooms from "../rooms.js";
+import type * as runPlaylist from "../runPlaylist.js";
 import type * as streams from "../streams.js";
 import type * as users from "../users.js";
 import type * as voiceMessages from "../voiceMessages.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   participants: typeof participants;
   rooms: typeof rooms;
+  runPlaylist: typeof runPlaylist;
   streams: typeof streams;
   users: typeof users;
   voiceMessages: typeof voiceMessages;
