@@ -5,6 +5,73 @@
 
 window.ROOM = window.ROOM || {};
 
+ROOM.CapsuleStack = {
+  stack: [],
+  register: function (capsuleId, el, bubbleEl) {
+    var existing = this.stack.find(function (c) { return c.id === capsuleId; });
+    if (existing) {
+      existing.el = el;
+      existing.bubbleEl = bubbleEl;
+    } else {
+      this.stack.push({ id: capsuleId, el: el, bubbleEl: bubbleEl });
+      var self = this;
+      if (el) {
+        el.addEventListener('click', function (e) {
+          var idx = self.stack.findIndex(function (c) { return c.id === capsuleId; });
+          if (idx > -1 && idx !== self.stack.length - 1) {
+            // Clicked a capsule that is NOT at the front
+            e.preventDefault();
+            e.stopPropagation();
+            // Bring to front
+            self.bringToFront(capsuleId);
+          }
+        }, true); // Use capture phase to intercept before normal button click
+      }
+    }
+    this.render();
+  },
+  unregister: function (capsuleId) {
+    this.stack = this.stack.filter(function (c) { return c.id !== capsuleId; });
+    this.render();
+  },
+  bringToFront: function (capsuleId) {
+    var idx = this.stack.findIndex(function (c) { return c.id === capsuleId; });
+    if (idx > -1 && idx !== this.stack.length - 1) {
+      var capsule = this.stack.splice(idx, 1)[0];
+      this.stack.push(capsule);
+      this.render();
+    }
+  },
+  render: function () {
+    var total = this.stack.length;
+    for (var i = 0; i < total; i++) {
+      var item = this.stack[i];
+      if (!item.el) continue;
+      var offset = total - 1 - i;
+      item.el.style.transition = 'margin 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, scale 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease';
+      item.el.style.zIndex = Math.max(100, 191 - offset);
+      if (offset > 0) {
+        // Stacked behind
+        item.el.style.marginTop = (offset * -60) + 'px'; // stack them higher
+        item.el.style.scale = Math.max(0.8, 1 - offset * 0.08); // shrink them to create depth
+        item.el.style.opacity = Math.max(0.6, 1 - offset * 0.2);
+        item.el.style.filter = 'brightness(' + Math.max(0.5, 1 - offset * 0.2) + ')';
+        if (item.bubbleEl) item.bubbleEl.style.display = 'none';
+      } else {
+        // Front capsule
+        item.el.style.marginTop = '0px';
+        item.el.style.scale = '1';
+        item.el.style.opacity = '1';
+        item.el.style.filter = 'none';
+        if (item.bubbleEl) {
+          // ensure it doesn't get stuck hidden
+          item.bubbleEl.style.display = '';
+        }
+      }
+    }
+  }
+};
+
 ROOM.Events = {
   sameSongCooldown: {},
   sameSongInterval: null,

@@ -526,6 +526,7 @@ ROOM.FillMap = {
     this._overlayEl.classList.add('room-fill-map-overlay--minimized');
     if (this._compactEl) {
       this._compactEl.classList.add('room-fill-map-capsule--visible');
+      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.register('fill-map', this._compactEl, this._bubbleEl);
     }
     if (this._bubbleEl) {
       this._bubbleEl.classList.add('room-fill-map-capsule-bubbles--visible');
@@ -543,6 +544,7 @@ ROOM.FillMap = {
     }
     if (this._compactEl) {
       this._compactEl.classList.remove('room-fill-map-capsule--visible');
+      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.unregister('fill-map');
     }
     if (this._bubbleEl) {
       this._bubbleEl.classList.remove('room-fill-map-capsule-bubbles--visible');
@@ -614,6 +616,7 @@ ROOM.FillMap = {
   },
 
   _removeCompactCard: function () {
+    if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.unregister('fill-map');
     if (this._bubbleEl) {
       this._bubbleEl.remove();
       this._bubbleEl = null;

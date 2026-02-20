@@ -646,6 +646,7 @@ ROOM.ListenAlong = {
     this._cardEl.classList.add('room-listen-along-card--minimized');
     if (this._compactEl) {
       this._compactEl.classList.add('room-listen-along-capsule--visible');
+      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.register('listen-along', this._compactEl, this._bubbleEl);
     }
     if (this._bubbleEl) {
       this._bubbleEl.classList.add('room-listen-along-capsule-bubbles--visible');
@@ -663,6 +664,7 @@ ROOM.ListenAlong = {
     }
     if (this._compactEl) {
       this._compactEl.classList.remove('room-listen-along-capsule--visible');
+      if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.unregister('listen-along');
     }
     if (this._bubbleEl) {
       this._bubbleEl.classList.remove('room-listen-along-capsule-bubbles--visible');
@@ -724,6 +726,7 @@ ROOM.ListenAlong = {
   },
 
   _removeCompactCard: function () {
+    if (window.ROOM && ROOM.CapsuleStack) ROOM.CapsuleStack.unregister('listen-along');
     if (this._bubbleEl) {
       this._bubbleEl.remove();
       this._bubbleEl = null;
