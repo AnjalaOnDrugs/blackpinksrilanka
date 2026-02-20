@@ -16,6 +16,7 @@ ROOM.Firebase = {
   _lastfmDebounceTimer: null,
   _processedEventIds: {},
   _presenceChangeHandler: null,
+  _initialSyncTimer: null,       // short-lived timer to catch initial data race
 
   init: function (roomId) {
     this.roomId = roomId;
@@ -45,6 +46,23 @@ ROOM.Firebase = {
       self.refreshUI();
     };
     ROOM.Presence.onPresenceChange(this._presenceChangeHandler);
+
+    // 1c. Initial sync: Convex subscription and RTDB presence arrive asynchronously.
+    // The first refreshUI() from either source may run before the other has data,
+    // resulting in an empty or incomplete render. Run a few catch-up refreshes
+    // during the first 6 seconds to ensure the UI renders once both sources are ready.
+    var syncCount = 0;
+    this._initialSyncTimer = setInterval(function () {
+      syncCount++;
+      if (self.rawParticipantsCache && self.rawParticipantsCache.length > 0) {
+        self.refreshUI();
+      }
+      // Stop after 6 attempts (6 seconds) — by then both sources should have delivered
+      if (syncCount >= 6) {
+        clearInterval(self._initialSyncTimer);
+        self._initialSyncTimer = null;
+      }
+    }, 1000);
 
     // 2. Subscribe to events (drives mini event animations)
     var eventSince = this._initTimestamp;
@@ -275,6 +293,11 @@ ROOM.Firebase = {
   },
 
   destroy: function () {
+    // Clear initial sync timer
+    if (this._initialSyncTimer) {
+      clearInterval(this._initialSyncTimer);
+      this._initialSyncTimer = null;
+    }
     // Unregister presence change listener
     if (this._presenceChangeHandler) {
       ROOM.Presence.offPresenceChange(this._presenceChangeHandler);
