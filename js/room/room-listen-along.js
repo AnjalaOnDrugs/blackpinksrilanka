@@ -977,10 +977,10 @@ ROOM.ListenAlong = {
       });
     }
 
-    // Auto-dismiss after 8 seconds
+    // Auto-dismiss after 20 seconds
     setTimeout(function () {
       self._dismissThankYou();
-    }, 8000);
+    }, 20000);
 
     // Confetti celebration
     if (ROOM.Animations && ROOM.Animations.spawnConfetti) {

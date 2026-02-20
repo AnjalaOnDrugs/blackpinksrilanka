@@ -305,24 +305,24 @@ ROOM.RunPlaylist = {
     card.innerHTML =
       '<div class="room-run-playlist-glow"></div>' +
       '<div class="room-run-playlist-content">' +
-        '<div class="room-run-playlist-header">' +
-          '<div class="room-run-playlist-badge">' +
-            '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">' +
-              '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>' +
-            '</svg>' +
-            ' RUN THE PLAYLIST' +
-          '</div>' +
-          '<div class="room-run-playlist-header-actions">' +
-            '<button class="room-run-playlist-quit" id="runPlaylistQuitBtn" type="button">Quit</button>' +
-            '<button class="room-run-playlist-minimize" id="runPlaylistMinimizeBtn" type="button" aria-label="Minimize">-</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="room-run-playlist-title">Your Personal Playlist Challenge</div>' +
-        '<div class="room-run-playlist-songs" id="runPlaylistSongs"></div>' +
-        '<div class="room-run-playlist-status" id="runPlaylistStatus"></div>' +
-        '<div class="room-run-playlist-points">' +
-          '<span class="room-run-playlist-points-label">Complete all 4 songs for <strong>5 points</strong>!</span>' +
-        '</div>' +
+      '<div class="room-run-playlist-header">' +
+      '<div class="room-run-playlist-badge">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">' +
+      '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>' +
+      '</svg>' +
+      ' RUN THE PLAYLIST' +
+      '</div>' +
+      '<div class="room-run-playlist-header-actions">' +
+      '<button class="room-run-playlist-quit" id="runPlaylistQuitBtn" type="button">Quit</button>' +
+      '<button class="room-run-playlist-minimize" id="runPlaylistMinimizeBtn" type="button" aria-label="Minimize">-</button>' +
+      '</div>' +
+      '</div>' +
+      '<div class="room-run-playlist-title">Your Personal Playlist Challenge</div>' +
+      '<div class="room-run-playlist-songs" id="runPlaylistSongs"></div>' +
+      '<div class="room-run-playlist-status" id="runPlaylistStatus"></div>' +
+      '<div class="room-run-playlist-points">' +
+      '<span class="room-run-playlist-points-label">Complete all 4 songs for <strong>5 points</strong>!</span>' +
+      '</div>' +
       '</div>';
 
     overlay.appendChild(card);
@@ -377,12 +377,12 @@ ROOM.RunPlaylist = {
         var pct = Math.min(100, (this._currentSongSeconds / required) * 100);
         progressHtml =
           '<div class="room-run-playlist-song-progress">' +
-            '<div class="room-run-playlist-song-progress-bar">' +
-              '<div class="room-run-playlist-song-progress-fill" data-song-index="' + i + '" style="width:' + pct + '%"></div>' +
-            '</div>' +
-            '<span class="room-run-playlist-song-timer" data-song-timer="' + i + '">' +
-              this._currentSongSeconds + 's / ' + required + 's' +
-            '</span>' +
+          '<div class="room-run-playlist-song-progress-bar">' +
+          '<div class="room-run-playlist-song-progress-fill" data-song-index="' + i + '" style="width:' + pct + '%"></div>' +
+          '</div>' +
+          '<span class="room-run-playlist-song-timer" data-song-timer="' + i + '">' +
+          this._currentSongSeconds + 's / ' + required + 's' +
+          '</span>' +
           '</div>';
       }
 
@@ -392,8 +392,8 @@ ROOM.RunPlaylist = {
         '<div class="room-run-playlist-song-number">' + (i + 1) + '</div>' +
         '<div class="room-run-playlist-song-status">' + statusIcon + '</div>' +
         '<div class="room-run-playlist-song-info">' +
-          '<div class="room-run-playlist-song-name">' + this._esc(song.name) + '</div>' +
-          '<div class="room-run-playlist-song-artist">' + this._esc(song.artist) + '</div>' +
+        '<div class="room-run-playlist-song-name">' + this._esc(song.name) + '</div>' +
+        '<div class="room-run-playlist-song-artist">' + this._esc(song.artist) + '</div>' +
         '</div>' +
         progressHtml;
 
@@ -512,9 +512,9 @@ ROOM.RunPlaylist = {
     capsule.innerHTML =
       '<div class="room-run-playlist-capsule-glare"></div>' +
       '<div class="room-run-playlist-capsule-icon">' +
-        '<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">' +
-          '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>' +
-        '</svg>' +
+      '<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">' +
+      '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>' +
+      '</svg>' +
       '</div>' +
       '<div class="room-run-playlist-capsule-label">RUN PLAYLIST</div>' +
       '<div class="room-run-playlist-capsule-progress" id="runPlaylistCapsuleProgress">0/4</div>' +
@@ -785,9 +785,9 @@ ROOM.RunPlaylist = {
         var s = this._eventData.songs[i];
         songsHtml +=
           '<div class="room-run-playlist-ty-song">' +
-            '<span class="room-run-playlist-ty-song-check">✅</span>' +
-            '<span class="room-run-playlist-ty-song-name">' + this._esc(s.name) + '</span>' +
-            '<span class="room-run-playlist-ty-song-artist">' + this._esc(s.artist) + '</span>' +
+          '<span class="room-run-playlist-ty-song-check">✅</span>' +
+          '<span class="room-run-playlist-ty-song-name">' + this._esc(s.name) + '</span>' +
+          '<span class="room-run-playlist-ty-song-artist">' + this._esc(s.artist) + '</span>' +
           '</div>';
       }
     }
@@ -797,16 +797,16 @@ ROOM.RunPlaylist = {
     overlay.innerHTML =
       '<div class="room-run-playlist-ty-backdrop"></div>' +
       '<div class="room-run-playlist-ty-modal">' +
-        '<div class="room-run-playlist-ty-icon">' +
-          '<svg viewBox="0 0 24 24" fill="#FA5BFF" width="56" height="56">' +
-            '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>' +
-          '</svg>' +
-        '</div>' +
-        '<div class="room-run-playlist-ty-title">Playlist Complete!</div>' +
-        '<div class="room-run-playlist-ty-points-big">+' + (pointsAwarded || 5) + ' points earned!</div>' +
-        '<div class="room-run-playlist-ty-desc">You played all 4 songs! Amazing!</div>' +
-        '<div class="room-run-playlist-ty-list">' + songsHtml + '</div>' +
-        '<button class="room-run-playlist-ty-close" id="runPlaylistCloseBtn">Close</button>' +
+      '<div class="room-run-playlist-ty-icon">' +
+      '<svg viewBox="0 0 24 24" fill="#FA5BFF" width="56" height="56">' +
+      '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>' +
+      '</svg>' +
+      '</div>' +
+      '<div class="room-run-playlist-ty-title">Playlist Complete!</div>' +
+      '<div class="room-run-playlist-ty-points-big">+' + (pointsAwarded || 5) + ' points earned!</div>' +
+      '<div class="room-run-playlist-ty-desc">You played all 4 songs! Amazing!</div>' +
+      '<div class="room-run-playlist-ty-list">' + songsHtml + '</div>' +
+      '<button class="room-run-playlist-ty-close" id="runPlaylistCloseBtn">Close</button>' +
       '</div>';
 
     document.body.appendChild(overlay);
@@ -821,7 +821,7 @@ ROOM.RunPlaylist = {
 
     setTimeout(function () {
       self._dismissThankYou();
-    }, 8000);
+    }, 30000);
 
     if (ROOM.Animations && ROOM.Animations.spawnConfetti) {
       ROOM.Animations.spawnConfetti(40);
