@@ -17,6 +17,9 @@ ROOM.RunPlaylist = {
   _currentSongSeconds: 0,
   _currentSongPlatform: null,
   _isListeningToCorrectSong: false,
+  _albumArtCache: {},
+  _capsuleArtLoaded: false,
+  _successLottieDataUri: 'data:application/octet-stream;base64,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',
 
   _cardEl: null,
   _compactEl: null,
@@ -244,6 +247,7 @@ ROOM.RunPlaylist = {
         // All 4 songs done!
         self._eventData.songs[idx].status = 'completed';
         self._eventData.currentSongIndex = self._eventData.songs.length;
+        self._playCapsuleSuccessAnimation();
         self._handleCompletion(result.pointsAwarded);
       } else {
         // Advance to next
@@ -253,6 +257,9 @@ ROOM.RunPlaylist = {
           self._eventData.songs[result.nextIndex].status = 'active';
         }
         self._refreshSongList();
+
+        // Play success animation on capsule, then load next album art
+        self._playCapsuleSuccessAnimation();
 
         if (ROOM.Animations && ROOM.Animations.showToast) {
           var nextSong = self._eventData.songs[result.nextIndex];
@@ -356,6 +363,7 @@ ROOM.RunPlaylist = {
   },
 
   _refreshSongList: function () {
+    var self = this;
     var container = this._cardEl ? this._cardEl.querySelector('#runPlaylistSongs') : null;
     if (!container || !this._eventData) return;
     container.innerHTML = '';
@@ -365,11 +373,20 @@ ROOM.RunPlaylist = {
       var isActive = song.status === 'active';
       var isCompleted = song.status === 'completed';
 
-      var statusIcon = isCompleted ? '✅' : isActive ? '🎵' : '🔒';
+      var statusIcon = isCompleted ? '<img src="assets/Icons/musician.png" width="20" height="20" style="object-fit: contain;">' : isActive ?
+        ('<div class="room-voice-bubble-wave">' +
+          '<div class="room-voice-wave-bar"></div>' +
+          '<div class="room-voice-wave-bar"></div>' +
+          '<div class="room-voice-wave-bar"></div>' +
+          '<div class="room-voice-wave-bar"></div>' +
+          '<div class="room-voice-wave-bar"></div>' +
+          '</div>') :
+        '<img src="assets/Icons/lock.png" width="20" height="20" style="object-fit: contain; opacity: 0.6;">';
       var songClass = 'room-run-playlist-song';
       if (isActive) songClass += ' room-run-playlist-song--active';
       if (isCompleted) songClass += ' room-run-playlist-song--completed';
       if (song.status === 'pending') songClass += ' room-run-playlist-song--pending';
+      if (isActive && this._isListeningToCorrectSong) songClass += ' room-run-playlist-song--playing';
 
       var progressHtml = '';
       if (isActive) {
@@ -389,6 +406,7 @@ ROOM.RunPlaylist = {
       var entry = document.createElement('div');
       entry.className = songClass;
       entry.innerHTML =
+        '<div class="room-run-playlist-song-bg" id="runPlaylistSongBg-' + i + '"></div>' +
         '<div class="room-run-playlist-song-number">' + (i + 1) + '</div>' +
         '<div class="room-run-playlist-song-status">' + statusIcon + '</div>' +
         '<div class="room-run-playlist-song-info">' +
@@ -398,6 +416,16 @@ ROOM.RunPlaylist = {
         progressHtml;
 
       container.appendChild(entry);
+
+      // Fetch album art and set background
+      (function (idx, songName, songArtist) {
+        self._fetchAlbumArt(songName, songArtist, function (artUrl) {
+          var bgEl = entry.querySelector('#runPlaylistSongBg-' + idx);
+          if (bgEl && artUrl) {
+            bgEl.style.backgroundImage = 'url("' + self._esc(artUrl) + '")';
+          }
+        });
+      })(i, song.name, song.artist);
     }
 
     this._updateStatusBar();
@@ -414,6 +442,7 @@ ROOM.RunPlaylist = {
     }
 
     this._updateCapsuleProgress();
+    this._updateCapsuleRing();
   },
 
   _updateStatusBar: function () {
@@ -421,6 +450,16 @@ ROOM.RunPlaylist = {
     if (!statusEl || !this._eventData) return;
 
     var idx = this._eventData.currentSongIndex;
+    var songEls = this._cardEl.querySelectorAll('.room-run-playlist-song');
+
+    for (var j = 0; j < songEls.length; j++) {
+      if (j === idx && this._isListeningToCorrectSong) {
+        songEls[j].classList.add('room-run-playlist-song--playing');
+      } else {
+        songEls[j].classList.remove('room-run-playlist-song--playing');
+      }
+    }
+
     if (idx >= this._eventData.songs.length) {
       statusEl.innerHTML =
         '<div class="room-run-playlist-status-icon">🎉</div>' +
@@ -439,11 +478,138 @@ ROOM.RunPlaylist = {
       statusEl.classList.remove('room-run-playlist-status--waiting');
     } else {
       statusEl.innerHTML =
-        '<div class="room-run-playlist-status-icon">▶️</div>' +
+        '<div class="room-run-playlist-status-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5.14v14l11-7-11-7z"/></svg></div>' +
         '<span>Play <strong>' + this._esc(currentSong.name) + '</strong> to continue!</span>';
       statusEl.classList.remove('room-run-playlist-status--listening');
       statusEl.classList.add('room-run-playlist-status--waiting');
     }
+  },
+
+  // ========== ALBUM ART ==========
+
+  _fetchAlbumArt: function (songName, songArtist, callback) {
+    var self = this;
+    var cacheKey = songArtist + '::' + songName;
+
+    if (this._albumArtCache[cacheKey]) {
+      if (callback) callback(this._albumArtCache[cacheKey]);
+      return;
+    }
+
+    var apiKey = CONFIG.lastfmApiKey;
+    if (!apiKey) return;
+
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo' +
+      '&api_key=' + encodeURIComponent(apiKey) +
+      '&artist=' + encodeURIComponent(songArtist) +
+      '&track=' + encodeURIComponent(songName) +
+      '&format=json';
+
+    fetch(url)
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        var artUrl = null;
+        if (json.track && json.track.album && json.track.album.image) {
+          var images = json.track.album.image;
+          for (var i = images.length - 1; i >= 0; i--) {
+            if (images[i]['#text'] && images[i]['#text'].length > 0) {
+              artUrl = images[i]['#text'];
+              break;
+            }
+          }
+        }
+        if (artUrl) {
+          self._albumArtCache[cacheKey] = artUrl;
+          if (callback) callback(artUrl);
+        }
+      })
+      .catch(function () { /* silent fail */ });
+  },
+
+  _updateCapsuleAlbumArt: function () {
+    if (!this._compactEl || !this._eventData) return;
+    var idx = this._eventData.currentSongIndex;
+    if (idx >= this._eventData.songs.length) return;
+
+    var song = this._eventData.songs[idx];
+    var self = this;
+
+    this._fetchAlbumArt(song.name, song.artist, function (artUrl) {
+      var artEl = self._compactEl ? self._compactEl.querySelector('#runPlaylistCapsuleArt') : null;
+      if (!artEl) return;
+      artEl.innerHTML = '<img src="' + self._esc(artUrl) + '" alt="Album art" class="room-run-playlist-capsule-art-img" loading="lazy">';
+      self._capsuleArtLoaded = true;
+    });
+  },
+
+  _updateCapsuleRing: function () {
+    var ringFill = this._compactEl ? this._compactEl.querySelector('#runPlaylistCapsuleRingFill') : null;
+    if (!ringFill) return;
+
+    var required = this._currentSongPlatform === 'youtube' ? 60 : 30;
+    var pct = Math.min(1, this._currentSongSeconds / required);
+    var circumference = 2 * Math.PI * 32; // r=32
+    var offset = circumference * (1 - pct);
+    ringFill.style.strokeDasharray = circumference;
+    ringFill.style.strokeDashoffset = offset;
+  },
+
+  _playCapsuleSuccessAnimation: function () {
+    var self = this;
+    var wrap = this._compactEl ? this._compactEl.querySelector('#runPlaylistCapsuleRingWrap') : null;
+    if (!wrap) return;
+
+    var artCircle = wrap.querySelector('#runPlaylistCapsuleArt');
+    var lottieContainer = wrap.querySelector('#runPlaylistCapsuleLottie');
+    var ringFill = wrap.querySelector('#runPlaylistCapsuleRingFill');
+
+    // Flash the ring green briefly
+    if (ringFill) {
+      ringFill.style.stroke = '#25D366';
+    }
+
+    // Fade out album art, show lottie
+    if (artCircle) {
+      artCircle.classList.add('room-run-playlist-capsule-art-circle--fade-out');
+    }
+
+    if (lottieContainer) {
+      lottieContainer.innerHTML = '<dotlottie-player src="' + self._successLottieDataUri + '" autoplay speed="1" style="width:60px;height:60px;"></dotlottie-player>';
+      lottieContainer.classList.add('room-run-playlist-capsule-lottie--visible');
+    }
+
+    // After lottie plays (~1.5s), fade it out and load next song art
+    setTimeout(function () {
+      if (lottieContainer) {
+        lottieContainer.classList.remove('room-run-playlist-capsule-lottie--visible');
+        lottieContainer.classList.add('room-run-playlist-capsule-lottie--fade-out');
+      }
+
+      // Reset ring
+      if (ringFill) {
+        ringFill.style.stroke = '';
+        var circumference = 2 * Math.PI * 32;
+        ringFill.style.strokeDasharray = circumference;
+        ringFill.style.strokeDashoffset = circumference;
+      }
+
+      setTimeout(function () {
+        // Clean up lottie
+        if (lottieContainer) {
+          lottieContainer.innerHTML = '';
+          lottieContainer.classList.remove('room-run-playlist-capsule-lottie--fade-out');
+        }
+
+        // Fade art back in with next song
+        if (artCircle) {
+          artCircle.classList.remove('room-run-playlist-capsule-art-circle--fade-out');
+        }
+
+        // Load next song's album art
+        self._capsuleArtLoaded = false;
+        self._updateCapsuleAlbumArt();
+      }, 400);
+    }, 1800);
   },
 
   // ========== UI: COMPACT / CAPSULE VIEW ==========
@@ -519,6 +685,16 @@ ROOM.RunPlaylist = {
       '<div class="room-run-playlist-capsule-label">RUN PLAYLIST</div>' +
       '<div class="room-run-playlist-capsule-progress" id="runPlaylistCapsuleProgress">0/4</div>' +
       '<div class="room-run-playlist-capsule-dots" id="runPlaylistCapsuleDots"></div>' +
+      '<div class="room-run-playlist-capsule-ring-wrap" id="runPlaylistCapsuleRingWrap">' +
+      '<svg class="room-run-playlist-capsule-ring-svg" viewBox="0 0 72 72" width="72" height="72">' +
+      '<circle class="room-run-playlist-capsule-ring-bg" cx="36" cy="36" r="32" />' +
+      '<circle class="room-run-playlist-capsule-ring-fill" id="runPlaylistCapsuleRingFill" cx="36" cy="36" r="32" />' +
+      '</svg>' +
+      '<div class="room-run-playlist-capsule-art-circle" id="runPlaylistCapsuleArt">' +
+      '<div class="room-run-playlist-capsule-art-placeholder">♪</div>' +
+      '</div>' +
+      '<div class="room-run-playlist-capsule-lottie" id="runPlaylistCapsuleLottie"></div>' +
+      '</div>' +
       '<div class="room-run-playlist-capsule-glow"></div>';
 
     // No people bubbles needed for personal event, but keep container for CapsuleStack compatibility
@@ -575,6 +751,8 @@ ROOM.RunPlaylist = {
     }
 
     this._updateCapsuleDots();
+    this._updateCapsuleAlbumArt();
+    this._updateCapsuleRing();
   },
 
   _updateCapsuleDots: function () {
@@ -728,6 +906,8 @@ ROOM.RunPlaylist = {
     this._currentSongSeconds = 0;
     this._currentSongPlatform = null;
     this._isListeningToCorrectSong = false;
+    this._albumArtCache = {};
+    this._capsuleArtLoaded = false;
     this._stopSongCheck();
     this._pauseListenTimer();
     this._stopProgressSave();
@@ -785,7 +965,7 @@ ROOM.RunPlaylist = {
         var s = this._eventData.songs[i];
         songsHtml +=
           '<div class="room-run-playlist-ty-song">' +
-          '<span class="room-run-playlist-ty-song-check">✅</span>' +
+          '<span class="room-run-playlist-ty-song-check"><img src="assets/Icons/musician.png" width="20" height="20" style="object-fit: contain;"></span>' +
           '<span class="room-run-playlist-ty-song-name">' + this._esc(s.name) + '</span>' +
           '<span class="room-run-playlist-ty-song-artist">' + this._esc(s.artist) + '</span>' +
           '</div>';

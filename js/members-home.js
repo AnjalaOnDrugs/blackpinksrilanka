@@ -31,6 +31,22 @@ checkAuthState().then(async (user) => {
     } else if (profileInitialEl) {
       profileInitialEl.textContent = username.charAt(0).toUpperCase();
     }
+
+    // Load streak badge on calendar icon
+    if (userData && userData.phoneNumber) {
+      try {
+        var streakResult = await ConvexService.query('checkins:getStreak', {
+          phoneNumber: userData.phoneNumber
+        });
+        var streakBadge = document.getElementById('streakBadge');
+        if (streakBadge && streakResult && streakResult.streak > 0) {
+          streakBadge.textContent = streakResult.streak;
+          streakBadge.style.display = 'flex';
+        }
+      } catch (streakErr) {
+        console.error('Error loading streak:', streakErr);
+      }
+    }
   } catch (err) {
     console.error('Error loading user data:', err);
     document.getElementById('greetingName').innerHTML =

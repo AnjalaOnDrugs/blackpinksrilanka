@@ -213,5 +213,13 @@ export default defineSchema({
     rank: v.number(),
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"]),
+
+  // Daily check-ins for calendar page
+  checkins: defineTable({
+    phoneNumber: v.string(),
+    dateKey: v.string(),        // "YYYY-MM-DD" (Sri Lanka time)
+    checkedInAt: v.number(),
+  }).index("by_phone", ["phoneNumber"])
+    .index("by_phone_date", ["phoneNumber", "dateKey"]),
 });
 

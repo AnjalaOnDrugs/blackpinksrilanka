@@ -80,7 +80,7 @@ const CONFIG = {
   // Run the Playlist event settings (personal event)
   runPlaylistCheckInterval: 60000,         // Check every 60s if we should trigger
   runPlaylistCooldown: 3600000,            // 1 hour between events per user
-  runPlaylistTriggerChance: 1,          // 15% chance per check once cooldown elapsed
+  runPlaylistTriggerChance: 0.15,          // 15% chance per check once cooldown elapsed
   runPlaylistSongCheckInterval: 3000,      // Check every 3s if user is playing the correct song
   runPlaylistProgressSaveInterval: 5000,   // Save listen progress to server every 5s
 

@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+
+<head>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <meta charset="utf-8">
+  <title>Calendar - BLACKPINK SRI LANKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/calendar.css">
+  <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+</head>
+
+<body class="calendar-body">
+
+  <!-- Background Effects -->
+  <div class="cal-bg">
+    <div class="cal-bg-glow cal-bg-glow--1"></div>
+    <div class="cal-bg-glow cal-bg-glow--2"></div>
+    <div class="cal-bg-glow cal-bg-glow--3"></div>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="cal-topbar">
+    <a class="cal-topbar-brand" href="members.html">
+      <img src="assets/Logo.png" alt="BPSL" width="34" height="34">
+      <span>CALENDAR</span>
+    </a>
+    <div class="cal-topbar-right">
+      <div class="cal-streak" id="streakDisplay">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M12 23c-3.6 0-8-3.12-8-8.5C4 9.5 10 2 12 1c2 1 8 8.5 8 13.5 0 5.38-4.4 8.5-8 8.5z"/>
+        </svg>
+        <span id="streakCount">0</span>
+      </div>
+      <a href="members.html" class="cal-topbar-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="cal-main" id="calLoading">
+    <div class="cal-loading">
+      <div class="cal-loading-spinner"></div>
+      <div class="cal-loading-text">Loading calendar...</div>
+    </div>
+  </div>
+
+  <!-- Calendar Content (hidden until loaded) -->
+  <div class="cal-main" id="calContent" style="display: none;">
+
+    <!-- Month Navigation -->
+    <div class="cal-month-nav">
+      <button class="cal-month-btn" id="prevMonthBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <div class="cal-month-title" id="monthTitle">February 2026</div>
+      <button class="cal-month-btn" id="nextMonthBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="cal-grid">
+      <div class="cal-day-headers">
+        <div class="cal-day-header">Mon</div>
+        <div class="cal-day-header">Tue</div>
+        <div class="cal-day-header">Wed</div>
+        <div class="cal-day-header">Thu</div>
+        <div class="cal-day-header">Fri</div>
+        <div class="cal-day-header">Sat</div>
+        <div class="cal-day-header">Sun</div>
+      </div>
+      <div class="cal-days" id="calDays">
+        <!-- Day cells rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Check-in Button Section -->
+    <div class="cal-checkin-section" id="checkinSection">
+      <button class="cal-checkin-btn" id="calCheckinBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>Check In Today</span>
+      </button>
+      <div class="cal-checkin-done" id="checkinDone" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Checked in today!</span>
+      </div>
+    </div>
+
+    <!-- Special Day Info Panel -->
+    <div class="cal-special-panel" id="specialPanel" style="display:none;">
+      <div class="cal-special-badge-icon" id="specialBadgeIcon"></div>
+      <div class="cal-special-title" id="specialTitle"></div>
+      <div class="cal-special-subtitle" id="specialSubtitle"></div>
+    </div>
+
+  </div>
+
+  <!-- Animation Overlay -->
+  <div class="cal-animation-overlay" id="calAnimationOverlay"></div>
+
+  <!-- Toast -->
+  <div class="cal-toast" id="calToast"></div>
+
+  <!-- Firebase SDK (Auth only) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <!-- Convex Browser SDK -->
+  <script src="https://unpkg.com/convex@1.3.1/dist/browser.bundle.js"></script>
+
+  <!-- Configuration and Auth Scripts -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/convex-client.js"></script>
+  <script src="js/auth.js"></script>
+
+  <!-- Calendar Logic -->
+  <script src="js/calendar.js"></script>
+
+</body>
+
+</html>
