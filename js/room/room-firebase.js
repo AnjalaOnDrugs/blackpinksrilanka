@@ -204,7 +204,20 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7);
+    // 8. Subscribe to active Vroom race events (for late joiners)
+    var unsub8 = ConvexService.watch(
+      'vroom:getActiveVroom',
+      { roomId: roomId },
+      function (event) {
+        if (event && event.status === 'active') {
+          if (ROOM.Vroom && ROOM.Vroom.handleActiveEvent) {
+            ROOM.Vroom.handleActiveEvent(event);
+          }
+        }
+      }
+    );
+
+    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8);
   },
 
   getParticipants: function () {

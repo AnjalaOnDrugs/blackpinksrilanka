@@ -123,6 +123,7 @@ async function initRoom(roomId) {
   ROOM.ListenAlong.init();
   ROOM.FillMap.init();
   ROOM.RunPlaylist.init();
+  ROOM.Vroom.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 
@@ -575,6 +576,7 @@ function setupCleanup() {
     ROOM.Events.destroy();
     ROOM.ListenAlong.destroy();
     ROOM.FillMap.destroy();
+    ROOM.Vroom.destroy();
     ROOM.HeatMap.destroy();
     ROOM.Firebase.destroy();
     ROOM.Presence.destroy();

@@ -85,5 +85,34 @@ const CONFIG = {
   runPlaylistProgressSaveInterval: 5000,   // Save listen progress to server every 5s
 
   // Klipy GIF API
-  klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv'
+  klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv',
+
+  // Vroom race event settings
+  vroomCheckInterval: 60000,           // Check every 60s if we should trigger
+  vroomCooldown: 7200000,              // 2 hours between events
+  vroomTriggerChance: 1,            // 15% chance per check once cooldown elapsed
+  vroomJoinCheckInterval: 5000,        // Check every 5s for auto-join detection
+
+  // Solo songs per member (for vroom race)
+  vroomSoloSongs: {
+    jennie: [{ name: "SOLO", artist: "Jennie" }],
+    lisa: [{ name: "MONEY", artist: "Lisa" }, { name: "LALISA", artist: "Lisa" }],
+    jisoo: [{ name: "Flower", artist: "Jisoo" }],
+    rose: [{ name: "On The Ground", artist: "Rosé" }, { name: "APT.", artist: "Rosé" }, { name: "number one girl", artist: "Rosé" }],
+  },
+
+  // Member display info
+  vroomMembers: ['jisoo', 'jennie', 'rose', 'lisa'],
+  vroomMemberLabels: {
+    jisoo: 'Jisoo',
+    jennie: 'Jennie',
+    rose: 'Rosé',
+    lisa: 'Lisa',
+  },
+  vroomMemberColors: {
+    jisoo: '#ef4444',
+    jennie: '#fbbf24',
+    rose: '#60a5fa',
+    lisa: '#a78bfa',
+  },
 };

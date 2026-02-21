@@ -214,6 +214,66 @@ export default defineSchema({
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"]),
 
+  // Vroom race events: 4-lane member race fueled by solo song streams
+  vroomEvents: defineTable({
+    roomId: v.string(),
+    // Target streams to win = onlineUsers × 3
+    target: v.number(),
+    // One lane per member with stream count and participants
+    lanes: v.object({
+      jisoo: v.object({
+        streams: v.number(),
+        participants: v.array(
+          v.object({
+            phoneNumber: v.string(),
+            username: v.string(),
+            profilePicture: v.optional(v.string()),
+            avatarColor: v.string(),
+          })
+        ),
+      }),
+      jennie: v.object({
+        streams: v.number(),
+        participants: v.array(
+          v.object({
+            phoneNumber: v.string(),
+            username: v.string(),
+            profilePicture: v.optional(v.string()),
+            avatarColor: v.string(),
+          })
+        ),
+      }),
+      rose: v.object({
+        streams: v.number(),
+        participants: v.array(
+          v.object({
+            phoneNumber: v.string(),
+            username: v.string(),
+            profilePicture: v.optional(v.string()),
+            avatarColor: v.string(),
+          })
+        ),
+      }),
+      lisa: v.object({
+        streams: v.number(),
+        participants: v.array(
+          v.object({
+            phoneNumber: v.string(),
+            username: v.string(),
+            profilePicture: v.optional(v.string()),
+            avatarColor: v.string(),
+          })
+        ),
+      }),
+    }),
+    winner: v.optional(v.string()),
+    startedAt: v.number(),
+    status: v.string(), // "active" | "finished"
+    pointsAwarded: v.optional(v.boolean()),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_status", ["roomId", "status"]),
+
   // Daily check-ins for calendar page
   checkins: defineTable({
     phoneNumber: v.string(),

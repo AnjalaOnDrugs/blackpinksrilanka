@@ -176,6 +176,18 @@ ROOM.Events = {
       case 'fill_map_failed':
         ROOM.FillMap && ROOM.FillMap.handleFailed(eventData.data);
         break;
+      case 'vroom_start':
+        ROOM.Vroom && ROOM.Vroom.handleStart(eventData.data);
+        break;
+      case 'vroom_join':
+        ROOM.Vroom && ROOM.Vroom.handleJoin(eventData.data);
+        break;
+      case 'vroom_progress':
+        ROOM.Vroom && ROOM.Vroom.handleProgress(eventData.data);
+        break;
+      case 'vroom_finish':
+        ROOM.Vroom && ROOM.Vroom.handleFinish(eventData.data);
+        break;
     }
   },
 

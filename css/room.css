@@ -7367,3 +7367,601 @@
     font-size: 24px;
   }
 }
+
+
+/* ========== VROOM RACE — MY LAMBORGHINI GO VROOM VROOM ========== */
+
+.room-vroom-card {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  background: rgba(18, 14, 28, 0.82);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  z-index: 190;
+  overflow: hidden;
+  animation: roomVroomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: bottom right;
+}
+
+.room-vroom-card--minimized {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(24px) scale(0.95);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.room-vroom-card--exit {
+  animation: roomVroomOut 0.5s ease both;
+}
+
+@keyframes roomVroomIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes roomVroomOut {
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+.room-vroom-glow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 80px;
+  background: radial-gradient(ellipse, rgba(247, 166, 185, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.room-vroom-content {
+  position: relative;
+  padding: 18px 20px 16px;
+}
+
+.room-vroom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.room-vroom-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+.room-vroom-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-vroom-minimize {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.room-vroom-minimize:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* ===== VROOM LANES ===== */
+
+.room-vroom-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-vroom-lane {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.room-vroom-lane--winner {
+  animation: vroomLaneWin 0.6s ease both;
+}
+
+@keyframes vroomLaneWin {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.room-vroom-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.room-vroom-lane-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.room-vroom-lane-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.room-vroom-track {
+  position: relative;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.room-vroom-track-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 20px;
+  opacity: 0.25;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.room-vroom-runner {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  z-index: 2;
+  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+.room-vroom-runner-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.room-vroom-finish-line {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #fff 0px,
+    #fff 3px,
+    #333 3px,
+    #333 6px
+  );
+  border-radius: 2px;
+  opacity: 0.4;
+}
+
+/* ===== VROOM AVATARS ===== */
+
+.room-vroom-avatars {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  min-height: 22px;
+  align-items: center;
+  padding-left: 2px;
+}
+
+.room-vroom-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  animation: vroomAvatarIn 0.3s ease both;
+}
+
+.room-vroom-avatar--extra {
+  background: rgba(255, 255, 255, 0.1) !important;
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes vroomAvatarIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== VROOM FOOTER ===== */
+
+.room-vroom-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.room-vroom-target {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+}
+
+.room-vroom-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.room-vroom-status--joined {
+  color: #25D366;
+}
+
+.room-vroom-status-icon {
+  font-size: 14px;
+}
+
+
+/* ===== VROOM CAPSULE / COMPACT VIEW ===== */
+
+.room-vroom-capsule {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) translateX(18px) scale(0.95);
+  width: 94px;
+  min-height: 180px;
+  background: rgba(18, 14, 28, 0.85);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-radius: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  z-index: 191;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 10px;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.room-vroom-capsule--visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.room-vroom-capsule--left {
+  right: auto;
+  left: 12px;
+}
+
+.room-vroom-capsule-glare {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 30px;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.room-vroom-capsule-icon {
+  font-size: 24px;
+  margin-bottom: 2px;
+}
+
+.room-vroom-capsule-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+.room-vroom-capsule-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 0 6px;
+}
+
+.room-vroom-capsule-bar-row {
+  display: flex;
+  align-items: center;
+}
+
+.room-vroom-capsule-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.room-vroom-capsule-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+  min-width: 0;
+}
+
+.room-vroom-capsule-glow {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 40px;
+  background: radial-gradient(ellipse, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ===== VROOM CAPSULE BUBBLES ===== */
+
+.room-vroom-capsule-bubbles {
+  position: fixed;
+  right: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 192;
+}
+
+.room-vroom-capsule-bubbles--visible {
+  opacity: 1;
+}
+
+.room-vroom-capsule-bubbles--left {
+  right: auto;
+  left: 12px;
+}
+
+.room-vroom-capsule-bubble {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  border: 2px solid rgba(18, 14, 28, 0.9);
+  animation: vroomBubbleFloat 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--bubble-delay, 0s);
+}
+
+.room-vroom-capsule-bubble--extra {
+  background: rgba(255, 255, 255, 0.1) !important;
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes vroomBubbleFloat {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ===== VROOM RESULT DIALOG ===== */
+
+.room-vroom-result {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: vroomResultIn 0.4s ease both;
+}
+
+.room-vroom-result--exit {
+  animation: vroomResultOut 0.4s ease both;
+}
+
+@keyframes vroomResultIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vroomResultOut {
+  to { opacity: 0; }
+}
+
+.room-vroom-result-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.room-vroom-result-modal {
+  position: relative;
+  background: rgba(20, 20, 35, 0.55);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  padding: 32px 36px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  animation: vroomModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes vroomModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.room-vroom-result-video {
+  margin-bottom: 16px;
+}
+
+.room-vroom-result-video video {
+  border-radius: 16px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.room-vroom-result-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.room-vroom-result-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+}
+
+.room-vroom-result-points {
+  font-size: 16px;
+  font-weight: 700;
+  color: #25D366;
+  margin-bottom: 20px;
+}
+
+.room-vroom-result-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 10px 28px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.room-vroom-result-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+
+/* ===== VROOM WINNER LANE GLOW ===== */
+
+.room-vroom-lane--winner .room-vroom-track {
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.room-vroom-lane--winner .room-vroom-track-fill {
+  opacity: 0.5;
+}
+
+.room-vroom-lane--winner .room-vroom-runner {
+  animation: vroomRunnerWin 0.5s ease infinite alternate;
+}
+
+@keyframes vroomRunnerWin {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.15); }
+}
+
+
+/* ===== VROOM MOBILE ===== */
+
+@media (max-width: 768px) {
+  .room-vroom-card {
+    right: 10px;
+    left: 10px;
+    bottom: 80px;
+    width: auto;
+  }
+
+  .room-vroom-runner {
+    width: 44px;
+    height: 44px;
+  }
+
+  .room-vroom-track {
+    height: 34px;
+  }
+
+  .room-vroom-result-modal {
+    padding: 24px 20px;
+  }
+}
