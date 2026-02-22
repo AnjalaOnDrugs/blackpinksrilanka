@@ -7,7 +7,7 @@ const MEMBERS = ["jisoo", "jennie", "rose", "lisa"] as const;
 
 // Helper: create an empty lane
 function emptyLane() {
-  return { streams: 0, participants: [] };
+  return { seconds: 0, participants: [] };
 }
 
 // Start a vroom race event (server-side dedup)
@@ -35,8 +35,8 @@ export const startVroom = mutation({
     // Must have 2+ online users
     if (args.onlineCount < 2) return null;
 
-    // Target = onlineUsers × 3
-    const target = Math.max(3, args.onlineCount * 3);
+    // Target = onlineUsers × 3 × 30 seconds (minimum 90s)
+    const target = Math.max(90, args.onlineCount * 3 * 30);
 
     // Create vroom event with empty lanes
     const eventId = await ctx.db.insert("vroomEvents", {
@@ -134,13 +134,14 @@ export const joinVroom = mutation({
   },
 });
 
-// Add a validated stream to a member's lane
-export const addVroomStream = mutation({
+// Add streamed seconds to a member's lane
+export const addVroomSeconds = mutation({
   args: {
     roomId: v.string(),
     vroomId: v.id("vroomEvents"),
     member: v.string(),
     phoneNumber: v.string(),
+    secondsToAdd: v.number(),
   },
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.vroomId);
@@ -148,6 +149,10 @@ export const addVroomStream = mutation({
 
     // Validate member
     if (!MEMBERS.includes(args.member as any)) return null;
+
+    // Clamp seconds to reasonable range (0-30s per report)
+    const secondsToAdd = Math.max(0, Math.min(30, args.secondsToAdd));
+    if (secondsToAdd <= 0) return null;
 
     const lanes = event.lanes as any;
 
@@ -157,11 +162,11 @@ export const addVroomStream = mutation({
     );
     if (!isParticipant) return null;
 
-    // Increment stream count
-    const newStreams = lanes[args.member].streams + 1;
+    // Accumulate seconds
+    const newSeconds = lanes[args.member].seconds + secondsToAdd;
     const updatedLane = {
       ...lanes[args.member],
-      streams: newStreams,
+      seconds: newSeconds,
     };
 
     const updatedLanes = {
@@ -170,7 +175,7 @@ export const addVroomStream = mutation({
     };
 
     // Check win condition
-    if (newStreams >= event.target) {
+    if (newSeconds >= event.target) {
       // This member wins!
       await ctx.db.patch(args.vroomId, {
         lanes: updatedLanes,
@@ -209,18 +214,18 @@ export const addVroomStream = mutation({
       data: {
         vroomId: args.vroomId,
         member: args.member,
-        streams: {
-          jisoo: updatedLanes.jisoo.streams,
-          jennie: updatedLanes.jennie.streams,
-          rose: updatedLanes.rose.streams,
-          lisa: updatedLanes.lisa.streams,
+        seconds: {
+          jisoo: updatedLanes.jisoo.seconds,
+          jennie: updatedLanes.jennie.seconds,
+          rose: updatedLanes.rose.seconds,
+          lisa: updatedLanes.lisa.seconds,
         },
         target: event.target,
       },
       createdAt: Date.now(),
     });
 
-    return { finished: false, streams: newStreams };
+    return { finished: false, seconds: newSeconds };
   },
 });
 

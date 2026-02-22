@@ -1,8 +1,8 @@
 /**
  * Room Vroom — "My Lamborghini Go Vroom Vroom"
- * 4-lane member race fueled by solo song streams.
+ * 4-lane member race fueled by solo song streaming seconds.
  * Auto-triggers every 2 hours; users join by streaming their bias member's solo.
- * First member lane to hit target streams wins the race.
+ * First member lane to hit target seconds wins the race.
  */
 
 window.ROOM = window.ROOM || {};
@@ -28,8 +28,8 @@ ROOM.Vroom = {
   _swipeStartX: null,
   _swipeStartY: null,
   _resultEl: null,
-  _streamWatchUnsub: null,
-  _lastKnownStreamCounts: null,
+  _streamReportInterval: null,
+  _lastStreamCheckTime: null,
 
   init: function () {
     this._fetchUserBias();
@@ -92,10 +92,10 @@ ROOM.Vroom = {
     this._activeEventId = data.vroomId;
     this._target = data.target;
     this._lanes = {
-      jisoo: { streams: 0, participants: [] },
-      jennie: { streams: 0, participants: [] },
-      rose: { streams: 0, participants: [] },
-      lisa: { streams: 0, participants: [] }
+      jisoo: { seconds: 0, participants: [] },
+      jennie: { seconds: 0, participants: [] },
+      rose: { seconds: 0, participants: [] },
+      lisa: { seconds: 0, participants: [] }
     };
     this._winner = null;
     this._hasJoined = false;
@@ -156,8 +156,8 @@ ROOM.Vroom = {
     var members = CONFIG.vroomMembers || ['jisoo', 'jennie', 'rose', 'lisa'];
     for (var i = 0; i < members.length; i++) {
       var m = members[i];
-      if (data.streams && typeof data.streams[m] === 'number') {
-        this._lanes[m].streams = data.streams[m];
+      if (data.seconds && typeof data.seconds[m] === 'number') {
+        this._lanes[m].seconds = data.seconds[m];
       }
     }
 
@@ -177,7 +177,7 @@ ROOM.Vroom = {
       for (var i = 0; i < members.length; i++) {
         var m = members[i];
         if (data.lanes[m]) {
-          this._lanes[m].streams = data.lanes[m].streams;
+          this._lanes[m].seconds = data.lanes[m].seconds;
         }
       }
     }
@@ -203,10 +203,10 @@ ROOM.Vroom = {
     this._activeEventId = event._id;
     this._target = event.target;
     this._lanes = {
-      jisoo: event.lanes.jisoo || { streams: 0, participants: [] },
-      jennie: event.lanes.jennie || { streams: 0, participants: [] },
-      rose: event.lanes.rose || { streams: 0, participants: [] },
-      lisa: event.lanes.lisa || { streams: 0, participants: [] }
+      jisoo: event.lanes.jisoo || { seconds: 0, participants: [] },
+      jennie: event.lanes.jennie || { seconds: 0, participants: [] },
+      rose: event.lanes.rose || { seconds: 0, participants: [] },
+      lisa: event.lanes.lisa || { seconds: 0, participants: [] }
     };
     this._winner = event.winner || null;
     this._hasJoined = false;
@@ -329,30 +329,33 @@ ROOM.Vroom = {
     });
   },
 
-  // ========== STREAM MONITORING ==========
+  // ========== STREAM SECONDS MONITORING ==========
 
   _startStreamMonitoring: function () {
     var self = this;
-    if (this._streamWatchUnsub) return;
+    if (this._streamReportInterval) return;
 
-    // Poll for stream changes every 5s
-    this._streamWatchInterval = setInterval(function () {
-      self._checkForNewStreams();
+    // Record the start time for elapsed calculation
+    this._lastStreamCheckTime = Date.now();
+
+    // Report streamed seconds every 5s
+    this._streamReportInterval = setInterval(function () {
+      self._reportStreamedSeconds();
     }, 5000);
   },
 
   _stopStreamMonitoring: function () {
-    if (this._streamWatchInterval) {
-      clearInterval(this._streamWatchInterval);
-      this._streamWatchInterval = null;
+    if (this._streamReportInterval) {
+      clearInterval(this._streamReportInterval);
+      this._streamReportInterval = null;
     }
+    this._lastStreamCheckTime = null;
   },
 
-  _checkForNewStreams: function () {
+  _reportStreamedSeconds: function () {
     if (!this._activeEventId || !this._hasJoined || !this._joinedMember) return;
     if (!ROOM.currentUser) return;
 
-    var self = this;
     var member = this._joinedMember;
     var soloSongs = CONFIG.vroomSoloSongs || {};
     var memberSongs = soloSongs[member] || [];
@@ -367,7 +370,11 @@ ROOM.Vroom = {
       }
     }
 
-    if (!me || !me.data.currentTrack || !me.data.currentTrack.nowPlaying) return;
+    if (!me || !me.data.currentTrack || !me.data.currentTrack.nowPlaying) {
+      // Not playing — reset timer so we don't count idle time
+      this._lastStreamCheckTime = Date.now();
+      return;
+    }
 
     // Check if user is still playing the correct solo song
     var isPlaying = false;
@@ -381,52 +388,28 @@ ROOM.Vroom = {
       }
     }
 
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      // Playing a different song — reset timer
+      this._lastStreamCheckTime = Date.now();
+      return;
+    }
 
-    // Query stream counts to detect new validated streams
-    // getUserStreamCounts returns { streams: [{trackName, trackArtist, platform, countedAt, ...}] }
-    ConvexService.query('streams:getUserStreamCounts', {
+    // Calculate elapsed seconds since last check
+    var now = Date.now();
+    var elapsed = (now - this._lastStreamCheckTime) / 1000;
+    this._lastStreamCheckTime = now;
+
+    // Only report if we have meaningful elapsed time (at least 1s)
+    if (elapsed < 1) return;
+
+    // Report seconds to backend
+    ConvexService.mutation('vroom:addVroomSeconds', {
       roomId: ROOM.Firebase.roomId,
-      phoneNumber: ROOM.currentUser.phoneNumber
-    }).then(function (result) {
-      if (!result || !result.streams || !self._activeEventId) return;
-
-      // Count solo song streams by matching track names using fuzzy matching
-      var totalSoloStreams = 0;
-      for (var i = 0; i < result.streams.length; i++) {
-        var stream = result.streams[i];
-        for (var s = 0; s < memberSongs.length; s++) {
-          if (ROOM.LastFM.isSameSong(
-            stream.trackName, stream.trackArtist,
-            memberSongs[s].name, memberSongs[s].artist
-          )) {
-            totalSoloStreams++;
-            break;
-          }
-        }
-      }
-
-      // Detect new streams since last check
-      if (self._lastKnownStreamCounts === null) {
-        self._lastKnownStreamCounts = totalSoloStreams;
-        return;
-      }
-
-      if (totalSoloStreams > self._lastKnownStreamCounts) {
-        var newStreams = totalSoloStreams - self._lastKnownStreamCounts;
-        self._lastKnownStreamCounts = totalSoloStreams;
-
-        // Report each new stream
-        for (var n = 0; n < newStreams; n++) {
-          ConvexService.mutation('vroom:addVroomStream', {
-            roomId: ROOM.Firebase.roomId,
-            vroomId: self._activeEventId,
-            member: member,
-            phoneNumber: ROOM.currentUser.phoneNumber
-          });
-        }
-      }
-    }).catch(function () { /* silent */ });
+      vroomId: this._activeEventId,
+      member: member,
+      phoneNumber: ROOM.currentUser.phoneNumber,
+      secondsToAdd: Math.round(elapsed)
+    });
   },
 
   // ========== UI: FULL VIEW ==========
@@ -450,14 +433,14 @@ ROOM.Vroom = {
       var m = members[i];
       var label = labels[m] || m;
       var color = colors[m] || '#f7a6b9';
-      var streams = this._lanes ? this._lanes[m].streams : 0;
-      var pct = this._target > 0 ? Math.min(100, (streams / this._target) * 100) : 0;
+      var secs = this._lanes ? this._lanes[m].seconds : 0;
+      var pct = this._target > 0 ? Math.min(100, (secs / this._target) * 100) : 0;
 
       lanesHtml +=
         '<div class="room-vroom-lane" data-member="' + m + '">' +
           '<div class="room-vroom-lane-header">' +
             '<span class="room-vroom-lane-label" style="color:' + color + '">' + this._esc(label) + '</span>' +
-            '<span class="room-vroom-lane-count" id="vroomCount_' + m + '">' + streams + '/' + this._target + '</span>' +
+            '<span class="room-vroom-lane-count" id="vroomCount_' + m + '">' + Math.round(secs) + 's/' + this._target + 's</span>' +
           '</div>' +
           '<div class="room-vroom-track">' +
             '<div class="room-vroom-track-fill" id="vroomFill_' + m + '" style="width:' + pct + '%;background:' + color + ';"></div>' +
@@ -483,7 +466,7 @@ ROOM.Vroom = {
         '</div>' +
         '<div class="room-vroom-lanes">' + lanesHtml + '</div>' +
         '<div class="room-vroom-footer">' +
-          '<div class="room-vroom-target">Target: ' + this._target + ' streams</div>' +
+          '<div class="room-vroom-target">Target: ' + this._target + 's</div>' +
           '<div class="room-vroom-status" id="vroomStatus">' +
             '<span class="room-vroom-status-icon">🎧</span>' +
             '<span>Play a solo song to join!</span>' +
@@ -532,8 +515,8 @@ ROOM.Vroom = {
     for (var i = 0; i < members.length; i++) {
       var m = members[i];
       var lane = this._lanes[m];
-      var streams = lane.streams;
-      var pct = this._target > 0 ? Math.min(100, (streams / this._target) * 100) : 0;
+      var secs = lane.seconds;
+      var pct = this._target > 0 ? Math.min(100, (secs / this._target) * 100) : 0;
 
       // Update fill
       var fill = document.getElementById('vroomFill_' + m);
@@ -543,15 +526,16 @@ ROOM.Vroom = {
       var runner = document.getElementById('vroomRunner_' + m);
       if (runner) runner.style.left = pct + '%';
 
-      // Update count
+      // Update count (show seconds)
       var count = document.getElementById('vroomCount_' + m);
-      if (count) count.textContent = streams + '/' + this._target;
+      if (count) count.textContent = Math.round(secs) + 's/' + this._target + 's';
 
       // Update video playback rate based on participant count
+      // More participants = faster animation (reflects concurrent streaming speed)
       var video = document.getElementById('vroomVideo_' + m);
       if (video) {
         var participantCount = lane.participants ? lane.participants.length : 0;
-        var rate = Math.min(3.0, 0.5 + (participantCount * 0.3));
+        var rate = Math.min(3.0, 0.5 + (participantCount * 0.5));
         try { video.playbackRate = rate; } catch (e) { /* silent */ }
       }
     }
@@ -833,8 +817,8 @@ ROOM.Vroom = {
     var members = CONFIG.vroomMembers || ['jisoo', 'jennie', 'rose', 'lisa'];
     for (var i = 0; i < members.length; i++) {
       var m = members[i];
-      var streams = this._lanes[m].streams;
-      var pct = this._target > 0 ? Math.min(100, (streams / this._target) * 100) : 0;
+      var secs = this._lanes[m].seconds;
+      var pct = this._target > 0 ? Math.min(100, (secs / this._target) * 100) : 0;
       var fill = document.getElementById('vroomCapsuleFill_' + m);
       if (fill) fill.style.width = pct + '%';
     }

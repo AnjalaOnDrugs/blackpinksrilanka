@@ -19,6 +19,7 @@ import type * as runPlaylist from "../runPlaylist.js";
 import type * as streams from "../streams.js";
 import type * as users from "../users.js";
 import type * as voiceMessages from "../voiceMessages.js";
+import type * as vroom from "../vroom.js";
 
 import type {
   ApiFromModules,
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   streams: typeof streams;
   users: typeof users;
   voiceMessages: typeof voiceMessages;
+  vroom: typeof vroom;
 }>;
 
 /**

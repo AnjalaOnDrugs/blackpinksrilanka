@@ -217,12 +217,12 @@ export default defineSchema({
   // Vroom race events: 4-lane member race fueled by solo song streams
   vroomEvents: defineTable({
     roomId: v.string(),
-    // Target streams to win = onlineUsers × 3
+    // Target seconds to win = onlineUsers × 3 × 30
     target: v.number(),
-    // One lane per member with stream count and participants
+    // One lane per member with accumulated seconds and participants
     lanes: v.object({
       jisoo: v.object({
-        streams: v.number(),
+        seconds: v.number(),
         participants: v.array(
           v.object({
             phoneNumber: v.string(),
@@ -233,7 +233,7 @@ export default defineSchema({
         ),
       }),
       jennie: v.object({
-        streams: v.number(),
+        seconds: v.number(),
         participants: v.array(
           v.object({
             phoneNumber: v.string(),
@@ -244,7 +244,7 @@ export default defineSchema({
         ),
       }),
       rose: v.object({
-        streams: v.number(),
+        seconds: v.number(),
         participants: v.array(
           v.object({
             phoneNumber: v.string(),
@@ -255,7 +255,7 @@ export default defineSchema({
         ),
       }),
       lisa: v.object({
-        streams: v.number(),
+        seconds: v.number(),
         participants: v.array(
           v.object({
             phoneNumber: v.string(),
