@@ -22,7 +22,7 @@ ROOM.Vroom = {
   _compactEl: null,
   _bubbleEl: null,
   _autoCompactTimer: null,
-  _initialAutoCompactMs: 12000,
+  _initialAutoCompactMs: 10000,
   _expandedAutoCompactMs: 20000,
   _capsuleSide: 'right',
   _swipeStartX: null,
@@ -438,40 +438,40 @@ ROOM.Vroom = {
 
       lanesHtml +=
         '<div class="room-vroom-lane" data-member="' + m + '">' +
-          '<div class="room-vroom-lane-header">' +
-            '<span class="room-vroom-lane-label" style="color:' + color + '">' + this._esc(label) + '</span>' +
-            '<span class="room-vroom-lane-count" id="vroomCount_' + m + '">' + Math.round(secs) + 's/' + this._target + 's</span>' +
-          '</div>' +
-          '<div class="room-vroom-track">' +
-            '<div class="room-vroom-track-fill" id="vroomFill_' + m + '" style="width:' + pct + '%;background:' + color + ';"></div>' +
-            '<div class="room-vroom-runner" id="vroomRunner_' + m + '" style="left:' + pct + '%;">' +
-              '<video autoplay loop muted playsinline class="room-vroom-runner-video" id="vroomVideo_' + m + '">' +
-                '<source src="assets/vroom/' + m + '.webm" type="video/webm">' +
-              '</video>' +
-            '</div>' +
-            '<div class="room-vroom-finish-line"></div>' +
-          '</div>' +
-          '<div class="room-vroom-avatars" id="vroomAvatars_' + m + '"></div>' +
+        '<div class="room-vroom-lane-header">' +
+        '<span class="room-vroom-lane-label" style="color:' + color + '">' + this._esc(label) + '</span>' +
+        '<span class="room-vroom-lane-count" id="vroomCount_' + m + '">' + Math.round(secs) + 's/' + this._target + 's</span>' +
+        '</div>' +
+        '<div class="room-vroom-track">' +
+        '<div class="room-vroom-track-fill" id="vroomFill_' + m + '" style="width:' + pct + '%;background:' + color + ';"></div>' +
+        '<div class="room-vroom-runner" id="vroomRunner_' + m + '" style="left:' + pct + '%;">' +
+        '<video autoplay loop muted playsinline class="room-vroom-runner-video" id="vroomVideo_' + m + '">' +
+        '<source src="assets/vroom/' + m + '.webm" type="video/webm">' +
+        '</video>' +
+        '</div>' +
+        '<div class="room-vroom-finish-line"></div>' +
+        '</div>' +
+        '<div class="room-vroom-avatars" id="vroomAvatars_' + m + '"></div>' +
         '</div>';
     }
 
     card.innerHTML =
       '<div class="room-vroom-glow"></div>' +
       '<div class="room-vroom-content">' +
-        '<div class="room-vroom-header">' +
-          '<div class="room-vroom-badge">🏎️ MY LAMBORGHINI GO VROOM VROOM</div>' +
-          '<div class="room-vroom-header-actions">' +
-            '<button class="room-vroom-minimize" id="vroomMinimizeBtn" type="button" aria-label="Minimize">−</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="room-vroom-lanes">' + lanesHtml + '</div>' +
-        '<div class="room-vroom-footer">' +
-          '<div class="room-vroom-target">Target: ' + this._target + 's</div>' +
-          '<div class="room-vroom-status" id="vroomStatus">' +
-            '<span class="room-vroom-status-icon">🎧</span>' +
-            '<span>Play a solo song to join!</span>' +
-          '</div>' +
-        '</div>' +
+      '<div class="room-vroom-header">' +
+      '<div class="room-vroom-badge">🏎️ MY LAMBORGHINI GO VROOM VROOM</div>' +
+      '<div class="room-vroom-header-actions">' +
+      '<button class="room-vroom-minimize" id="vroomMinimizeBtn" type="button" aria-label="Minimize">−</button>' +
+      '</div>' +
+      '</div>' +
+      '<div class="room-vroom-lanes">' + lanesHtml + '</div>' +
+      '<div class="room-vroom-footer">' +
+      '<div class="room-vroom-target">Target: ' + this._target + 's</div>' +
+      '<div class="room-vroom-status" id="vroomStatus">' +
+      '<span class="room-vroom-status-icon">🎧</span>' +
+      '<span>Play a solo song to join!</span>' +
+      '</div>' +
+      '</div>' +
       '</div>';
 
     overlay.appendChild(card);
@@ -641,20 +641,34 @@ ROOM.Vroom = {
       pointsMsg = '<div class="room-vroom-result-points">🏆 +8 points earned! (3 base + 5 winner bonus)</div>';
     } else if (wasParticipant) {
       pointsMsg = '<div class="room-vroom-result-points">+3 points earned!</div>';
+    } else {
+      pointsMsg = '<div class="room-vroom-result-points" style="color: rgba(255,255,255,0.4);">0 points earned</div>';
+    }
+
+    var winnerParticipants = this._lanes && this._lanes[winner] ? this._lanes[winner].participants || [] : [];
+    var participantHtml = '';
+    if (winnerParticipants.length > 0) {
+      var names = [];
+      for (var k = 0; k < winnerParticipants.length; k++) {
+        names.push(winnerParticipants[k].username || 'someone');
+      }
+      participantHtml = '<div class="room-vroom-result-thanks" style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 20px; padding: 0 10px;">' +
+        'Made possible by: <strong style="color: #fff;">' + this._esc(names.join(', ')) + '</strong></div>';
     }
 
     overlay.innerHTML =
       '<div class="room-vroom-result-backdrop"></div>' +
       '<div class="room-vroom-result-modal">' +
-        '<div class="room-vroom-result-video">' +
-          '<video autoplay loop muted playsinline style="width:120px;height:120px;">' +
-            '<source src="assets/vroom/' + winner + '.webm" type="video/webm">' +
-          '</video>' +
-        '</div>' +
-        '<div class="room-vroom-result-title" style="color:' + color + '">🏎️ ' + this._esc(label) + ' WINS!</div>' +
-        '<div class="room-vroom-result-subtitle">My Lamborghini Go Vroom Vroom!</div>' +
-        pointsMsg +
-        '<button class="room-vroom-result-close" id="vroomResultClose">Close</button>' +
+      '<div class="room-vroom-result-video">' +
+      '<video autoplay loop muted playsinline style="width:120px;height:120px;">' +
+      '<source src="assets/vroom/' + winner + '.webm" type="video/webm">' +
+      '</video>' +
+      '</div>' +
+      '<div class="room-vroom-result-title" style="color:' + color + '">🏎️ ' + this._esc(label) + ' WINS!</div>' +
+      '<div class="room-vroom-result-subtitle">My Lamborghini Go Vroom Vroom!</div>' +
+      pointsMsg +
+      participantHtml +
+      '<button class="room-vroom-result-close" id="vroomResultClose">Close</button>' +
       '</div>';
 
     document.body.appendChild(overlay);
@@ -753,23 +767,11 @@ ROOM.Vroom = {
     var members = CONFIG.vroomMembers || ['jisoo', 'jennie', 'rose', 'lisa'];
     var colors = CONFIG.vroomMemberColors || {};
 
-    var barsHtml = '';
-    for (var i = 0; i < members.length; i++) {
-      var m = members[i];
-      var color = colors[m] || '#f7a6b9';
-      barsHtml +=
-        '<div class="room-vroom-capsule-bar-row">' +
-          '<div class="room-vroom-capsule-bar-track">' +
-            '<div class="room-vroom-capsule-bar-fill" id="vroomCapsuleFill_' + m + '" style="background:' + color + ';width:0%;"></div>' +
-          '</div>' +
-        '</div>';
-    }
-
     capsule.innerHTML =
       '<div class="room-vroom-capsule-glare"></div>' +
       '<div class="room-vroom-capsule-icon">🏎️</div>' +
-      '<div class="room-vroom-capsule-label">VROOM</div>' +
-      '<div class="room-vroom-capsule-bars">' + barsHtml + '</div>' +
+      '<div class="room-vroom-capsule-label" style="margin-bottom:2px;">VROOM</div>' +
+      '<div class="room-vroom-capsule-leader" id="vroomCapsuleLeader" style="display:flex;flex-direction:column;align-items:center;width:100%;" data-leader="" data-tied="false"></div>' +
       '<div class="room-vroom-capsule-glow"></div>';
 
     // Bubble container
@@ -815,12 +817,56 @@ ROOM.Vroom = {
     if (!this._lanes || !this._compactEl) return;
 
     var members = CONFIG.vroomMembers || ['jisoo', 'jennie', 'rose', 'lisa'];
+    var leader = null;
+    var maxSeconds = -1;
+    var isTied = false;
+
     for (var i = 0; i < members.length; i++) {
       var m = members[i];
       var secs = this._lanes[m].seconds;
-      var pct = this._target > 0 ? Math.min(100, (secs / this._target) * 100) : 0;
-      var fill = document.getElementById('vroomCapsuleFill_' + m);
-      if (fill) fill.style.width = pct + '%';
+      if (secs > maxSeconds) {
+        maxSeconds = secs;
+        leader = m;
+        isTied = false;
+      } else if (secs === maxSeconds) {
+        isTied = true;
+      }
+    }
+
+    var leaderContainer = document.getElementById('vroomCapsuleLeader');
+    if (leaderContainer) {
+      if (isTied || maxSeconds === 0) {
+        if (leaderContainer.dataset.tied !== "true") {
+          leaderContainer.innerHTML = '<img src="assets/vroom/flag.png" alt="Tied" style="width:36px;height:36px;object-fit:contain;margin:10px 0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">';
+          leaderContainer.dataset.tied = "true";
+          leaderContainer.dataset.leader = "";
+        }
+      } else {
+        var pct = this._target > 0 ? Math.min(100, (maxSeconds / this._target) * 100) : 0;
+        var colors = CONFIG.vroomMemberColors || {};
+        var color = colors[leader] || '#f7a6b9';
+
+        if (leaderContainer.dataset.leader !== leader || leaderContainer.dataset.tied === "true") {
+          leaderContainer.innerHTML =
+            '<div style="width:40px;height:40px;margin:2px 0 6px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.05);box-shadow:0 4px 10px rgba(0,0,0,0.3);">' +
+            '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;">' +
+            '<source src="assets/vroom/' + leader + '.webm" type="video/webm">' +
+            '</video>' +
+            '</div>' +
+            '<div style="width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:2px;overflow:hidden;padding:0 6px;box-sizing:border-box;">' +
+            '<div id="vroomCapsuleLeaderFill" style="width:' + pct + '%;height:100%;background:' + color + ';transition:width 0.8s ease;border-radius:2px;"></div>' +
+            '</div>' +
+            '<div id="vroomCapsuleLeaderSecs" style="font-size:11px;font-weight:700;color:' + color + ';font-variant-numeric:tabular-nums;margin-top:2px;">' + Math.round(maxSeconds) + 's</div>';
+
+          leaderContainer.dataset.leader = leader;
+          leaderContainer.dataset.tied = "false";
+        } else {
+          var fill = document.getElementById('vroomCapsuleLeaderFill');
+          var text = document.getElementById('vroomCapsuleLeaderSecs');
+          if (fill) fill.style.width = pct + '%';
+          if (text) text.textContent = Math.round(maxSeconds) + 's';
+        }
+      }
     }
 
     this._refreshCompactParticipants();
