@@ -35,7 +35,8 @@
       "Bash(npx convex push:*)",
       "Bash(git -C \"C:\\\\Users\\\\haris\\\\Documents\\\\Projects\\\\blackpinksrilanka.org\\\\blackpinksrilanka.org\" log --oneline -20)",
       "Bash(npx convex:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

@@ -848,7 +848,7 @@ ROOM.Vroom = {
 
         if (leaderContainer.dataset.leader !== leader || leaderContainer.dataset.tied === "true") {
           leaderContainer.innerHTML =
-            '<div style="width:40px;height:40px;margin:2px 0 6px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.05);box-shadow:0 4px 10px rgba(0,0,0,0.3);">' +
+            '<div style="height:40px;margin:2px 0 6px;border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.3);">' +
             '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;">' +
             '<source src="assets/vroom/' + leader + '.webm" type="video/webm">' +
             '</video>' +

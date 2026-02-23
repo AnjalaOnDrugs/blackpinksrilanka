@@ -7391,6 +7391,7 @@
   animation: roomVroomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   transition: opacity 0.25s ease, transform 0.25s ease;
   transform-origin: bottom right;
+  pointer-events: auto;
 }
 
 .room-vroom-card--minimized {
@@ -7968,7 +7969,7 @@
 @media (max-width: 768px) {
   .room-vroom-card {
     right: 10px;
-    left: 10px;
+    left: 20px;
     bottom: 80px;
     width: auto;
   }
