@@ -93,13 +93,38 @@ ROOM.CapsuleStack = {
 ROOM.Events = {
   sameSongCooldown: {},
   sameSongInterval: null,
+  _roomJoinedAt: null,
 
   init: function () {
+    // Record when the user joined the room for the 10s grace period
+    this._roomJoinedAt = Date.now();
+
     // Periodic fallback — refreshUI already triggers these on participant changes
     // with a 2s debounce, so these just catch edge cases
     this.sameSongInterval = setInterval(function () {
       ROOM.LastFM && ROOM.LastFM.detectSameSong && ROOM.LastFM.detectSameSong();
     }, 30000);
+  },
+
+  /**
+   * Returns true if enough time has passed since room join (10s grace period).
+   * All events should call this before triggering.
+   */
+  canFireEvent: function () {
+    if (!this._roomJoinedAt) return false;
+    return (Date.now() - this._roomJoinedAt) >= 10000;
+  },
+
+  /**
+   * Returns true if any room-wide timed event is currently active.
+   * Timed events: Listen Along, Fill the Map, Vroom.
+   * Use this to prevent overlapping timed events.
+   */
+  isTimedEventActive: function () {
+    if (ROOM.ListenAlong && ROOM.ListenAlong._activeEventId) return true;
+    if (ROOM.FillMap && ROOM.FillMap._activeEventId) return true;
+    if (ROOM.Vroom && ROOM.Vroom._activeEventId) return true;
+    return false;
   },
 
   handleEvent: function (eventData) {

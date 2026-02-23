@@ -383,7 +383,7 @@ var MembersRoom = {
         { title: 'How You Like That', artist: 'BLACKPINK', albumArt: null },
         { title: 'Lovesick Girls', artist: 'BLACKPINK', albumArt: null },
         { title: 'DDU-DU DDU-DU', artist: 'BLACKPINK', albumArt: null },
-        { title: 'Kill This Love', artist: 'BLACKPINK', albumArt: null },
+        { title: 'GO', artist: 'BLACKPINK', albumArt: null },
         { title: 'BOOMBAYAH', artist: 'BLACKPINK', albumArt: null },
         { title: 'SOLO', artist: 'JENNIE', albumArt: null },
         { title: 'LALISA', artist: 'LISA', albumArt: null },

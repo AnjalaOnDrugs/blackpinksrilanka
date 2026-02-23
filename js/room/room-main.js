@@ -123,6 +123,7 @@ async function initRoom(roomId) {
   ROOM.ListenAlong.init();
   ROOM.FillMap.init();
   ROOM.RunPlaylist.init();
+  ROOM.RedGreen.init();
   ROOM.Vroom.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
@@ -130,6 +131,10 @@ async function initRoom(roomId) {
   // 9. Setup mobile tabs and heat map toggle
   setupMobileTabs();
   setupHeatMapToggle();
+
+  // 9b. Set main song label from config
+  var mainLabel = document.getElementById('breakdownMainLabel');
+  if (mainLabel && CONFIG.mainSong) mainLabel.textContent = CONFIG.mainSong.name;
 
   // 10. Hide loading, show room
   document.getElementById('roomLoading').style.display = 'none';
@@ -576,6 +581,7 @@ function setupCleanup() {
     ROOM.Events.destroy();
     ROOM.ListenAlong.destroy();
     ROOM.FillMap.destroy();
+    ROOM.RedGreen.destroy();
     ROOM.Vroom.destroy();
     ROOM.HeatMap.destroy();
     ROOM.Firebase.destroy();

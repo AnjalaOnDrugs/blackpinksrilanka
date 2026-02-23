@@ -69,6 +69,8 @@ ROOM.Vroom = {
 
   _tryTrigger: function () {
     if (this._activeEventId) return;
+    if (!ROOM.Events.canFireEvent()) return; // 10s grace period after joining
+    if (ROOM.Events.isTimedEventActive()) return; // Another timed event is running
 
     var participants = ROOM.Firebase.getParticipants();
     var onlineUsers = participants.filter(function (p) { return p.data.isOnline; });

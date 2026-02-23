@@ -51,6 +51,7 @@ ROOM.RunPlaylist = {
 
   _tryTrigger: function () {
     if (this._activeEventId) return;
+    if (!ROOM.Events.canFireEvent()) return; // 10s grace period after joining
     if (!ROOM.currentUser) return;
 
     var chance = CONFIG.runPlaylistTriggerChance || 0.15;

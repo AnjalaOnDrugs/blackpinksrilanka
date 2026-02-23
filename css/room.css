@@ -7369,6 +7369,677 @@
 }
 
 
+/* ========== RED GREEN — PLATFORM ALTERNATING CHALLENGE ========== */
+
+.room-red-green-card {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  z-index: 210;
+  width: 360px;
+  animation: roomRedGreenIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: auto;
+}
+
+.room-red-green-card--minimized {
+  opacity: 0;
+  transform: translateX(24px) scale(0.95);
+  pointer-events: none;
+}
+
+.room-red-green-card--exit {
+  animation: roomRedGreenOut 0.5s ease-in forwards !important;
+}
+
+@keyframes roomRedGreenIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes roomRedGreenOut {
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
+
+.room-red-green-glow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 0, 0, 0.1) 0%, rgba(29, 185, 84, 0.1) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+.room-red-green-content {
+  background: linear-gradient(180deg, rgba(25, 25, 25, 0.98) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.room-red-green-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.room-red-green-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #FF0000, #1DB954);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.room-red-green-badge-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.room-red-green-badge-dot--red {
+  background: #FF0000;
+}
+
+.room-red-green-badge-dot--green {
+  background: #1DB954;
+}
+
+.room-red-green-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-red-green-quit {
+  background: rgba(255, 100, 100, 0.15);
+  border: 1px solid rgba(255, 100, 100, 0.25);
+  color: #ff6b6b;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.room-red-green-quit:hover {
+  background: rgba(255, 100, 100, 0.25);
+}
+
+.room-red-green-minimize {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.room-red-green-minimize:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Song display */
+.room-red-green-song-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+.room-red-green-song-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.room-red-green-song-art-placeholder {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.room-red-green-song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-red-green-song-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-red-green-song-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Step list */
+.room-red-green-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.room-red-green-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.room-red-green-step--active {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.room-red-green-step--playing .room-voice-wave-bar {
+  animation-play-state: running !important;
+}
+
+.room-red-green-step--completed {
+  opacity: 0.55;
+}
+
+.room-red-green-step--pending {
+  opacity: 0.35;
+}
+
+.room-red-green-step-number {
+  font-size: 13px;
+  font-weight: 700;
+  width: 18px;
+  text-align: center;
+  padding-top: 1px;
+}
+
+.room-red-green-step-status {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.room-red-green-step-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-red-green-step-platform {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.room-red-green-step-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Step progress bar */
+.room-red-green-step-progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.room-red-green-step-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.room-red-green-step-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+.room-red-green-step-timer {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status bar */
+.room-red-green-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  transition: background 0.3s;
+}
+
+.room-red-green-status--listening {
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.room-red-green-status--completed {
+  background: rgba(37, 211, 102, 0.1);
+}
+
+.room-red-green-status-icon {
+  font-size: 16px;
+}
+
+.room-red-green-points {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.room-red-green-points-label strong {
+  background: linear-gradient(90deg, #FF0000, #1DB954);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+
+/* ===== RED GREEN CAPSULE ===== */
+
+.room-red-green-capsule {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) translateX(18px) scale(0.95);
+  z-index: 191;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.12) 0%, rgba(29, 185, 84, 0.12) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  padding: 6px 14px 6px 10px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.room-red-green-capsule--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.room-red-green-capsule--left {
+  right: auto;
+  left: 12px;
+}
+
+.room-red-green-capsule-glare {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  border-radius: 50px 50px 0 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.room-red-green-capsule-icon {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.room-red-green-capsule-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.room-red-green-capsule-dot--red {
+  background: #FF0000;
+}
+
+.room-red-green-capsule-dot--green {
+  background: #1DB954;
+}
+
+.room-red-green-capsule-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #FF0000, #1DB954);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.room-red-green-capsule-progress {
+  font-size: 11px;
+  color: rgba(255,255,255,0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+.room-red-green-capsule-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.room-red-green-capsule-dot-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  transition: background 0.3s;
+}
+
+.room-red-green-capsule-dot-indicator--completed {
+  opacity: 1;
+}
+
+.room-red-green-capsule-dot-indicator--active {
+  animation: roomRedGreenDotPulse 1.5s infinite;
+}
+
+@keyframes roomRedGreenDotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Capsule ring */
+.room-red-green-capsule-ring-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.room-red-green-capsule-ring-svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.room-red-green-capsule-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 4;
+}
+
+.room-red-green-capsule-ring-fill {
+  fill: none;
+  stroke: #FF0000;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+}
+
+.room-red-green-capsule-art-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.room-red-green-capsule-art-placeholder {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.room-red-green-capsule-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.room-red-green-capsule-glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 60px;
+  background: radial-gradient(circle, rgba(255, 0, 0, 0.08) 0%, rgba(29, 185, 84, 0.08) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Capsule bubbles (for CapsuleStack compatibility) */
+.room-red-green-capsule-bubbles {
+  position: fixed;
+  right: 12px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 192;
+}
+
+.room-red-green-capsule-bubbles--visible {
+  opacity: 1;
+}
+
+.room-red-green-capsule-bubbles--left {
+  right: auto;
+  left: 12px;
+}
+
+
+/* ===== RED GREEN THANK YOU ===== */
+
+.room-red-green-thankyou {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: roomRedGreenTyIn 0.4s ease;
+}
+
+.room-red-green-thankyou--exit {
+  animation: roomRedGreenTyOut 0.4s ease forwards;
+}
+
+@keyframes roomRedGreenTyIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes roomRedGreenTyOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.room-red-green-ty-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.room-red-green-ty-modal {
+  position: relative;
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 32px 28px;
+  width: 340px;
+  max-width: 90vw;
+  text-align: center;
+  animation: roomRedGreenModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes roomRedGreenModalIn {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.room-red-green-ty-icon {
+  margin-bottom: 12px;
+}
+
+.room-red-green-ty-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.room-red-green-ty-points-big {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #FF0000, #1DB954);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.room-red-green-ty-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+.room-red-green-ty-song {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 16px;
+}
+
+.room-red-green-ty-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.room-red-green-ty-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.room-red-green-ty-step-check {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.room-red-green-ty-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.room-red-green-ty-close {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0.15), rgba(29, 185, 84, 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.room-red-green-ty-close:hover {
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0.25), rgba(29, 185, 84, 0.25));
+}
+
+
+/* ===== RED GREEN MOBILE ===== */
+
+@media (max-width: 768px) {
+  .room-red-green-card {
+    right: 10px;
+    left: 10px;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-width: none;
+  }
+
+  .room-red-green-ty-modal {
+    padding: 24px 20px;
+  }
+
+  .room-red-green-ty-points-big {
+    font-size: 24px;
+  }
+}
+
+
 /* ========== VROOM RACE — MY LAMBORGHINI GO VROOM VROOM ========== */
 
 .room-vroom-card {

@@ -46,6 +46,8 @@ ROOM.FillMap = {
   _tryTrigger: function () {
     console.log('[FillMap] _tryTrigger called');
     if (this._activeEventId) { console.log('[FillMap] ⛔ Skipped: active event already exists:', this._activeEventId); return; }
+    if (!ROOM.Events.canFireEvent()) { console.log('[FillMap] ⛔ Skipped: 10s grace period'); return; }
+    if (ROOM.Events.isTimedEventActive()) { console.log('[FillMap] ⛔ Skipped: another timed event is active'); return; }
 
     var participants = ROOM.Firebase.getParticipants();
     var onlineUsers = participants.filter(function (p) { return p.data.isOnline; });

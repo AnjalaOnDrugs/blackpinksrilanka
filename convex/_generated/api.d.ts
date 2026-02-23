@@ -14,6 +14,7 @@ import type * as fillTheMap from "../fillTheMap.js";
 import type * as listenAlong from "../listenAlong.js";
 import type * as messages from "../messages.js";
 import type * as participants from "../participants.js";
+import type * as redGreen from "../redGreen.js";
 import type * as rooms from "../rooms.js";
 import type * as runPlaylist from "../runPlaylist.js";
 import type * as streams from "../streams.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   listenAlong: typeof listenAlong;
   messages: typeof messages;
   participants: typeof participants;
+  redGreen: typeof redGreen;
   rooms: typeof rooms;
   runPlaylist: typeof runPlaylist;
   streams: typeof streams;

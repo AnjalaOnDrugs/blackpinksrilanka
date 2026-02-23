@@ -89,7 +89,7 @@ export default defineSchema({
     trackKey: v.string(),
     // "youtube", "spotify", or "other" - detected from album art + title markers
     platform: v.optional(v.string()),
-    // Whether this is the main event song (e.g. "Kill This Love")
+    // Whether this is the main event song (defined in CONFIG.mainSong)
     isMainSong: v.optional(v.boolean()),
     // Timestamp when this stream was counted
     countedAt: v.number(),
@@ -175,6 +175,30 @@ export default defineSchema({
       })
     ),
     currentSongIndex: v.number(),
+    startedAt: v.number(),
+    status: v.string(), // "active" | "completed" | "quit"
+    pointsAwarded: v.optional(v.boolean()),
+  })
+    .index("by_room_phone", ["roomId", "phoneNumber"])
+    .index("by_room_phone_status", ["roomId", "phoneNumber", "status"]),
+
+  redGreenEvents: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    username: v.string(),
+    songName: v.string(),
+    songArtist: v.string(),
+    // 4 steps: youtube, spotify, youtube, spotify
+    steps: v.array(
+      v.object({
+        platform: v.string(), // "youtube" | "spotify"
+        status: v.string(), // "pending" | "active" | "completed"
+        listenedSeconds: v.optional(v.number()),
+        requiredSeconds: v.optional(v.number()),
+        completedAt: v.optional(v.number()),
+      })
+    ),
+    currentStepIndex: v.number(),
     startedAt: v.number(),
     status: v.string(), // "active" | "completed" | "quit"
     pointsAwarded: v.optional(v.boolean()),

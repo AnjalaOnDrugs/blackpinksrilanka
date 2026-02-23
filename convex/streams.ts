@@ -46,8 +46,9 @@ const SP_INTERLEAVE_REQUIRED = 1; // 1 different song in between
 
 // ── Shared ──
 const MAX_RECENT_TRACKS = 5; // how many track keys to keep in history
+// Main event song — keep in sync with CONFIG.mainSong in js/config.js
 const MAIN_EVENT_SONG = {
-  title: "kill this love",
+  title: "go",
   artist: "blackpink",
 };
 
@@ -89,7 +90,7 @@ function cleanForMatch(value: string): string {
   return s;
 }
 
-/** Extract core song title and strip artist prefixes like "BLACKPINK - Kill This Love" */
+/** Extract core song title and strip artist prefixes like "BLACKPINK - GO" */
 function extractCoreSongTitle(name: string, artist: string): string {
   let cleanName = cleanForMatch(name);
   const cleanArtist = cleanForMatch(artist);

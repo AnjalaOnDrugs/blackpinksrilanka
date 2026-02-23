@@ -2,6 +2,10 @@
 // Non-sensitive configuration values
 
 const CONFIG = {
+  // Main event song — the primary song that earns bonus points and tracks room milestones.
+  // Change this to switch the featured song across the entire app.
+  mainSong: { name: "GO", artist: "BLACKPINK" },
+
   // WhatsApp API endpoint
   whatsappApiUrl: "https://api.wawp.net/send-text",
 
@@ -50,6 +54,7 @@ const CONFIG = {
 
   // Listen Along song catalog (random pick per event)
   listenAlongSongs: [
+    { name: "GO", artist: "BLACKPINK" },
     { name: "DDU-DU DDU-DU", artist: "BLACKPINK" },
     { name: "Kill This Love", artist: "BLACKPINK" },
     { name: "How You Like That", artist: "BLACKPINK" },
@@ -83,6 +88,13 @@ const CONFIG = {
   runPlaylistTriggerChance: 0.15,          // 15% chance per check once cooldown elapsed
   runPlaylistSongCheckInterval: 3000,      // Check every 3s if user is playing the correct song
   runPlaylistProgressSaveInterval: 5000,   // Save listen progress to server every 5s
+
+  // Red Green event settings (personal event)
+  redGreenCheckInterval: 60000,             // Check every 60s if we should trigger
+  redGreenCooldown: 3600000,                // 1 hour between events per user
+  redGreenTriggerChance: 0.15,              // 15% chance per check once cooldown elapsed
+  redGreenSongCheckInterval: 3000,          // Check every 3s if user is playing on correct platform
+  redGreenProgressSaveInterval: 5000,       // Save listen progress to server every 5s
 
   // Klipy GIF API
   klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv',
