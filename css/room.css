@@ -1914,14 +1914,14 @@
 }
 
 .room-activity-card {
-  padding: 10px 12px;
+  padding: 7px 12px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.03);
   transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  height: 56px;
-  max-height: 56px;
+  height: 46px;
+  max-height: 46px;
   flex-shrink: 0;
 }
 
