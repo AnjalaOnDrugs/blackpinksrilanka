@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as checkins from "../checkins.js";
 import type * as events from "../events.js";
 import type * as fillTheMap from "../fillTheMap.js";
@@ -29,6 +30,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   checkins: typeof checkins;
   events: typeof events;
   fillTheMap: typeof fillTheMap;

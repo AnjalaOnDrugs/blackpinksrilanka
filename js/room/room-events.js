@@ -130,13 +130,6 @@ ROOM.Events = {
   handleEvent: function (eventData) {
     if (!eventData || !eventData.type) return;
 
-    // Don't replay events older than 10 seconds
-    if (eventData.createdAt) {
-      var eventTime = eventData.createdAt.seconds || (eventData.createdAt / 1000);
-      var now = Date.now() / 1000;
-      if (now - eventTime > 10) return;
-    }
-
     switch (eventData.type) {
       case 'join':
         ROOM.Animations.playJoin(eventData.data);
@@ -212,6 +205,9 @@ ROOM.Events = {
         break;
       case 'vroom_finish':
         ROOM.Vroom && ROOM.Vroom.handleFinish(eventData.data);
+        break;
+      case 'admin_message':
+        ROOM.Animations && ROOM.Animations.playAdminMessage(eventData.data);
         break;
     }
   },

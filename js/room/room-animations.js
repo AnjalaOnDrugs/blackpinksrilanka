@@ -671,6 +671,45 @@ ROOM.Animations = {
     }, 3600);
   },
 
+  // ========== ADMIN MESSAGE ANIMATION ==========
+  playAdminMessage: function (data) {
+    if (!data || !data.message) return;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'room-admin-msg-overlay';
+
+    var backdropUrl = data.bgImage ? data.bgImage : '';
+    var backdropStyle = backdropUrl ? 'background-image: url(' + this.esc(backdropUrl) + '); background-size: cover; background-position: center;' : 'background: linear-gradient(135deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95));';
+
+    overlay.innerHTML =
+      '<div class="room-admin-msg-box" style="' + backdropStyle + '">' +
+      '<div class="room-admin-msg-dimmer"></div>' +
+      '<div class="room-admin-msg-content">' +
+      (data.title ? '<h2 class="room-admin-msg-title">' + this.esc(data.title) + '</h2>' : '') +
+      '<div class="room-admin-msg-text">' + this.esc(data.message) + '</div>' +
+      '<button class="room-admin-msg-close">Dismiss</button>' +
+      '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    // Screen shake to grab attention
+    document.body.classList.add('room-screen-shake');
+    setTimeout(function () {
+      document.body.classList.remove('room-screen-shake');
+    }, 500);
+
+    var closeBtn = overlay.querySelector('.room-admin-msg-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        overlay.classList.add('room-admin-msg-overlay--exit');
+        setTimeout(function () {
+          if (overlay.parentNode) overlay.remove();
+        }, 300);
+      });
+    }
+  },
+
   // ========== CONFETTI ==========
   spawnConfetti: function (count) {
     if (!this.overlay) return;

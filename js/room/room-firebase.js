@@ -65,36 +65,33 @@ ROOM.Firebase = {
     }, 1000);
 
     // 2. Subscribe to events (drives mini event animations)
-    var eventSince = this._initTimestamp;
+    var isInitialEventLoad = true;
     var unsub2 = ConvexService.watch(
       'events:listRecent',
-      { roomId: roomId, since: eventSince },
+      { roomId: roomId },
       function (events) {
         if (!events) return;
         events.forEach(function (evt) {
           // Skip events we've already processed (watch fires with full list on every update)
           if (evt._id && self._processedEventIds[evt._id]) return;
 
-          // Only handle events created after init (don't replay old events)
-          if (evt.createdAt > self._initTimestamp) {
-            // Don't replay events older than 10 seconds
-            var now = Date.now();
-            if (now - evt.createdAt < 10000) {
-              if (ROOM.Events && ROOM.Events.handleEvent) {
-                ROOM.Events.handleEvent({
-                  type: evt.type,
-                  data: evt.data,
-                  createdAt: { seconds: evt.createdAt / 1000 }
-                });
-              }
+          // Only handle new events avoiding all client-server clock drift issues
+          if (!isInitialEventLoad) {
+            if (ROOM.Events && ROOM.Events.handleEvent) {
+              ROOM.Events.handleEvent({
+                type: evt.type,
+                data: evt.data,
+                createdAt: { seconds: evt.createdAt / 1000 }
+              });
             }
           }
 
-          // Mark as processed regardless of age (so we never re-handle it)
+          // Mark as processed
           if (evt._id) {
             self._processedEventIds[evt._id] = true;
           }
         });
+        isInitialEventLoad = false;
       }
     );
 

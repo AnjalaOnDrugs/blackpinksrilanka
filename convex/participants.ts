@@ -56,14 +56,23 @@ export const joinRoom = mutation({
       .first();
     const profilePicture = userDoc?.profilePicture ?? undefined;
 
+    const room = await ctx.db
+      .query("rooms")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .first();
+
+    const now = Date.now();
+    if (room?.lockedUntil && room.lockedUntil > now) {
+      const lockDate = new Date(room.lockedUntil);
+      throw new Error(`Room is locked until ${lockDate.toLocaleDateString()} ${lockDate.toLocaleTimeString()}`);
+    }
+
     const existing = await ctx.db
       .query("participants")
       .withIndex("by_room_phone", (q) =>
         q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
       )
       .first();
-
-    const now = Date.now();
 
     if (existing) {
       await ctx.db.patch(existing._id, {

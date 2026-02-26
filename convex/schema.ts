@@ -211,6 +211,7 @@ export default defineSchema({
     name: v.string(),
     type: v.string(),
     createdAt: v.number(),
+    lockedUntil: v.optional(v.number()),
     currentMostPlayed: v.optional(
       v.object({
         track: v.string(),

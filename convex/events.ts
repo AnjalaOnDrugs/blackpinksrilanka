@@ -131,19 +131,20 @@ export const sendBongBack = mutation({
   },
 });
 
-// Get recent events (since a given timestamp)
+// Get recent events (last 50)
 export const listRecent = query({
   args: {
     roomId: v.string(),
-    since: v.number(),
+    since: v.optional(v.number()), // Kept for backwards compatibility but ignored
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const events = await ctx.db
       .query("events")
-      .withIndex("by_room_time", (q) =>
-        q.eq("roomId", args.roomId).gt("createdAt", args.since)
-      )
-      .order("asc")
-      .collect();
+      .withIndex("by_room_time", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(50);
+
+    // Return them in ascending order for the client
+    return events.reverse();
   },
 });
