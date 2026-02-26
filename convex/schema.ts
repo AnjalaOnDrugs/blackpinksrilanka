@@ -300,6 +300,25 @@ export default defineSchema({
     .index("by_room", ["roomId"])
     .index("by_room_status", ["roomId", "status"]),
 
+  // GIF messages: persistent GIF+message sent between users
+  gifMessages: defineTable({
+    roomId: v.string(),
+    senderPhoneNumber: v.string(),
+    senderUsername: v.string(),
+    senderAvatarColor: v.string(),
+    recipientPhoneNumber: v.string(),
+    recipientUsername: v.string(),
+    gifUrl: v.string(),
+    gifIsVideo: v.boolean(),
+    member: v.string(),
+    action: v.string(),
+    message: v.optional(v.string()),
+    createdAt: v.number(),
+    isRead: v.boolean(),
+    readAt: v.optional(v.number()),
+  }).index("by_room", ["roomId"])
+    .index("by_recipient_unread", ["roomId", "recipientPhoneNumber", "isRead"]),
+
   // Daily check-ins for calendar page
   checkins: defineTable({
     phoneNumber: v.string(),

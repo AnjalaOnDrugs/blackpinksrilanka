@@ -1,6 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+// Users who can always enter locked rooms (admins)
+const ALWAYS_ALLOWED = ["714066514", "714545776"]; // Modinee, Anjala
+
 // Set a room lock until a specific timestamp
 export const setRoomLock = mutation({
     args: {
@@ -34,7 +37,7 @@ export const setRoomLock = mutation({
                 .collect();
 
             for (const participant of participants) {
-                if (!allowed.includes(participant.phoneNumber)) {
+                if (!allowed.includes(participant.phoneNumber) && !ALWAYS_ALLOWED.includes(participant.phoneNumber)) {
                     await ctx.db.delete(participant._id);
                 }
             }

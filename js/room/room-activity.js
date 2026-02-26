@@ -37,6 +37,21 @@ ROOM.Activity = {
         self.sendBong(bongBtn);
         return;
       }
+
+      // Handle GIF button click
+      var gifBtn = e.target.closest('.room-activity-gif-btn');
+      if (gifBtn) {
+        e.stopPropagation();
+        self.closeAllDropdowns();
+        if (ROOM.Gif) {
+          ROOM.Gif.openPicker(
+            gifBtn.dataset.targetPhone,
+            gifBtn.dataset.targetUsername,
+            gifBtn.dataset.targetColor
+          );
+        }
+        return;
+      }
     });
 
     // Close dropdowns when clicking outside
@@ -264,6 +279,14 @@ ROOM.Activity = {
             ' data-target-color="' + color + '">' +
             this.lightstickSvg() +
             '<span>Bong</span>' +
+          '</button>' +
+          '<button class="room-activity-dropdown-item room-activity-gif-btn"' +
+            ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
+            ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
+            ' data-target-color="' + color + '">' +
+            '<span class="room-gif-btn-icon">🎞</span>' +
+            '<span>Send GIF</span>' +
+            '<span class="room-gif-btn-cost">10 pts</span>' +
           '</button>' +
         '</div>';
     }

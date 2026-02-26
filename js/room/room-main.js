@@ -149,6 +149,7 @@ async function initRoom(roomId) {
   ROOM.Voice.init();
   ROOM.Events.init();
   ROOM.Animations.init();
+  ROOM.Gif.init();
   ROOM.ListenAlong.init();
   ROOM.FillMap.init();
   ROOM.RunPlaylist.init();
@@ -608,6 +609,7 @@ function setupCleanup() {
     ROOM.Voice.destroy();
     ROOM.LastFM.destroy();
     ROOM.Events.destroy();
+    ROOM.Gif.destroy();
     ROOM.ListenAlong.destroy();
     ROOM.FillMap.destroy();
     ROOM.RedGreen.destroy();

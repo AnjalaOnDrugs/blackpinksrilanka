@@ -173,6 +173,12 @@ ROOM.Events = {
           ROOM.Animations.playBongBack(eventData.data);
         }
         break;
+      case 'gif_send':
+        // Only the recipient sees the GIF overlay
+        if (ROOM.currentUser && eventData.data.recipientPhoneNumber === ROOM.currentUser.phoneNumber) {
+          ROOM.Gif && ROOM.Gif.playGifMessage(eventData.data);
+        }
+        break;
       case 'listen_along_start':
         ROOM.ListenAlong && ROOM.ListenAlong.handleStart(eventData.data);
         break;

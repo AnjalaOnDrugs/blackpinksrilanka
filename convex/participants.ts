@@ -1,6 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+// Users who can always enter locked rooms (admins)
+const ALWAYS_ALLOWED = ["714066514", "714545776"]; // Modinee, Anjala
+
 // Get all participants for a room (sorted by totalMinutes desc)
 export const listByRoom = query({
   args: { roomId: v.string() },
@@ -63,8 +66,9 @@ export const joinRoom = mutation({
 
     const now = Date.now();
     if (room?.lockedUntil && room.lockedUntil > now) {
+      const isAdmin = ALWAYS_ALLOWED.includes(args.phoneNumber);
       const isAllowed = room.allowedUsers && room.allowedUsers.includes(args.phoneNumber);
-      if (!isAllowed) {
+      if (!isAdmin && !isAllowed) {
         throw new Error(`ROOM_CLOSED:${room.lockedUntil}`);
       }
     }

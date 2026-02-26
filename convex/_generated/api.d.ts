@@ -12,6 +12,7 @@ import type * as admin from "../admin.js";
 import type * as checkins from "../checkins.js";
 import type * as events from "../events.js";
 import type * as fillTheMap from "../fillTheMap.js";
+import type * as gifMessages from "../gifMessages.js";
 import type * as listenAlong from "../listenAlong.js";
 import type * as messages from "../messages.js";
 import type * as participants from "../participants.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   checkins: typeof checkins;
   events: typeof events;
   fillTheMap: typeof fillTheMap;
+  gifMessages: typeof gifMessages;
   listenAlong: typeof listenAlong;
   messages: typeof messages;
   participants: typeof participants;

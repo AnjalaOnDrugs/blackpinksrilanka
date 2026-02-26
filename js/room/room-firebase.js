@@ -214,7 +214,37 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8);
+    // 9. Subscribe to unread GIF messages for the current user (offline catch-up)
+    var gifProcessedIds = {};
+    var isInitialGifLoad = true;
+    var unsub9 = ConvexService.watch(
+      'gifMessages:listUnread',
+      { roomId: roomId, phoneNumber: ROOM.currentUser.phoneNumber },
+      function (gifs) {
+        if (!gifs || !gifs.length) { isInitialGifLoad = false; return; }
+
+        if (isInitialGifLoad) {
+          // First load — pass all unread GIFs to inbox queue
+          if (ROOM.Gif && ROOM.Gif.handleUnreadGifs) {
+            ROOM.Gif.handleUnreadGifs(gifs);
+          }
+          gifs.forEach(function (g) { if (g._id) gifProcessedIds[g._id] = true; });
+          isInitialGifLoad = false;
+        } else {
+          // Subsequent updates — only process genuinely new GIFs
+          // (real-time delivery is handled by the events subscription,
+          //  so this just catches edge cases)
+          gifs.forEach(function (g) {
+            if (g._id && !gifProcessedIds[g._id]) {
+              gifProcessedIds[g._id] = true;
+              // Don't re-play — the gif_send event handles real-time display
+            }
+          });
+        }
+      }
+    );
+
+    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8, unsub9);
   },
 
   getParticipants: function () {
