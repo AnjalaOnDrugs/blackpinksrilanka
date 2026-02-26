@@ -489,11 +489,10 @@ export const tryCountStream = mutation({
       .first();
 
     if (participant) {
-      // Count check-in points: each check-in = 2 points
-      // We track this based on offlineTracking being true (they checked in at least once)
       const checkInPoints = participant.offlineTracking ? POINTS_CHECK_IN : 0;
+      const bonusPoints = participant.bonusPoints ?? 0;
       await ctx.db.patch(participant._id, {
-        totalPoints: totalPoints + checkInPoints,
+        totalPoints: totalPoints + checkInPoints + bonusPoints,
       });
     }
 
