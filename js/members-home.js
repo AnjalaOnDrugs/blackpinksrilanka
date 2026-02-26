@@ -275,11 +275,16 @@ var MembersRoom = {
       }
     }
 
-    // Update status tag based on online users
+    // Update status tag based on online users and lock status
     var tagEl = document.getElementById('roomStatusTag');
     var tagText = document.getElementById('roomStatusText');
     if (tagEl && tagText) {
-      if (onlineCount > 0) {
+      var isLocked = this._roomData && this._roomData.lockedUntil && this._roomData.lockedUntil > Date.now();
+
+      if (isLocked) {
+        tagText.textContent = 'Room Closed';
+        tagEl.classList.add('mh-room-tag--idle');
+      } else if (onlineCount > 0) {
         tagText.textContent = 'Live Now';
         tagEl.classList.remove('mh-room-tag--idle');
       } else {
@@ -451,6 +456,9 @@ var MembersRoom = {
 
   // ---- Render room status from room doc ----
   _renderRoomStatus: function (room) {
+    this._roomData = room;
+    this._renderAvatars(); // Re-render to update Room Open/Closed status
+
     // If room has a currentMostPlayed track, it shows as the "featured" track
     if (room.currentMostPlayed && room.currentMostPlayed.track) {
       var titleEl = document.getElementById('nowPlayingTitle');

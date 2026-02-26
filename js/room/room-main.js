@@ -77,8 +77,17 @@ checkAuthState().then(async function (user) {
 
   } catch (err) {
     console.error('Room init error:', err);
+
+    var errorMsg = err.message || 'Failed to join.';
+    var isClosedInfo = errorMsg.indexOf("Room is closed until") > -1;
+    var displayMsg = isClosedInfo ? errorMsg : 'Failed to join.';
+
     document.getElementById('roomLoading').innerHTML =
-      '<div class="room-loading-text" style="color:#ff6b7a;">Failed to join. <a href="members.html" style="color:#f7a6b9;">Go back</a></div>';
+      '<div style="text-align: center; padding: 40px; background: rgba(0,0,0,0.8); border-radius: 20px; border: 1px solid rgba(247, 166, 185, 0.3);">' +
+      '<div style="font-size: 50px; margin-bottom: 20px; animation: adminMsgPop 0.5s;">🔒</div>' +
+      '<div class="room-loading-text" style="color:#fff; font-size: 1.2rem; margin-bottom: 20px; line-height: 1.4;">' + ROOM.Animations.esc(displayMsg) + '</div>' +
+      '<a href="members.html" style="display: inline-block; padding: 12px 32px; background: #f7a6b9; color: #000; text-decoration: none; border-radius: 50px; font-family: \'Outfit\', sans-serif; font-weight: 800; font-size: 16px; text-transform: uppercase;">Go Back</a>' +
+      '</div>';
   }
 });
 

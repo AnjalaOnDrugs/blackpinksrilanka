@@ -63,8 +63,11 @@ export const joinRoom = mutation({
 
     const now = Date.now();
     if (room?.lockedUntil && room.lockedUntil > now) {
-      const lockDate = new Date(room.lockedUntil);
-      throw new Error(`Room is locked until ${lockDate.toLocaleDateString()} ${lockDate.toLocaleTimeString()}`);
+      const isAllowed = room.allowedUsers && room.allowedUsers.includes(args.phoneNumber);
+      if (!isAllowed) {
+        const lockDate = new Date(room.lockedUntil);
+        throw new Error(`Room is closed until ${lockDate.toLocaleDateString()} ${lockDate.toLocaleTimeString()}`);
+      }
     }
 
     const existing = await ctx.db

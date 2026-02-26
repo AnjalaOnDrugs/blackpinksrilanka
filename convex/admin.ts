@@ -6,6 +6,7 @@ export const setRoomLock = mutation({
     args: {
         roomId: v.string(),
         lockedUntil: v.optional(v.number()), // Time when lock expires (or null/undefined to unlock)
+        allowedUsers: v.optional(v.array(v.string())),
     },
     handler: async (ctx, args) => {
         const room = await ctx.db
@@ -19,7 +20,50 @@ export const setRoomLock = mutation({
 
         await ctx.db.patch(room._id, {
             lockedUntil: args.lockedUntil,
+            allowedUsers: args.allowedUsers,
         });
+
+        if (args.lockedUntil && args.lockedUntil > Date.now()) {
+            const now = Date.now();
+            const allowed = args.allowedUsers || [];
+
+            // Kick unauthorized users
+            const participants = await ctx.db
+                .query("participants")
+                .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+                .collect();
+
+            for (const participant of participants) {
+                if (!allowed.includes(participant.phoneNumber)) {
+                    await ctx.db.delete(participant._id);
+                }
+            }
+
+            // End active events
+            const listenAlong = await ctx.db.query("listenAlongEvents")
+                .withIndex("by_room_status", q => q.eq("roomId", args.roomId).eq("status", "active")).collect();
+            for (const ev of listenAlong) await ctx.db.patch(ev._id, { status: "ended", endsAt: now });
+
+            const fillMap = await ctx.db.query("fillTheMapEvents")
+                .withIndex("by_room_status", q => q.eq("roomId", args.roomId).eq("status", "active")).collect();
+            for (const ev of fillMap) await ctx.db.patch(ev._id, { status: "ended", endsAt: now });
+
+            const vroomEvents = await ctx.db.query("vroomEvents")
+                .withIndex("by_room_status", q => q.eq("roomId", args.roomId).eq("status", "active")).collect();
+            for (const ev of vroomEvents) await ctx.db.patch(ev._id, { status: "failed" });
+
+            // Send an event so clients refresh/kick themselves
+            await ctx.db.insert("events", {
+                roomId: args.roomId,
+                type: "admin_message",
+                data: {
+                    title: "Room Closed",
+                    message: "The room has been closed. Please wait until it opens.",
+                    bgImage: ""
+                },
+                createdAt: now,
+            });
+        }
     },
 });
 
