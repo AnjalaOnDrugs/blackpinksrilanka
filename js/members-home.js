@@ -62,6 +62,7 @@ checkAuthState().then(async (user) => {
 var joinStreamBtn = document.getElementById('joinStreamBtn');
 if (joinStreamBtn) {
   joinStreamBtn.addEventListener('click', function () {
+    if (joinStreamBtn.classList.contains('mh-room-join-btn--locked')) return;
     window.location.href = 'room.html?id=streaming';
   });
 }
@@ -72,6 +73,7 @@ if (streamingRoom) {
   streamingRoom.addEventListener('click', function (e) {
     // Don't navigate if clicking the users button
     if (e.target.closest('.mh-room-users-btn')) return;
+    if (joinStreamBtn && joinStreamBtn.classList.contains('mh-room-join-btn--locked')) return;
     window.location.href = 'room.html?id=streaming';
   });
 }
@@ -278,18 +280,34 @@ var MembersRoom = {
     // Update status tag based on online users and lock status
     var tagEl = document.getElementById('roomStatusTag');
     var tagText = document.getElementById('roomStatusText');
+    var joinBtn = document.getElementById('joinStreamBtn');
     if (tagEl && tagText) {
       var isLocked = this._roomData && this._roomData.lockedUntil && this._roomData.lockedUntil > Date.now();
 
       if (isLocked) {
         tagText.textContent = 'Room Closed';
         tagEl.classList.add('mh-room-tag--idle');
-      } else if (onlineCount > 0) {
-        tagText.textContent = 'Live Now';
-        tagEl.classList.remove('mh-room-tag--idle');
+        // Disable join button and start countdown
+        if (joinBtn) {
+          joinBtn.classList.add('mh-room-join-btn--locked');
+          this._startJoinCountdown(this._roomData.lockedUntil);
+        }
       } else {
-        tagText.textContent = 'Room Open';
-        tagEl.classList.add('mh-room-tag--idle');
+        // Room is open — restore join button
+        if (joinBtn && joinBtn.classList.contains('mh-room-join-btn--locked')) {
+          joinBtn.classList.remove('mh-room-join-btn--locked');
+          this._stopJoinCountdown();
+          joinBtn.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>' +
+            'Join Party';
+        }
+        if (onlineCount > 0) {
+          tagText.textContent = 'Live Now';
+          tagEl.classList.remove('mh-room-tag--idle');
+        } else {
+          tagText.textContent = 'Room Open';
+          tagEl.classList.add('mh-room-tag--idle');
+        }
       }
     }
   },
@@ -499,7 +517,67 @@ var MembersRoom = {
     return n.toLocaleString();
   },
 
+  // ---- Room closed countdown on Join button ----
+  _joinCountdownTimer: null,
+
+  _startJoinCountdown: function (lockedUntil) {
+    var self = this;
+    // Clear any existing timer
+    if (this._joinCountdownTimer) clearInterval(this._joinCountdownTimer);
+
+    function update() {
+      var now = Date.now();
+      var remaining = lockedUntil - now;
+      var btn = document.getElementById('joinStreamBtn');
+      if (!btn) return;
+
+      if (remaining <= 0) {
+        // Room has opened — this will be caught by the next Convex update,
+        // but clean up proactively
+        self._stopJoinCountdown();
+        btn.classList.remove('mh-room-join-btn--locked');
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>' +
+          'Join Party';
+        return;
+      }
+
+      var totalSec = Math.floor(remaining / 1000);
+      var days = Math.floor(totalSec / 86400);
+      var hours = Math.floor((totalSec % 86400) / 3600);
+      var mins = Math.floor((totalSec % 3600) / 60);
+      var secs = totalSec % 60;
+
+      var parts = [];
+      if (days > 0) parts.push(days + 'd');
+      if (hours > 0) parts.push(hours + 'h');
+      parts.push(mins + 'm');
+      parts.push((secs < 10 ? '0' : '') + secs + 's');
+
+      btn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>' +
+          '<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>' +
+        '</svg>' +
+        '<span class="mh-room-join-countdown">' +
+          '<span class="mh-room-join-countdown-label">Opens in</span>' +
+          '<span class="mh-room-join-countdown-time">' + parts.join(' ') + '</span>' +
+        '</span>';
+    }
+
+    update();
+    this._joinCountdownTimer = setInterval(update, 1000);
+  },
+
+  _stopJoinCountdown: function () {
+    if (this._joinCountdownTimer) {
+      clearInterval(this._joinCountdownTimer);
+      this._joinCountdownTimer = null;
+    }
+  },
+
   destroy: function () {
+    this._stopJoinCountdown();
     if (this._presenceHandler) {
       ROOM.Presence.offPresenceChange(this._presenceHandler);
       this._presenceHandler = null;
