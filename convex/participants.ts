@@ -65,8 +65,7 @@ export const joinRoom = mutation({
     if (room?.lockedUntil && room.lockedUntil > now) {
       const isAllowed = room.allowedUsers && room.allowedUsers.includes(args.phoneNumber);
       if (!isAllowed) {
-        const lockDate = new Date(room.lockedUntil);
-        throw new Error(`Room is closed until ${lockDate.toLocaleDateString()} ${lockDate.toLocaleTimeString()}`);
+        throw new Error(`ROOM_CLOSED:${room.lockedUntil}`);
       }
     }
 

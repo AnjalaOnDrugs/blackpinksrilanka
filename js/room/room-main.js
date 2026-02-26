@@ -78,16 +78,36 @@ checkAuthState().then(async function (user) {
   } catch (err) {
     console.error('Room init error:', err);
 
-    var errorMsg = err.message || 'Failed to join.';
-    var isClosedInfo = errorMsg.indexOf("Room is closed until") > -1;
-    var displayMsg = isClosedInfo ? errorMsg : 'Failed to join.';
+    // Tear down subscriptions and presence so events don't pop up
+    try { ROOM.Firebase.destroy(); } catch (e) { /* ignore */ }
+    try { ROOM.Presence.destroy(); } catch (e) { /* ignore */ }
 
-    document.getElementById('roomLoading').innerHTML =
-      '<div style="text-align: center; padding: 40px; background: rgba(0,0,0,0.8); border-radius: 20px; border: 1px solid rgba(247, 166, 185, 0.3);">' +
-      '<div style="font-size: 50px; margin-bottom: 20px; animation: adminMsgPop 0.5s;">🔒</div>' +
-      '<div class="room-loading-text" style="color:#fff; font-size: 1.2rem; margin-bottom: 20px; line-height: 1.4;">' + ROOM.Animations.esc(displayMsg) + '</div>' +
-      '<a href="members.html" style="display: inline-block; padding: 12px 32px; background: #f7a6b9; color: #000; text-decoration: none; border-radius: 50px; font-family: \'Outfit\', sans-serif; font-weight: 800; font-size: 16px; text-transform: uppercase;">Go Back</a>' +
-      '</div>';
+    var errorMsg = err.message || '';
+    var closedMatch = errorMsg.match(/^ROOM_CLOSED:(\d+)/);
+    var loadingEl = document.getElementById('roomLoading');
+
+    if (closedMatch) {
+      var lockedUntil = new Date(parseInt(closedMatch[1], 10));
+      var dateStr = lockedUntil.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      var timeStr = lockedUntil.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+      loadingEl.innerHTML =
+        '<div class="room-closed-card">' +
+          '<div class="room-closed-icon">🔒</div>' +
+          '<div class="room-closed-title">Room Closed</div>' +
+          '<div class="room-closed-msg">The room is currently closed.<br>It will reopen on</div>' +
+          '<div class="room-closed-date">' + dateStr + ' at ' + timeStr + '</div>' +
+          '<a href="members.html" class="room-closed-btn">Go Back</a>' +
+        '</div>';
+    } else {
+      loadingEl.innerHTML =
+        '<div class="room-closed-card">' +
+          '<div class="room-closed-icon">😵</div>' +
+          '<div class="room-closed-title">Couldn\'t Join</div>' +
+          '<div class="room-closed-msg">Something went wrong while joining the room.<br>Please try again later.</div>' +
+          '<a href="members.html" class="room-closed-btn">Go Back</a>' +
+        '</div>';
+    }
   }
 });
 

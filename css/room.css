@@ -230,6 +230,71 @@
   }
 }
 
+/* ========== ROOM CLOSED STATE ========== */
+.room-closed-card {
+  text-align: center;
+  padding: 48px 32px;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 24px;
+  border: 1px solid rgba(247, 166, 185, 0.25);
+  max-width: 360px;
+  width: 90vw;
+  animation: adminMsgPop 0.4s ease-out;
+}
+
+.room-closed-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  animation: adminMsgPop 0.5s ease-out;
+}
+
+.room-closed-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.room-closed-msg {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: #aaa;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.room-closed-date {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #f7a6b9;
+  margin-bottom: 28px;
+}
+
+.room-closed-btn {
+  display: inline-block;
+  padding: 14px 36px;
+  background: #f7a6b9;
+  color: #000;
+  text-decoration: none;
+  border-radius: 50px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.room-closed-btn:hover {
+  background: #e8758a;
+  transform: scale(1.03);
+}
+
 /* ========== LAST.FM MODAL ========== */
 .room-modal-backdrop {
   position: fixed;
