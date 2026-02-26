@@ -608,6 +608,7 @@
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 20px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .room-panel--stage {
@@ -1917,8 +1918,11 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.03);
-  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  height: 56px;
+  max-height: 56px;
+  flex-shrink: 0;
 }
 
 .room-activity-card:hover {
@@ -1935,6 +1939,8 @@
 .room-activity-card--menu-open {
   border-color: rgba(247, 166, 185, 0.24);
   box-shadow: 0 8px 26px rgba(247, 166, 185, 0.08);
+  max-height: 200px;
+  height: auto;
 }
 
 .room-activity-card--session-start {
