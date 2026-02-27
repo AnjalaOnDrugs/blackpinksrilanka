@@ -28,26 +28,84 @@ export const getProfilePictures = query({
         .query("users")
         .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
         .first();
-      let profilePicture = user?.profilePicture ?? null;
-
-      // Backward-compatible fallback: older rows may only have picture on participants.
-      if (!profilePicture && args.roomId) {
-        const participant = await ctx.db
-          .query("participants")
-          .withIndex("by_room_phone", (q) =>
-            q.eq("roomId", args.roomId as string).eq("phoneNumber", phoneNumber)
-          )
-          .first();
-        profilePicture = participant?.profilePicture ?? null;
-      }
-
       out.push({
         phoneNumber,
-        profilePicture,
+        profilePicture: user?.profilePicture ?? null,
       });
     }
 
     return out;
+  },
+});
+
+// One-time migration utility:
+// copy legacy participants.profilePicture into users.profilePicture.
+export const migrateProfilePicturesFromParticipants = mutation({
+  args: {
+    roomId: v.optional(v.string()),
+    overwriteExisting: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const overwrite = args.overwriteExisting === true;
+    const participants = args.roomId
+      ? await ctx.db
+        .query("participants")
+        .withIndex("by_room", (q) => q.eq("roomId", args.roomId as string))
+        .collect()
+      : await ctx.db.query("participants").collect();
+
+    const phoneToPicture: Record<string, string> = {};
+    for (const p of participants) {
+      if (p.profilePicture) {
+        // Keep first seen per phone number.
+        if (!phoneToPicture[p.phoneNumber]) {
+          phoneToPicture[p.phoneNumber] = p.profilePicture;
+        }
+      }
+    }
+
+    let patched = 0;
+    let inserted = 0;
+    let skipped = 0;
+
+    for (const phoneNumber of Object.keys(phoneToPicture)) {
+      const profilePicture = phoneToPicture[phoneNumber];
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
+        .first();
+
+      if (!user) {
+        await ctx.db.insert("users", {
+          phoneNumber,
+          profilePicture,
+        });
+        inserted++;
+        continue;
+      }
+
+      if (user.profilePicture && !overwrite) {
+        skipped++;
+        continue;
+      }
+
+      if (user.profilePicture !== profilePicture) {
+        await ctx.db.patch(user._id, { profilePicture });
+        patched++;
+      } else {
+        skipped++;
+      }
+    }
+
+    return {
+      roomId: args.roomId ?? null,
+      participantsScanned: participants.length,
+      usersWithLegacyPictures: Object.keys(phoneToPicture).length,
+      patched,
+      inserted,
+      skipped,
+      overwriteExisting: overwrite,
+    };
   },
 });
 
