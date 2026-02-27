@@ -101,8 +101,8 @@ const CONFIG = {
 
   // Vroom race event settings
   vroomCheckInterval: 60000,           // Check every 60s if we should trigger
-  vroomCooldown: 7200000,              // 2 hours between events
-  vroomTriggerChance: 1,            // 15% chance per check once cooldown elapsed
+  vroomCooldown: 3600000,              // 1 hour between events
+  vroomTriggerChance: 0.15,            // 15% chance per check once cooldown elapsed
   vroomJoinCheckInterval: 5000,        // Check every 5s for auto-join detection
 
   // Solo songs per member (for vroom race)
