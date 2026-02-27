@@ -287,6 +287,37 @@ export const disableOfflineTracking = mutation({
   },
 });
 
+// Reset all participant points to 0 and clear stream counts
+export const resetAllPoints = mutation({
+  args: { roomId: v.string() },
+  handler: async (ctx, args) => {
+    // 1. Reset totalPoints and bonusPoints on all participants
+    const participants = await ctx.db
+      .query("participants")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    for (const p of participants) {
+      await ctx.db.patch(p._id, {
+        totalPoints: 0,
+        bonusPoints: 0,
+      });
+    }
+
+    // 2. Delete all streamCounts for this room
+    const streams = await ctx.db
+      .query("streamCounts")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    for (const s of streams) {
+      await ctx.db.delete(s._id);
+    }
+
+    return { reset: participants.length, streamsCleared: streams.length };
+  },
+});
+
 // Add milestone with dedup
 export const addMilestone = mutation({
   args: {

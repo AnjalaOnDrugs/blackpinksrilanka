@@ -28,8 +28,8 @@ ROOM.LastFM = {
     var a = (artist || '').toLowerCase();
     var combined = n + ' ' + a;
 
-    // Empty or garbage
-    if (!name || name.trim().length <= 2) return true;
+    // Empty or garbage (threshold lowered to 1 to allow short titles like "GO")
+    if (!name || name.trim().length <= 1) return true;
     if (!artist || artist.trim().length === 0) return true;
 
     // Generic/placeholder artists
