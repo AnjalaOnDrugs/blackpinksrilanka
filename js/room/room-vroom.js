@@ -168,6 +168,23 @@ ROOM.Vroom = {
     this._updateCompactView();
   },
 
+  // Live progress update from the getActiveVroom subscription (replaces vroom_progress events)
+  handleLiveUpdate: function (event) {
+    if (!this._activeEventId || !this._lanes || !event.lanes) return;
+
+    var members = CONFIG.vroomMembers || ['jisoo', 'jennie', 'rose', 'lisa'];
+    for (var i = 0; i < members.length; i++) {
+      var m = members[i];
+      if (event.lanes[m] && typeof event.lanes[m].seconds === 'number') {
+        this._lanes[m].seconds = event.lanes[m].seconds;
+      }
+    }
+
+    this._target = event.target || this._target;
+    this._updateAllLanes();
+    this._updateCompactView();
+  },
+
   handleFinish: function (data) {
     this._winner = data.winner;
     this._stopJoinCheck();

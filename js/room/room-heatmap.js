@@ -7,7 +7,8 @@
 window.ROOM = window.ROOM || {};
 
 ROOM.HeatMap = {
-  watchCancel: null,
+  _pollInterval: null,
+  _roomId: null,
   districtData: {},
   maxStreams: 0,
   svgEl: null,
@@ -70,13 +71,28 @@ ROOM.HeatMap = {
 
   subscribe: function (roomId) {
     var self = this;
-    this.watchCancel = ConvexService.watch(
+    this._roomId = roomId;
+
+    // Initial fetch
+    this._pollDistricts();
+
+    // Poll every 30 seconds instead of reactive subscription
+    this._pollInterval = setInterval(function () {
+      self._pollDistricts();
+    }, 30000);
+  },
+
+  _pollDistricts: function () {
+    var self = this;
+    if (!this._roomId) return;
+    ConvexService.query(
       'streams:getStreamsByDistrict',
-      { roomId: roomId },
-      function (data) {
-        if (data) self.updateData(data);
-      }
-    );
+      { roomId: this._roomId }
+    ).then(function (data) {
+      if (data) self.updateData(data);
+    }).catch(function () {
+      // Silently ignore poll errors
+    });
   },
 
   updateData: function (data) {
@@ -260,10 +276,11 @@ ROOM.HeatMap = {
   },
 
   destroy: function () {
-    if (this.watchCancel) {
-      this.watchCancel();
-      this.watchCancel = null;
+    if (this._pollInterval) {
+      clearInterval(this._pollInterval);
+      this._pollInterval = null;
     }
+    this._roomId = null;
     this.hideTooltip();
     ROOM.HeatMap.Deck.destroy();
   }

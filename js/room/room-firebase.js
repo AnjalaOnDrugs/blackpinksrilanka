@@ -10,6 +10,7 @@ window.ROOM = window.ROOM || {};
 ROOM.Firebase = {
   participantsCache: [],
   rawParticipantsCache: [],
+  _tracksCache: {},              // phoneNumber → currentTrack (separate subscription)
   unsubscribers: [],
   roomId: null,
   _initTimestamp: null,
@@ -31,11 +32,27 @@ ROOM.Firebase = {
     var self = this;
 
     // 1. Subscribe to participants (drives leaderboard + activity)
+    // NOTE: currentTrack is excluded from this query to reduce bandwidth.
+    // Track data comes from the separate listTracks subscription below.
     var unsub1 = ConvexService.watch(
       'participants:listByRoom',
       { roomId: roomId },
       function (participants) {
         self.rawParticipantsCache = participants || [];
+        self.refreshUI();
+      }
+    );
+
+    // 1a. Subscribe to track data separately (lightweight, changes often)
+    var unsub1a = ConvexService.watch(
+      'participants:listTracks',
+      { roomId: roomId },
+      function (tracks) {
+        if (!tracks) return;
+        self._tracksCache = {};
+        for (var i = 0; i < tracks.length; i++) {
+          self._tracksCache[tracks[i].phoneNumber] = tracks[i].currentTrack;
+        }
         self.refreshUI();
       }
     );
@@ -201,13 +218,19 @@ ROOM.Firebase = {
       }
     );
 
-    // 8. Subscribe to active Vroom race events (for late joiners)
+    // 8. Subscribe to active Vroom race events (late-join + live progress)
+    // vroom_progress events are no longer broadcast via the events table —
+    // this subscription drives live lane updates directly from the vroom document.
     var unsub8 = ConvexService.watch(
       'vroom:getActiveVroom',
       { roomId: roomId },
       function (event) {
         if (event && event.status === 'active') {
-          if (ROOM.Vroom && ROOM.Vroom.handleActiveEvent) {
+          if (ROOM.Vroom && ROOM.Vroom._activeEventId && ROOM.Vroom._activeEventId === event._id) {
+            // Already tracking this vroom — live progress update
+            ROOM.Vroom.handleLiveUpdate && ROOM.Vroom.handleLiveUpdate(event);
+          } else if (ROOM.Vroom && ROOM.Vroom.handleActiveEvent) {
+            // New/untracked vroom — full catch-up
             ROOM.Vroom.handleActiveEvent(event);
           }
         }
@@ -250,7 +273,7 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8, unsub9);
+    this.unsubscribers.push(unsub1, unsub1a, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8, unsub9);
   },
 
   getParticipants: function () {
@@ -372,11 +395,15 @@ ROOM.Firebase = {
   refreshUI: function () {
     var self = this;
 
-    // Merge Convex participant data with Firebase RTDB presence
+    // Merge Convex participant data with Firebase RTDB presence and track data
+    var tracksCache = this._tracksCache;
     this.participantsCache = (this.rawParticipantsCache || []).map(function (p) {
       // Clone participant data to avoid mutating raw cache directly
       var processed = Object.assign({}, p); // Shallow clone participant object
       processed.data = Object.assign({}, p.data); // Shallow clone data object
+
+      // Merge currentTrack from separate tracks subscription
+      processed.data.currentTrack = tracksCache[p.id] || null;
 
       // Override isOnline and lastSeen from Firebase RTDB presence
       var presenceOnline = ROOM.Presence.isOnline(p.id);

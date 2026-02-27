@@ -206,9 +206,6 @@ ROOM.Events = {
       case 'vroom_join':
         ROOM.Vroom && ROOM.Vroom.handleJoin(eventData.data);
         break;
-      case 'vroom_progress':
-        ROOM.Vroom && ROOM.Vroom.handleProgress(eventData.data);
-        break;
       case 'vroom_finish':
         ROOM.Vroom && ROOM.Vroom.handleFinish(eventData.data);
         break;

@@ -202,27 +202,9 @@ export const addVroomSeconds = mutation({
       return { finished: true, winner: args.member };
     }
 
-    // Not finished yet — update and broadcast progress
+    // Not finished yet — update the document (clients watch via getActiveVroom subscription)
     await ctx.db.patch(args.vroomId, {
       lanes: updatedLanes,
-    });
-
-    // Broadcast progress
-    await ctx.db.insert("events", {
-      roomId: args.roomId,
-      type: "vroom_progress",
-      data: {
-        vroomId: args.vroomId,
-        member: args.member,
-        seconds: {
-          jisoo: updatedLanes.jisoo.seconds,
-          jennie: updatedLanes.jennie.seconds,
-          rose: updatedLanes.rose.seconds,
-          lisa: updatedLanes.lisa.seconds,
-        },
-        target: event.target,
-      },
-      createdAt: Date.now(),
     });
 
     return { finished: false, seconds: newSeconds };

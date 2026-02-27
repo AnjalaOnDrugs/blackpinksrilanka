@@ -16,9 +16,9 @@ export const listByRoom = query({
     // Sort by totalPoints descending (fallback to totalMinutes for legacy)
     participants.sort((a, b) => (b.totalPoints ?? 0) - (a.totalPoints ?? 0) || b.totalMinutes - a.totalMinutes);
 
-    // NOTE: isOnline and lastSeen are no longer returned from this query.
-    // Presence is now handled by Firebase Realtime Database (client-side merge).
-    // This means heartbeat writes no longer invalidate this subscription.
+    // NOTE: currentTrack is excluded here to reduce subscription bandwidth.
+    // Track data is served by the separate listTracks query, so track changes
+    // don't trigger a full participant list re-send to every client.
     return participants.map((p) => ({
       id: p.phoneNumber,
       data: {
@@ -30,14 +30,31 @@ export const listByRoom = query({
         currentRank: p.currentRank,
         previousRank: p.previousRank,
         milestones: p.milestones,
-        currentTrack: p.currentTrack ?? null,
         avatarColor: p.avatarColor,
         profilePicture: p.profilePicture ?? null,
         streakMinutes: p.streakMinutes,
         offlineTracking: p.offlineTracking ?? false,
         lastCheckIn: p.lastCheckIn ?? null,
         bonusPoints: p.bonusPoints ?? 0,
+        gifsSent: p.gifsSent ?? 0,
       },
+    }));
+  },
+});
+
+// Lightweight track-only query — subscribed separately so track changes
+// don't cause the full participant list to re-send.
+export const listTracks = query({
+  args: { roomId: v.string() },
+  handler: async (ctx, args) => {
+    const participants = await ctx.db
+      .query("participants")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    return participants.map((p) => ({
+      phoneNumber: p.phoneNumber,
+      currentTrack: p.currentTrack ?? null,
     }));
   },
 });
