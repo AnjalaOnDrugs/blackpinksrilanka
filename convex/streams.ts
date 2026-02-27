@@ -120,11 +120,24 @@ function normalizeTrackKey(name: string, artist: string): string {
 
 /** Check if this is the main event song */
 function isMainEventSong(trackName: string, trackArtist: string): boolean {
-  return (
-    cleanForMatch(trackArtist) === cleanForMatch(MAIN_EVENT_SONG.artist) &&
-    extractCoreSongTitle(trackName, trackArtist) ===
-      cleanForMatch(MAIN_EVENT_SONG.title)
-  );
+  const cleanedArtist = cleanForMatch(trackArtist);
+  const mainArtist = cleanForMatch(MAIN_EVENT_SONG.artist);
+  const mainTitle = cleanForMatch(MAIN_EVENT_SONG.title);
+
+  // Artist match: exact or starts-with (handles "BLACKPINK - Topic", "BLACKPINK Official", etc.)
+  const artistMatch =
+    cleanedArtist === mainArtist || cleanedArtist.indexOf(mainArtist + " ") === 0;
+
+  if (!artistMatch) {
+    // Fallback: artist might be embedded in track name (e.g. "BLACKPINK - GO")
+    const coreTitle = extractCoreSongTitle(trackName, trackArtist);
+    if (coreTitle !== mainTitle) return false;
+    // Check if the main artist appears anywhere in the track name
+    const cleanedName = cleanForMatch(trackName);
+    return cleanedName.indexOf(mainArtist) >= 0;
+  }
+
+  return extractCoreSongTitle(trackName, trackArtist) === mainTitle;
 }
 
 /** Check if this is a BLACKPINK or solo member song */
