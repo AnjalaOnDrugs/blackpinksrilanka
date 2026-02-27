@@ -56,10 +56,11 @@ ROOM.Gif = {
   // ============================
 
   openPicker: function (targetPhone, targetUsername, targetColor) {
-    // Quick client-side point check before even opening the modal
-    var myPts = this._getMyPoints();
-    if (myPts < 10) {
-      ROOM.Animations && ROOM.Animations.showToast('gif', '💰', 'You need at least <strong>10 points</strong> to send a GIF!');
+    // Quick client-side check: do they have any GIFs available?
+    var available = this._getAvailableGifs();
+    if (available <= 0) {
+      var nextUnlock = (this._getGifsSent() + 1) * 10;
+      ROOM.Animations && ROOM.Animations.showToast('gif', '🎞', 'No GIFs available! Next unlock at <strong>' + nextUnlock + ' pts</strong>.');
       return;
     }
 
@@ -147,7 +148,7 @@ ROOM.Gif = {
           '<input type="text" class="room-gif-message-input" id="gifMessageInput" placeholder="Add a message (optional)" maxlength="100" autocomplete="off">' +
           '<button class="room-gif-send-btn" id="gifSendBtn">' +
             '<span>Send GIF</span>' +
-            '<span class="room-gif-send-cost">-10 pts</span>' +
+            '<span class="room-gif-send-cost">' + this._getAvailableGifs() + ' left</span>' +
           '</button>' +
         '</div>';
     }
@@ -409,9 +410,10 @@ ROOM.Gif = {
       return;
     }
 
-    // Client-side point check
-    if (this._getMyPoints() < 10) {
-      ROOM.Animations && ROOM.Animations.showToast('gif', '💰', 'Not enough points! Need <strong>10 pts</strong>.');
+    // Client-side GIF availability check
+    if (this._getAvailableGifs() <= 0) {
+      var nextUnlock = (this._getGifsSent() + 1) * 10;
+      ROOM.Animations && ROOM.Animations.showToast('gif', '🎞', 'No GIFs available! Next unlock at <strong>' + nextUnlock + ' pts</strong>.');
       this._removeModal();
       return;
     }
@@ -434,8 +436,9 @@ ROOM.Gif = {
       message: message || undefined,
     }).then(function (result) {
       if (result && result.success === false) {
-        if (result.reason === 'insufficient_points') {
-          ROOM.Animations && ROOM.Animations.showToast('gif', '💰', 'Not enough points! Need <strong>10 pts</strong>.');
+        if (result.reason === 'no_gifs_available') {
+          var nextAt = result.nextUnlockAt || '?';
+          ROOM.Animations && ROOM.Animations.showToast('gif', '🎞', 'No GIFs available! Next unlock at <strong>' + nextAt + ' pts</strong>.');
         } else if (result.reason === 'cooldown') {
           ROOM.Animations && ROOM.Animations.showToast('gif', '⏳', 'Wait before sending another GIF!');
         }
@@ -443,10 +446,11 @@ ROOM.Gif = {
         return;
       }
 
+      var remaining = (result && result.gifsAvailable != null) ? result.gifsAvailable : '?';
       ROOM.Animations && ROOM.Animations.showToast(
         'gif',
         '🎞',
-        'GIF sent to <strong>' + self._esc(targetUsername) + '</strong>! (-10 pts)'
+        'GIF sent to <strong>' + self._esc(targetUsername) + '</strong>! (' + remaining + ' left)'
       );
     });
   },
@@ -574,6 +578,24 @@ ROOM.Gif = {
       }
     }
     return 0;
+  },
+
+  _getGifsSent: function () {
+    if (!ROOM.Firebase || !ROOM.Firebase.participantsCache || !ROOM.currentUser) return 0;
+    var myPhone = ROOM.currentUser.phoneNumber;
+    for (var i = 0; i < ROOM.Firebase.participantsCache.length; i++) {
+      if (ROOM.Firebase.participantsCache[i].id === myPhone) {
+        return ROOM.Firebase.participantsCache[i].data.gifsSent || 0;
+      }
+    }
+    return 0;
+  },
+
+  _getAvailableGifs: function () {
+    var pts = this._getMyPoints();
+    var sent = this._getGifsSent();
+    var unlocked = Math.floor(pts / 10);
+    return Math.max(0, unlocked - sent);
   },
 
   _getMemberLabel: function (key) {

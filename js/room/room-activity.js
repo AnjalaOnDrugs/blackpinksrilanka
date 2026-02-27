@@ -286,7 +286,7 @@ ROOM.Activity = {
             ' data-target-color="' + color + '">' +
             '<span class="room-gif-btn-icon">🎞</span>' +
             '<span>Send GIF</span>' +
-            '<span class="room-gif-btn-cost">10 pts</span>' +
+            '<span class="room-gif-btn-cost">' + (ROOM.Gif ? ROOM.Gif._getAvailableGifs() : 0) + ' avail</span>' +
           '</button>' +
         '</div>';
     }

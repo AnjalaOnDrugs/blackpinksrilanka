@@ -51,6 +51,7 @@ export default defineSchema({
     offlineTracking: v.optional(v.boolean()),
     lastCheckIn: v.optional(v.number()),
     bonusPoints: v.optional(v.number()),
+    gifsSent: v.optional(v.number()),
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"])
     .index("by_room_minutes", ["roomId", "totalMinutes"]),

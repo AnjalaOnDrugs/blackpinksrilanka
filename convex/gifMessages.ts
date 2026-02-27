@@ -1,9 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-const GIF_COST = 10;
+const POINTS_PER_GIF = 10;
 
-// Send a GIF message to another user (costs 10 points)
+// Send a GIF message to another user (every 10 points unlocks a GIF)
 export const send = mutation({
   args: {
     roomId: v.string(),
@@ -50,17 +50,17 @@ export const send = mutation({
     }
 
     const currentTotal = participant.totalPoints ?? 0;
-    if (currentTotal < GIF_COST) {
-      return { success: false, reason: "insufficient_points" };
+    const gifsSent = participant.gifsSent ?? 0;
+    const gifsUnlocked = Math.floor(currentTotal / POINTS_PER_GIF);
+    const gifsAvailable = gifsUnlocked - gifsSent;
+
+    if (gifsAvailable <= 0) {
+      return { success: false, reason: "no_gifs_available", gifsAvailable: 0, nextUnlockAt: (gifsSent + 1) * POINTS_PER_GIF };
     }
 
-    // Deduct points via bonusPoints (can go negative — recalculatePoints handles it)
-    const newBonusPoints = (participant.bonusPoints ?? 0) - GIF_COST;
-    const newTotalPoints = currentTotal - GIF_COST;
-
+    // Increment gifsSent counter (no point deduction)
     await ctx.db.patch(participant._id, {
-      bonusPoints: newBonusPoints,
-      totalPoints: newTotalPoints,
+      gifsSent: gifsSent + 1,
     });
 
     // Truncate message to 100 chars
@@ -102,7 +102,7 @@ export const send = mutation({
       createdAt: now,
     });
 
-    return { success: true, newTotalPoints };
+    return { success: true, gifsAvailable: gifsAvailable - 1 };
   },
 });
 
