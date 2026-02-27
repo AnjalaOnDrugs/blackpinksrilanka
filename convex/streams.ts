@@ -16,7 +16,8 @@ import { v } from "convex/values";
  *
  * Spotify:
  *   - Unlimited daily streams
- *   - 30s listen time always, 2-minute same-song cooldown always
+ *   - Listen time scales with user points: 30s (default), 60s (>350pts), 90s (>400pts), 120s (>500pts)
+ *   - 2-minute same-song cooldown always
  *   - After 10 total streams: must have at least 1 different song in between
  *
  * Points System:
@@ -39,10 +40,18 @@ const YT_LATE_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 const YT_INTERLEAVE_REQUIRED = 2; // 2 different songs in between
 
 // ── Spotify constants ──
-const SP_LISTEN_SECONDS = 30;
+const SP_BASE_LISTEN_SECONDS = 30;
 const SP_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes
 const SP_INTERLEAVE_THRESHOLD = 10; // after 10 total streams
 const SP_INTERLEAVE_REQUIRED = 1; // 1 different song in between
+
+/** Spotify listen time scales with user points */
+function getSpotifyListenSeconds(totalPoints: number): number {
+  if (totalPoints > 500) return 120; // 2 minutes
+  if (totalPoints > 400) return 90;  // 1.5 minutes
+  if (totalPoints > 350) return 60;  // 1 minute
+  return SP_BASE_LISTEN_SECONDS;     // 30 seconds
+}
 
 // ── Shared ──
 const MAX_RECENT_TRACKS = 5; // how many track keys to keep in history
@@ -424,12 +433,21 @@ export const tryCountStream = mutation({
     } else {
       // ── Spotify Rules ──
 
-      // 30s listen time always
-      if (listenedSeconds < SP_LISTEN_SECONDS) {
+      // Look up user's current points to determine required listen time
+      const userParticipant = await ctx.db
+        .query("participants")
+        .withIndex("by_room_phone", (q) =>
+          q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+        )
+        .first();
+      const userPoints = userParticipant?.totalPoints ?? 0;
+      const requiredListenSeconds = getSpotifyListenSeconds(userPoints);
+
+      if (listenedSeconds < requiredListenSeconds) {
         return {
           counted: false,
           reason: "too_short",
-          secondsRemaining: SP_LISTEN_SECONDS - listenedSeconds,
+          secondsRemaining: requiredListenSeconds - listenedSeconds,
         };
       }
 
