@@ -15,7 +15,10 @@ export const getByPhone = query({
 // Get profile pictures for a set of phone numbers.
 // Returned as a flat array to keep client-side merge simple.
 export const getProfilePictures = query({
-  args: { phoneNumbers: v.array(v.string()) },
+  args: {
+    phoneNumbers: v.array(v.string()),
+    roomId: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const unique = [...new Set(args.phoneNumbers)].slice(0, 300);
     const out: Array<{ phoneNumber: string; profilePicture: string | null }> = [];
@@ -25,9 +28,22 @@ export const getProfilePictures = query({
         .query("users")
         .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
         .first();
+      let profilePicture = user?.profilePicture ?? null;
+
+      // Backward-compatible fallback: older rows may only have picture on participants.
+      if (!profilePicture && args.roomId) {
+        const participant = await ctx.db
+          .query("participants")
+          .withIndex("by_room_phone", (q) =>
+            q.eq("roomId", args.roomId as string).eq("phoneNumber", phoneNumber)
+          )
+          .first();
+        profilePicture = participant?.profilePicture ?? null;
+      }
+
       out.push({
         phoneNumber,
-        profilePicture: user?.profilePicture ?? null,
+        profilePicture,
       });
     }
 

@@ -50,7 +50,7 @@ ROOM.Firebase = {
         if (self._lastPhoneHash !== phoneHash) {
           self._lastPhoneHash = phoneHash;
           if (self._unsubPfps) self._unsubPfps();
-          self._unsubPfps = ConvexService.watch('users:getProfilePictures', { phoneNumbers: phoneNumbers }, function (pfps) {
+          self._unsubPfps = ConvexService.watch('users:getProfilePictures', { roomId: roomId, phoneNumbers: phoneNumbers }, function (pfps) {
             if (!pfps) return;
             for (var i = 0; i < pfps.length; i++) {
               self._pfpCache[pfps[i].phoneNumber] = pfps[i].profilePicture;

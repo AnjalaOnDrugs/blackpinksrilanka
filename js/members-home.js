@@ -190,7 +190,7 @@ var MembersRoom = {
           if (self._unsubPfps) self._unsubPfps();
           self._unsubPfps = ConvexService.watch(
             'users:getProfilePictures',
-            { phoneNumbers: phoneNumbers },
+            { roomId: self._roomId, phoneNumbers: phoneNumbers },
             function (pfps) {
               if (!pfps) return;
               for (var i = 0; i < pfps.length; i++) {
