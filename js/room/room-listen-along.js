@@ -56,6 +56,8 @@ ROOM.ListenAlong = {
 
     if (onlineUsers.length < 2) return;
     if (!ROOM.currentUser) return;
+    var leaderPhone = onlineUsers.map(function (p) { return p.id; }).sort()[0];
+    if (leaderPhone !== ROOM.currentUser.phoneNumber) return;
 
     // Random chance gate
     var chance = CONFIG.listenAlongTriggerChance || 0.15;

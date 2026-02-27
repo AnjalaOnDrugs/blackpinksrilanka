@@ -220,6 +220,7 @@ ROOM.LastFM = {
   _offlinePollInterval: null,
   // Track last known track per offline user to avoid redundant startListening calls
   _offlineLastTrack: {},
+  _offlineTrackState: {},
 
   init: function () {
     this.apiKey = CONFIG.lastfmApiKey;
@@ -384,6 +385,7 @@ ROOM.LastFM = {
       if (timeSinceCheckIn > checkInExpiry) {
         // Check-in expired — disable offline tracking and clean up stream session
         delete self._offlineLastTrack[p.id];
+        delete self._offlineTrackState[p.id];
         ConvexService.mutation('streams:stopListening', {
           roomId: ROOM.Firebase.roomId,
           phoneNumber: p.id
@@ -402,6 +404,7 @@ ROOM.LastFM = {
           // No track — stop any active stream session
           if (self._offlineLastTrack[userId]) {
             delete self._offlineLastTrack[userId];
+            delete self._offlineTrackState[userId];
             ConvexService.mutation('streams:stopListening', {
               roomId: ROOM.Firebase.roomId,
               phoneNumber: userId
@@ -413,6 +416,7 @@ ROOM.LastFM = {
         if (self.isLikelyNonMusic(trackData.name, trackData.artist)) {
           if (self._offlineLastTrack[userId]) {
             delete self._offlineLastTrack[userId];
+            delete self._offlineTrackState[userId];
             ConvexService.mutation('streams:stopListening', {
               roomId: ROOM.Firebase.roomId,
               phoneNumber: userId
@@ -425,6 +429,7 @@ ROOM.LastFM = {
           if (!isMusic) {
             if (self._offlineLastTrack[userId]) {
               delete self._offlineLastTrack[userId];
+              delete self._offlineTrackState[userId];
               ConvexService.mutation('streams:stopListening', {
                 roomId: ROOM.Firebase.roomId,
                 phoneNumber: userId
@@ -434,7 +439,11 @@ ROOM.LastFM = {
           }
 
           // Update track display
-          ROOM.Firebase.updateParticipantTrack(userId, trackData);
+          var offlineTrackState = trackData.name + '|' + trackData.artist + '|' + trackData.nowPlaying;
+          if (self._offlineTrackState[userId] !== offlineTrackState) {
+            self._offlineTrackState[userId] = offlineTrackState;
+            ROOM.Firebase.updateParticipantTrack(userId, trackData);
+          }
 
           // Manage stream session for this offline-tracked user
           if (trackData.nowPlaying) {
@@ -458,6 +467,7 @@ ROOM.LastFM = {
             // Not currently playing — end session
             if (self._offlineLastTrack[userId]) {
               delete self._offlineLastTrack[userId];
+              delete self._offlineTrackState[userId];
               ConvexService.mutation('streams:stopListening', {
                 roomId: ROOM.Firebase.roomId,
                 phoneNumber: userId

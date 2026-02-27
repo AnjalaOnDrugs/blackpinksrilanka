@@ -12,6 +12,29 @@ export const getByPhone = query({
   },
 });
 
+// Get profile pictures for a set of phone numbers.
+// Returned as a flat array to keep client-side merge simple.
+export const getProfilePictures = query({
+  args: { phoneNumbers: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const unique = [...new Set(args.phoneNumbers)].slice(0, 300);
+    const out: Array<{ phoneNumber: string; profilePicture: string | null }> = [];
+
+    for (const phoneNumber of unique) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
+        .first();
+      out.push({
+        phoneNumber,
+        profilePicture: user?.profilePicture ?? null,
+      });
+    }
+
+    return out;
+  },
+});
+
 // Get user by username
 export const getByUsername = query({
   args: { username: v.string() },

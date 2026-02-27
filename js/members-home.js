@@ -158,6 +158,9 @@ var MembersRoom = {
   _currentTrackIdx: 0,
 
   _rawParticipants: [],
+  _pfpCache: {},
+  _lastPhoneHash: '',
+  _unsubPfps: null,
   _presenceHandler: null,
 
   init: function () {
@@ -179,6 +182,24 @@ var MembersRoom = {
       function (participants) {
         if (!participants) return;
         self._rawParticipants = participants;
+
+        var phoneNumbers = self._rawParticipants.map(function (p) { return p.id; }).sort();
+        var phoneHash = phoneNumbers.join(',');
+        if (self._lastPhoneHash !== phoneHash) {
+          self._lastPhoneHash = phoneHash;
+          if (self._unsubPfps) self._unsubPfps();
+          self._unsubPfps = ConvexService.watch(
+            'users:getProfilePictures',
+            { phoneNumbers: phoneNumbers },
+            function (pfps) {
+              if (!pfps) return;
+              for (var i = 0; i < pfps.length; i++) {
+                self._pfpCache[pfps[i].phoneNumber] = pfps[i].profilePicture;
+              }
+              self._mergeAndRender();
+            }
+          );
+        }
         self._mergeAndRender();
       }
     );
@@ -198,9 +219,11 @@ var MembersRoom = {
 
   // ---- Merge Convex participants with Firebase RTDB presence ----
   _mergeAndRender: function () {
+    var pfpCache = this._pfpCache || {};
     this._participants = (this._rawParticipants || []).map(function (p) {
       var merged = Object.assign({}, p);
       merged.data = Object.assign({}, p.data);
+      merged.data.profilePicture = pfpCache[p.id] || null;
       // Override isOnline from Firebase RTDB presence
       merged.data.isOnline = ROOM.Presence.isOnline(p.id);
       var presenceLastSeen = ROOM.Presence.getLastSeen(p.id);
@@ -577,6 +600,10 @@ var MembersRoom = {
   },
 
   destroy: function () {
+    if (this._unsubPfps) {
+      this._unsubPfps();
+      this._unsubPfps = null;
+    }
     this._stopJoinCountdown();
     if (this._presenceHandler) {
       ROOM.Presence.offPresenceChange(this._presenceHandler);

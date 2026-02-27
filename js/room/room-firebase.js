@@ -18,6 +18,9 @@ ROOM.Firebase = {
   _processedEventIds: {},
   _presenceChangeHandler: null,
   _initialSyncTimer: null,       // short-lived timer to catch initial data race
+  _pfpCache: {},
+  _lastPhoneHash: '',
+  _unsubPfps: null,
 
   init: function (roomId) {
     this.roomId = roomId;
@@ -34,11 +37,28 @@ ROOM.Firebase = {
     // 1. Subscribe to participants (drives leaderboard + activity)
     // NOTE: currentTrack is excluded from this query to reduce bandwidth.
     // Track data comes from the separate listTracks subscription below.
+    self._pfpCache = {};
+    self._lastPhoneHash = '';
     var unsub1 = ConvexService.watch(
       'participants:listByRoom',
       { roomId: roomId },
       function (participants) {
         self.rawParticipantsCache = participants || [];
+
+        var phoneNumbers = self.rawParticipantsCache.map(function (p) { return p.id; }).sort();
+        var phoneHash = phoneNumbers.join(',');
+        if (self._lastPhoneHash !== phoneHash) {
+          self._lastPhoneHash = phoneHash;
+          if (self._unsubPfps) self._unsubPfps();
+          self._unsubPfps = ConvexService.watch('users:getProfilePictures', { phoneNumbers: phoneNumbers }, function (pfps) {
+            if (!pfps) return;
+            for (var i = 0; i < pfps.length; i++) {
+              self._pfpCache[pfps[i].phoneNumber] = pfps[i].profilePicture;
+            }
+            self.refreshUI();
+          });
+        }
+
         self.refreshUI();
       }
     );
@@ -85,7 +105,7 @@ ROOM.Firebase = {
     var isInitialEventLoad = true;
     var unsub2 = ConvexService.watch(
       'events:listRecent',
-      { roomId: roomId },
+      { roomId: roomId, since: this._initTimestamp },
       function (events) {
         if (!events) return;
         events.forEach(function (evt) {
@@ -274,6 +294,8 @@ ROOM.Firebase = {
     );
 
     this.unsubscribers.push(unsub1, unsub1a, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8, unsub9);
+    var selfRef = this;
+    this.unsubscribers.push(function () { if (selfRef._unsubPfps) selfRef._unsubPfps(); });
   },
 
   getParticipants: function () {
@@ -389,6 +411,9 @@ ROOM.Firebase = {
       if (typeof unsub === 'function') unsub();
     });
     this.unsubscribers = [];
+    this._unsubPfps = null;
+    this._pfpCache = {};
+    this._lastPhoneHash = '';
     ConvexService.destroy();
   },
 
@@ -404,6 +429,7 @@ ROOM.Firebase = {
 
       // Merge currentTrack from separate tracks subscription
       processed.data.currentTrack = tracksCache[p.id] || null;
+      processed.data.profilePicture = self._pfpCache[p.id] || null;
 
       // Override isOnline and lastSeen from Firebase RTDB presence
       var presenceOnline = ROOM.Presence.isOnline(p.id);

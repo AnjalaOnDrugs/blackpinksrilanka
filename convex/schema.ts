@@ -96,10 +96,44 @@ export default defineSchema({
     countedAt: v.number(),
     // How long they actually listened (in seconds) before we counted it
     listenDuration: v.number(),
+    // Denormalized user metadata at count-time for fast heat map queries
+    userDistrict: v.optional(v.string()),
+    userLat: v.optional(v.number()),
+    userLng: v.optional(v.number()),
+    // Denormalized music family flag for fast aggregate queries
+    isBlackpinkOrSolo: v.optional(v.boolean()),
   }).index("by_room", ["roomId"])
     .index("by_room_phone", ["roomId", "phoneNumber"])
+    .index("by_room_phone_platform_time", ["roomId", "phoneNumber", "platform", "countedAt"])
     .index("by_room_track", ["roomId", "trackKey"])
     .index("by_room_phone_track", ["roomId", "phoneNumber", "trackKey"]),
+
+  // Materialized per-room stream aggregates for lightweight reactive stats cards.
+  roomStreamStats: defineTable({
+    roomId: v.string(),
+    youtube: v.number(),
+    spotify: v.number(),
+    other: v.number(),
+    totalMain: v.number(),
+    totalAll: v.number(),
+    totalBlackpink: v.number(),
+    totalOther: v.number(),
+  }).index("by_room", ["roomId"]),
+
+  // Materialized per-user stream aggregates for lightweight personal stats cards.
+  userStreamStats: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    totalStreams: v.number(),
+    mainYoutube: v.number(),
+    mainSpotify: v.number(),
+    mainOther: v.number(),
+    totalBlackpink: v.number(),
+    totalOther: v.number(),
+    // Stream points only (does not include bonus/check-in points)
+    totalPoints: v.number(),
+  }).index("by_room", ["roomId"])
+    .index("by_room_phone", ["roomId", "phoneNumber"]),
 
   // Active listening sessions: tracks when a user started listening to a song
   // Used to validate the minimum listen time before counting a stream

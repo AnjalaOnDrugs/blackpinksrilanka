@@ -208,6 +208,103 @@ function calculateStreamPoints(platform: string, isMain: boolean): number {
   return isMain ? POINTS_SP_MAIN : POINTS_SP_OTHER;
 }
 
+async function getOrCreateRoomStats(ctx: any, roomId: string) {
+  const existing = await ctx.db
+    .query("roomStreamStats")
+    .withIndex("by_room", (q: any) => q.eq("roomId", roomId))
+    .first();
+  if (existing) return existing;
+
+  const streams = await ctx.db
+    .query("streamCounts")
+    .withIndex("by_room", (q: any) => q.eq("roomId", roomId))
+    .collect();
+
+  let youtube = 0;
+  let spotify = 0;
+  let other = 0;
+  let totalMain = 0;
+  let totalBlackpink = 0;
+  let totalOther = 0;
+  for (const s of streams) {
+    const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+    const sIsBp = s.isBlackpinkOrSolo ?? isBlackpinkOrSolo(s.trackArtist);
+    if (sIsBp) totalBlackpink++;
+    else totalOther++;
+    if (sIsMain) {
+      totalMain++;
+      const p = (s.platform as string) || "other";
+      if (p === "youtube") youtube++;
+      else if (p === "spotify") spotify++;
+      else other++;
+    }
+  }
+
+  const id = await ctx.db.insert("roomStreamStats", {
+    roomId,
+    youtube,
+    spotify,
+    other,
+    totalMain,
+    totalAll: streams.length,
+    totalBlackpink,
+    totalOther,
+  });
+  return await ctx.db.get(id);
+}
+
+async function getOrCreateUserStats(ctx: any, roomId: string, phoneNumber: string) {
+  const existing = await ctx.db
+    .query("userStreamStats")
+    .withIndex("by_room_phone", (q: any) =>
+      q.eq("roomId", roomId).eq("phoneNumber", phoneNumber)
+    )
+    .first();
+  if (existing) return existing;
+
+  const streams = await ctx.db
+    .query("streamCounts")
+    .withIndex("by_room_phone", (q: any) =>
+      q.eq("roomId", roomId).eq("phoneNumber", phoneNumber)
+    )
+    .collect();
+
+  let totalStreams = 0;
+  let mainYoutube = 0;
+  let mainSpotify = 0;
+  let mainOther = 0;
+  let totalBlackpink = 0;
+  let totalOther = 0;
+  let totalPoints = 0;
+  for (const s of streams) {
+    const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+    const sIsBp = s.isBlackpinkOrSolo ?? isBlackpinkOrSolo(s.trackArtist);
+    totalPoints += calculateStreamPoints((s.platform as string) || "other", sIsMain);
+    if (sIsBp) totalBlackpink++;
+    else totalOther++;
+    if (sIsMain) {
+      totalStreams++;
+      const p = (s.platform as string) || "other";
+      if (p === "youtube") mainYoutube++;
+      else if (p === "spotify") mainSpotify++;
+      else mainOther++;
+    }
+  }
+
+  const id = await ctx.db.insert("userStreamStats", {
+    roomId,
+    phoneNumber,
+    totalStreams,
+    mainYoutube,
+    mainSpotify,
+    mainOther,
+    totalBlackpink,
+    totalOther,
+    totalPoints,
+  });
+  return await ctx.db.get(id);
+}
+
 // ── Mutations ──
 
 /**
@@ -338,23 +435,39 @@ export const tryCountStream = mutation({
     const listenedMs = now - session.startedAt;
     const listenedSeconds = Math.floor(listenedMs / 1000);
 
+    // Fast gate: avoid extra queries before baseline minimum listen time.
+    if (listenedSeconds < SP_BASE_LISTEN_SECONDS) {
+      return {
+        counted: false,
+        reason: "too_short",
+        secondsRemaining: SP_BASE_LISTEN_SECONDS - listenedSeconds,
+      };
+    }
+
+    const participant = await ctx.db
+      .query("participants")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
     // 2. Get today's stream count for this user on this platform
     const dayStart = new Date(now);
     dayStart.setHours(0, 0, 0, 0);
     const dayStartMs = dayStart.getTime();
 
-    const todayAllStreams = await ctx.db
+    const todayPlatformStreams = await ctx.db
       .query("streamCounts")
-      .withIndex("by_room_phone", (q) =>
-        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      .withIndex("by_room_phone_platform_time", (q) =>
+        q
+          .eq("roomId", args.roomId)
+          .eq("phoneNumber", args.phoneNumber)
+          .eq("platform", platform)
+          .gte("countedAt", dayStartMs)
       )
       .collect();
 
-    const todayPlatformCount = todayAllStreams.filter(
-      (s) =>
-        s.countedAt >= dayStartMs &&
-        (s.platform || "other") === platform
-    ).length;
+    const todayPlatformCount = todayPlatformStreams.length;
 
     // 3. Get most recent stream of this exact track (for cooldown)
     const recentSameTrack = await ctx.db
@@ -434,13 +547,7 @@ export const tryCountStream = mutation({
       // ── Spotify Rules ──
 
       // Look up user's current points to determine required listen time
-      const userParticipant = await ctx.db
-        .query("participants")
-        .withIndex("by_room_phone", (q) =>
-          q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
-        )
-        .first();
-      const userPoints = userParticipant?.totalPoints ?? 0;
+      const userPoints = participant?.totalPoints ?? 0;
       const requiredListenSeconds = getSpotifyListenSeconds(userPoints);
 
       if (listenedSeconds < requiredListenSeconds) {
@@ -481,6 +588,11 @@ export const tryCountStream = mutation({
 
     // 5. All checks passed — count the stream!
     const points = calculateStreamPoints(platform, isMain);
+    const isBpOrSolo = isBlackpinkOrSolo(session.trackArtist);
+    const userDoc = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
 
     await ctx.db.insert("streamCounts", {
       roomId: args.roomId,
@@ -492,70 +604,64 @@ export const tryCountStream = mutation({
       isMainSong: isMain,
       countedAt: now,
       listenDuration: listenedSeconds,
+      userDistrict: userDoc?.district,
+      userLat: userDoc?.lat,
+      userLng: userDoc?.lng,
+      isBlackpinkOrSolo: isBpOrSolo,
     });
 
     // Mark session as counted
     await ctx.db.patch(session._id, { counted: true });
 
-    // 5b. Update user's totalPoints
-    const userStreams = await ctx.db
-      .query("streamCounts")
-      .withIndex("by_room_phone", (q) =>
-        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
-      )
-      .collect();
-
-    let totalPoints = 0;
-    for (const s of userStreams) {
-      const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
-      totalPoints += calculateStreamPoints((s.platform as string) || "other", sIsMain);
-    }
-
-    // Add check-in points
-    const participant = await ctx.db
-      .query("participants")
-      .withIndex("by_room_phone", (q) =>
-        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
-      )
-      .first();
-
+    // 5b. Update user's leaderboard points incrementally.
     if (participant) {
-      const checkInPoints = participant.offlineTracking ? POINTS_CHECK_IN : 0;
-      const bonusPoints = participant.bonusPoints ?? 0;
       await ctx.db.patch(participant._id, {
-        totalPoints: totalPoints + checkInPoints + bonusPoints,
+        totalPoints: (participant.totalPoints ?? 0) + points,
       });
     }
 
-    // 6. Check if we crossed a 100-stream milestone (main song streams only for room milestones)
-    if (isMain) {
-      const totalRoomStreams = await ctx.db
-        .query("streamCounts")
-        .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-        .collect();
+    // 5c. Update user materialized stream stats.
+    const userStats = await getOrCreateUserStats(ctx, args.roomId, args.phoneNumber);
+    await ctx.db.patch(userStats._id, {
+      totalStreams: userStats.totalStreams + (isMain ? 1 : 0),
+      mainYoutube: userStats.mainYoutube + (isMain && platform === "youtube" ? 1 : 0),
+      mainSpotify: userStats.mainSpotify + (isMain && platform === "spotify" ? 1 : 0),
+      mainOther: userStats.mainOther + (isMain && platform === "other" ? 1 : 0),
+      totalBlackpink: userStats.totalBlackpink + (isBpOrSolo ? 1 : 0),
+      totalOther: userStats.totalOther + (isBpOrSolo ? 0 : 1),
+      totalPoints: userStats.totalPoints + points,
+    });
 
-      const totalMainCount = totalRoomStreams.filter((s) =>
-        s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist)
-      ).length;
+    // 5d. Update room materialized stream stats.
+    const roomStats = await getOrCreateRoomStats(ctx, args.roomId);
+    const nextTotalMain = roomStats.totalMain + (isMain ? 1 : 0);
+    await ctx.db.patch(roomStats._id, {
+      youtube: roomStats.youtube + (isMain && platform === "youtube" ? 1 : 0),
+      spotify: roomStats.spotify + (isMain && platform === "spotify" ? 1 : 0),
+      other: roomStats.other + (isMain && platform === "other" ? 1 : 0),
+      totalMain: nextTotalMain,
+      totalAll: roomStats.totalAll + 1,
+      totalBlackpink: roomStats.totalBlackpink + (isBpOrSolo ? 1 : 0),
+      totalOther: roomStats.totalOther + (isBpOrSolo ? 0 : 1),
+    });
 
-      if (totalMainCount > 0 && totalMainCount % 100 === 0) {
-        // Dedup: don't fire if a stream_milestone event was fired in the last 30s
-        const recentMilestone = await ctx.db
-          .query("events")
-          .withIndex("by_room_type", (q) =>
-            q.eq("roomId", args.roomId).eq("type", "stream_milestone")
-          )
-          .order("desc")
-          .first();
+    // 6. Check if we crossed a 100-stream milestone (main-song streams only).
+    if (isMain && nextTotalMain > 0 && nextTotalMain % 100 === 0) {
+      const recentMilestone = await ctx.db
+        .query("events")
+        .withIndex("by_room_type", (q) =>
+          q.eq("roomId", args.roomId).eq("type", "stream_milestone")
+        )
+        .order("desc")
+        .first();
 
-        if (!recentMilestone || now - recentMilestone.createdAt > 30000) {
-          await ctx.db.insert("events", {
-            roomId: args.roomId,
-            type: "stream_milestone",
-            data: { totalStreams: totalMainCount },
-            createdAt: now,
-          });
-        }
+      if (!recentMilestone || now - recentMilestone.createdAt > 30000) {
+        await ctx.db.insert("events", {
+          roomId: args.roomId,
+          type: "stream_milestone",
+          data: { totalStreams: nextTotalMain },
+          createdAt: now,
+        });
       }
     }
 
@@ -580,6 +686,23 @@ export const tryCountStream = mutation({
 export const getRoomStreamsByPlatform = query({
   args: { roomId: v.string() },
   handler: async (ctx, args) => {
+    const stats = await ctx.db
+      .query("roomStreamStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .first();
+
+    if (stats) {
+      return {
+        youtube: stats.youtube,
+        spotify: stats.spotify,
+        other: stats.other,
+        total: stats.totalMain,
+        totalBlackpink: stats.totalBlackpink,
+        totalOther: stats.totalOther,
+        totalAll: stats.totalAll,
+      };
+    }
+
     const streams = await ctx.db
       .query("streamCounts")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -591,7 +714,7 @@ export const getRoomStreamsByPlatform = query({
     let totalBlackpink = 0;
     let totalOther = 0;
     for (const s of streams) {
-      const isBpOrSolo = isBlackpinkOrSolo(s.trackArtist);
+      const isBpOrSolo = s.isBlackpinkOrSolo ?? isBlackpinkOrSolo(s.trackArtist);
       if (isBpOrSolo) {
         totalBlackpink++;
       } else {
@@ -684,6 +807,26 @@ export const getUserStreamCounts = query({
     phoneNumber: v.string(),
   },
   handler: async (ctx, args) => {
+    const stats = await ctx.db
+      .query("userStreamStats")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
+    if (stats) {
+      return {
+        totalStreams: stats.totalStreams,
+        mainYoutube: stats.mainYoutube,
+        mainSpotify: stats.mainSpotify,
+        mainOther: stats.mainOther,
+        totalBlackpink: stats.totalBlackpink,
+        totalOther: stats.totalOther,
+        totalPoints: stats.totalPoints,
+        streams: [],
+      };
+    }
+
     const allStreams = await ctx.db
       .query("streamCounts")
       .withIndex("by_room_phone", (q) =>
@@ -702,7 +845,7 @@ export const getUserStreamCounts = query({
     let totalPoints = 0;
 
     for (const s of allStreams) {
-      const isBpOrSolo = isBlackpinkOrSolo(s.trackArtist);
+      const isBpOrSolo = s.isBlackpinkOrSolo ?? isBlackpinkOrSolo(s.trackArtist);
       if (isBpOrSolo) {
         totalBlackpink++;
       } else {
@@ -731,13 +874,7 @@ export const getUserStreamCounts = query({
       totalBlackpink,
       totalOther,
       totalPoints,
-      streams: mainStreams.map((s) => ({
-        trackName: s.trackName,
-        trackArtist: s.trackArtist,
-        platform: (s.platform as string) || "other",
-        countedAt: s.countedAt,
-        listenDuration: s.listenDuration,
-      })),
+      streams: [],
     };
   },
 });
@@ -752,6 +889,16 @@ export const getUserPoints = query({
     phoneNumber: v.string(),
   },
   handler: async (ctx, args) => {
+    const stats = await ctx.db
+      .query("userStreamStats")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+    if (stats) {
+      return { points: stats.totalPoints };
+    }
+
     const streams = await ctx.db
       .query("streamCounts")
       .withIndex("by_room_phone", (q) =>
@@ -786,9 +933,26 @@ export const recalculatePoints = mutation({
       .collect();
 
     let streamPoints = 0;
+    let totalStreams = 0;
+    let mainYoutube = 0;
+    let mainSpotify = 0;
+    let mainOther = 0;
+    let totalBlackpink = 0;
+    let totalOther = 0;
     for (const s of streams) {
       const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
       streamPoints += calculateStreamPoints((s.platform as string) || "other", sIsMain);
+      const sIsBp = s.isBlackpinkOrSolo ?? isBlackpinkOrSolo(s.trackArtist);
+      if (sIsBp) totalBlackpink++;
+      else totalOther++;
+
+      if (sIsMain) {
+        totalStreams++;
+        const p = (s.platform as string) || "other";
+        if (p === "youtube") mainYoutube++;
+        else if (p === "spotify") mainSpotify++;
+        else mainOther++;
+      }
     }
 
     const participant = await ctx.db
@@ -805,6 +969,17 @@ export const recalculatePoints = mutation({
         totalPoints: streamPoints + checkInPoints + bonusPoints,
       });
     }
+
+    const userStats = await getOrCreateUserStats(ctx, args.roomId, args.phoneNumber);
+    await ctx.db.patch(userStats._id, {
+      totalStreams,
+      mainYoutube,
+      mainSpotify,
+      mainOther,
+      totalBlackpink,
+      totalOther,
+      totalPoints: streamPoints,
+    });
 
     const bonusPoints = participant?.bonusPoints ?? 0;
     return { totalPoints: streamPoints + (participant?.offlineTracking ? POINTS_CHECK_IN : 0) + bonusPoints };
@@ -824,25 +999,20 @@ export const getStreamsByDistrict = query({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    // Get unique phone numbers from streams
-    const phoneNumbers = [...new Set(streams.map((s) => s.phoneNumber))];
-
-    // Look up district for each phone number
-    const phoneToDistrict: Record<string, string> = {};
-    for (const phone of phoneNumbers) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
-        .first();
-      if (user?.district) {
-        phoneToDistrict[phone] = user.district;
-      }
-    }
-
-    // Aggregate streams by district
+    const phoneToDistrict: Record<string, string | null> = {};
     const districtCounts: Record<string, { totalStreams: number; uniqueUsers: Set<string> }> = {};
     for (const s of streams) {
-      const district = phoneToDistrict[s.phoneNumber];
+      let district = s.userDistrict ?? null;
+      if (!district) {
+        if (!(s.phoneNumber in phoneToDistrict)) {
+          const user = await ctx.db
+            .query("users")
+            .withIndex("by_phone", (q) => q.eq("phoneNumber", s.phoneNumber))
+            .first();
+          phoneToDistrict[s.phoneNumber] = user?.district ?? null;
+        }
+        district = phoneToDistrict[s.phoneNumber];
+      }
       if (!district) continue;
       if (!districtCounts[district]) {
         districtCounts[district] = { totalStreams: 0, uniqueUsers: new Set() };
@@ -873,16 +1043,34 @@ export const getPreciseHeatmapData = query({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    // Aggregate stream count per user
-    const userStreamCounts: Record<string, number> = {};
+    // Aggregate stream count per user and capture denormalized coordinates when present.
+    const userStreamCounts: Record<string, { weight: number; lat?: number; lng?: number }> = {};
     for (const s of streams) {
-      userStreamCounts[s.phoneNumber] = (userStreamCounts[s.phoneNumber] || 0) + 1;
+      if (!userStreamCounts[s.phoneNumber]) {
+        userStreamCounts[s.phoneNumber] = { weight: 0 };
+      }
+      userStreamCounts[s.phoneNumber].weight++;
+      if (s.userLat != null && s.userLng != null) {
+        userStreamCounts[s.phoneNumber].lat = s.userLat;
+        userStreamCounts[s.phoneNumber].lng = s.userLng;
+      }
     }
 
-    // Look up lat/lng for each user; skip those without coordinates
+    // Fall back to users table only when stream row has no coordinates.
     const result: Array<{ lat: number; lng: number; weight: number; phoneNumber: string }> = [];
 
     for (const phoneNumber of Object.keys(userStreamCounts)) {
+      const cached = userStreamCounts[phoneNumber];
+      if (cached.lat != null && cached.lng != null) {
+        result.push({
+          lat: cached.lat,
+          lng: cached.lng,
+          weight: cached.weight,
+          phoneNumber,
+        });
+        continue;
+      }
+
       const user = await ctx.db
         .query("users")
         .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
@@ -892,7 +1080,7 @@ export const getPreciseHeatmapData = query({
         result.push({
           lat: user.lat,
           lng: user.lng,
-          weight: userStreamCounts[phoneNumber],
+          weight: cached.weight,
           phoneNumber,
         });
       }

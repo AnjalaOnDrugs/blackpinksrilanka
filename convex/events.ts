@@ -135,16 +135,24 @@ export const sendBongBack = mutation({
 export const listRecent = query({
   args: {
     roomId: v.string(),
-    since: v.optional(v.number()), // Kept for backwards compatibility but ignored
+    since: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const events = await ctx.db
-      .query("events")
-      .withIndex("by_room_time", (q) => q.eq("roomId", args.roomId))
-      .order("desc")
-      .take(50);
+    const events = args.since != null
+      ? await ctx.db
+        .query("events")
+        .withIndex("by_room_time", (q) =>
+          q.eq("roomId", args.roomId).gt("createdAt", args.since as number)
+        )
+        .order("asc")
+        .take(25)
+      : await ctx.db
+        .query("events")
+        .withIndex("by_room_time", (q) => q.eq("roomId", args.roomId))
+        .order("desc")
+        .take(25);
 
     // Return them in ascending order for the client
-    return events.reverse();
+    return args.since != null ? events : events.reverse();
   },
 });

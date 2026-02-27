@@ -77,6 +77,8 @@ ROOM.Vroom = {
 
     if (onlineUsers.length < 2) return;
     if (!ROOM.currentUser) return;
+    var leaderPhone = onlineUsers.map(function (p) { return p.id; }).sort()[0];
+    if (leaderPhone !== ROOM.currentUser.phoneNumber) return;
 
     var chance = CONFIG.vroomTriggerChance || 0.15;
     if (Math.random() > chance) return;
@@ -572,11 +574,12 @@ ROOM.Vroom = {
       var p = participants[i];
       var av = document.createElement('div');
       av.className = 'room-vroom-avatar';
+      var pic = p.profilePicture || (ROOM.profilePicMap && ROOM.profilePicMap[p.phoneNumber]) || null;
 
-      if (p.profilePicture) {
+      if (pic) {
         av.style.background = 'transparent';
         av.style.overflow = 'hidden';
-        av.innerHTML = '<img src="' + this._esc(p.profilePicture) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        av.innerHTML = '<img src="' + this._esc(pic) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
       } else {
         av.style.background = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
         av.textContent = (p.username || '?').charAt(0).toUpperCase();
@@ -916,10 +919,11 @@ ROOM.Vroom = {
       var p = all[i];
       var bubble = document.createElement('div');
       bubble.className = 'room-vroom-capsule-bubble';
-      if (p.profilePicture) {
+      var pic = p.profilePicture || (ROOM.profilePicMap && ROOM.profilePicMap[p.phoneNumber]) || null;
+      if (pic) {
         bubble.style.background = 'transparent';
         bubble.style.overflow = 'hidden';
-        bubble.innerHTML = '<img src="' + p.profilePicture + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        bubble.innerHTML = '<img src="' + pic + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
       } else {
         bubble.style.background = p.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
         bubble.textContent = (p.username || '?').charAt(0).toUpperCase();

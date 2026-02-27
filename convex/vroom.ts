@@ -103,7 +103,6 @@ export const joinVroom = mutation({
           phoneNumber: args.phoneNumber,
           username: args.username,
           avatarColor: args.avatarColor,
-          profilePicture: args.profilePicture,
         },
       ],
     };
@@ -125,7 +124,6 @@ export const joinVroom = mutation({
         phoneNumber: args.phoneNumber,
         username: args.username,
         avatarColor: args.avatarColor,
-        profilePicture: args.profilePicture,
       },
       createdAt: Date.now(),
     });

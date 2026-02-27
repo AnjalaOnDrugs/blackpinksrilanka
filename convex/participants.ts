@@ -31,7 +31,6 @@ export const listByRoom = query({
         previousRank: p.previousRank,
         milestones: p.milestones,
         avatarColor: p.avatarColor,
-        profilePicture: p.profilePicture ?? null,
         streakMinutes: p.streakMinutes,
         offlineTracking: p.offlineTracking ?? false,
         lastCheckIn: p.lastCheckIn ?? null,
@@ -331,7 +330,29 @@ export const resetAllPoints = mutation({
       await ctx.db.delete(s._id);
     }
 
-    return { reset: participants.length, streamsCleared: streams.length };
+    // 3. Clear materialized stream stats
+    const roomStats = await ctx.db
+      .query("roomStreamStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const rs of roomStats) {
+      await ctx.db.delete(rs._id);
+    }
+
+    const userStats = await ctx.db
+      .query("userStreamStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const us of userStats) {
+      await ctx.db.delete(us._id);
+    }
+
+    return {
+      reset: participants.length,
+      streamsCleared: streams.length,
+      roomStatsCleared: roomStats.length,
+      userStatsCleared: userStats.length,
+    };
   },
 });
 
