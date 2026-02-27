@@ -480,28 +480,24 @@ ROOM.Gif = {
     var mediaHtml;
     if (data.gifIsVideo) {
       mediaHtml =
-        '<video autoplay loop muted playsinline class="room-gif-recv-media">' +
+        '<video autoplay loop muted playsinline>' +
         '<source src="' + this._esc(data.gifUrl) + '" type="video/mp4">' +
         '</video>';
     } else {
-      mediaHtml = '<img src="' + this._esc(data.gifUrl) + '" alt="GIF" class="room-gif-recv-media">';
+      mediaHtml = '<img src="' + this._esc(data.gifUrl) + '" alt="GIF">';
     }
 
     var messageHtml = data.message
-      ? '<div class="room-gif-recv-message">' + this._esc(data.message) + '</div>'
+      ? '<div class="room-gif-overlay-message">' + this._esc(data.message) + '</div>'
       : '';
 
     overlay.innerHTML =
-      '<div class="room-gif-recv-backdrop"></div>' +
-      '<div class="room-gif-recv-scene">' +
-      '<div class="room-gif-recv-aura"></div>' +
-      '<div class="room-gif-recv-media-wrap">' + mediaHtml + '</div>' +
-      '<div class="room-gif-recv-sender">' +
+      '<div class="room-gif-overlay-media">' + mediaHtml + '</div>' +
+      '<div class="room-gif-overlay-sender">' +
       '<strong>' + this._esc(data.senderUsername) + '</strong> sent you a GIF!' +
       '</div>' +
       messageHtml +
-      '<button class="room-gif-recv-dismiss">Dismiss</button>' +
-      '</div>';
+      '<button class="room-gif-overlay-dismiss">Dismiss</button>';
 
     document.body.appendChild(overlay);
 
@@ -515,17 +511,25 @@ ROOM.Gif = {
     }
 
     // Dismiss handler
-    var dismissBtn = overlay.querySelector('.room-gif-recv-dismiss');
+    var dismissOverlay = function () {
+      if (overlay.classList.contains('room-gif-overlay--exit')) return;
+      overlay.classList.add('room-gif-overlay--exit');
+      setTimeout(function () {
+        if (overlay.parentNode) overlay.remove();
+        // If we're processing inbox queue, show next
+        if (self._isShowingInbox) self._playNextInQueue();
+      }, 400);
+    };
+
+    var dismissBtn = overlay.querySelector('.room-gif-overlay-dismiss');
     if (dismissBtn) {
-      dismissBtn.addEventListener('click', function () {
-        overlay.classList.add('room-gif-overlay--exit');
-        setTimeout(function () {
-          if (overlay.parentNode) overlay.remove();
-          // If we're processing inbox queue, show next
-          if (self._isShowingInbox) self._playNextInQueue();
-        }, 400);
-      });
+      dismissBtn.addEventListener('click', dismissOverlay);
     }
+
+    // Tap anywhere on overlay backdrop to dismiss (mobile friendly)
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) dismissOverlay();
+    });
 
     // Mark as read (works for both inbox GIFs with _id and real-time events with gifMessageId)
     var markId = data._id || data.gifMessageId;
