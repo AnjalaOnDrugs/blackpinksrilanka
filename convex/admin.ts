@@ -141,6 +141,8 @@ export const sendAdminMessage = mutation({
         title: v.string(),
         message: v.string(),
         bgImage: v.string(),
+        gifUrl: v.optional(v.string()),
+        gifIsVideo: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         await ctx.db.insert("events", {
@@ -150,6 +152,34 @@ export const sendAdminMessage = mutation({
                 title: args.title,
                 message: args.message,
                 bgImage: args.bgImage,
+                gifUrl: args.gifUrl,
+                gifIsVideo: args.gifIsVideo,
+            },
+            createdAt: Date.now(),
+        });
+    },
+});
+
+// Send a global admin GIF message
+export const sendAdminGifMessage = mutation({
+    args: {
+        roomId: v.string(),
+        title: v.optional(v.string()),
+        message: v.string(),
+        gifUrl: v.string(),
+        gifIsVideo: v.boolean(),
+        bgImage: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.insert("events", {
+            roomId: args.roomId,
+            type: "admin_message",
+            data: {
+                title: args.title || "Admin Message",
+                message: args.message,
+                bgImage: args.bgImage || "",
+                gifUrl: args.gifUrl,
+                gifIsVideo: args.gifIsVideo,
             },
             createdAt: Date.now(),
         });

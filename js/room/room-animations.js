@@ -681,11 +681,21 @@ ROOM.Animations = {
     var backdropUrl = data.bgImage ? data.bgImage : '';
     var backdropStyle = backdropUrl ? 'background-image: url(' + this.esc(backdropUrl) + '); background-size: cover; background-position: center;' : 'background: linear-gradient(135deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95));';
 
+    var mediaHtml = '';
+    if (data.gifUrl) {
+      if (data.gifIsVideo) {
+        mediaHtml = '<video autoplay loop muted playsinline class="room-admin-msg-gif"><source src="' + this.esc(data.gifUrl) + '" type="video/mp4"></video>';
+      } else {
+        mediaHtml = '<img src="' + this.esc(data.gifUrl) + '" alt="GIF" class="room-admin-msg-gif">';
+      }
+    }
+
     overlay.innerHTML =
       '<div class="room-admin-msg-box" style="' + backdropStyle + '">' +
       '<div class="room-admin-msg-dimmer"></div>' +
       '<div class="room-admin-msg-content">' +
       (data.title ? '<h2 class="room-admin-msg-title">' + this.esc(data.title) + '</h2>' : '') +
+      mediaHtml +
       '<div class="room-admin-msg-text">' + this.esc(data.message) + '</div>' +
       '<button class="room-admin-msg-close">Dismiss</button>' +
       '</div>' +

@@ -231,15 +231,21 @@ ROOM.Firebase = {
           gifs.forEach(function (g) { if (g._id) gifProcessedIds[g._id] = true; });
           isInitialGifLoad = false;
         } else {
-          // Subsequent updates — only process genuinely new GIFs
-          // (real-time delivery is handled by the events subscription,
-          //  so this just catches edge cases)
+          // Subsequent updates — play genuinely new GIFs as fallback
+          // (primary delivery is via events subscription, but this catches
+          //  cases where the event was missed due to network issues)
+          var newInboxGifs = [];
           gifs.forEach(function (g) {
             if (g._id && !gifProcessedIds[g._id]) {
               gifProcessedIds[g._id] = true;
-              // Don't re-play — the gif_send event handles real-time display
+              newInboxGifs.push(g);
             }
           });
+          if (newInboxGifs.length > 0 && ROOM.Gif && ROOM.Gif.handleUnreadGifs) {
+            // playGifMessage has built-in dedup via _recentlyPlayedIds,
+            // so this won't double-play GIFs already shown via the event
+            ROOM.Gif.handleUnreadGifs(newInboxGifs);
+          }
         }
       }
     );

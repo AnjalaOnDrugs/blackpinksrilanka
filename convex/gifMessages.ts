@@ -67,7 +67,7 @@ export const send = mutation({
     const message = args.message ? args.message.slice(0, 100) : undefined;
 
     // Insert persistent GIF message
-    await ctx.db.insert("gifMessages", {
+    const gifMessageId = await ctx.db.insert("gifMessages", {
       roomId: args.roomId,
       senderPhoneNumber: args.senderPhoneNumber,
       senderUsername: args.senderUsername,
@@ -88,6 +88,7 @@ export const send = mutation({
       roomId: args.roomId,
       type: "gif_send",
       data: {
+        gifMessageId,
         senderPhoneNumber: args.senderPhoneNumber,
         senderUsername: args.senderUsername,
         senderAvatarColor: args.senderAvatarColor,

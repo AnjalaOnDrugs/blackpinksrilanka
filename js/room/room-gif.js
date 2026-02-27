@@ -22,6 +22,8 @@ ROOM.Gif = {
   _inboxQueue: [],
   _inboxProcessedIds: {},
   _isShowingInbox: false,
+  // Track recently played gifMessage IDs to prevent double-play
+  _recentlyPlayedIds: {},
 
   MEMBERS: [
     { key: 'ot4', label: 'OT4', emoji: '🖤💗' },
@@ -462,6 +464,11 @@ ROOM.Gif = {
   playGifMessage: function (data) {
     if (!data || !data.gifUrl) return;
 
+    // Dedup: skip if this gifMessage was already played recently
+    var msgId = data._id || data.gifMessageId;
+    if (msgId && this._recentlyPlayedIds[msgId]) return;
+    if (msgId) this._recentlyPlayedIds[msgId] = true;
+
     var self = this;
     var overlay = document.createElement('div');
     overlay.className = 'room-gif-overlay';
@@ -516,9 +523,10 @@ ROOM.Gif = {
       });
     }
 
-    // Mark as read if this is from the inbox queue (has _id)
-    if (data._id) {
-      ConvexService.mutation('gifMessages:markAsRead', { messageId: data._id });
+    // Mark as read (works for both inbox GIFs with _id and real-time events with gifMessageId)
+    var markId = data._id || data.gifMessageId;
+    if (markId) {
+      ConvexService.mutation('gifMessages:markAsRead', { messageId: markId });
     }
   },
 
