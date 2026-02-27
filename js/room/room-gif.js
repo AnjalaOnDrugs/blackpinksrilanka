@@ -454,6 +454,10 @@ ROOM.Gif = {
         '🎞',
         'GIF sent to <strong>' + self._esc(targetUsername) + '</strong>! (Token x' + remaining + ')'
       );
+    }).catch(function (err) {
+      console.error('[GIF] Send failed:', err);
+      ROOM.Animations && ROOM.Animations.showToast('gif', '❌', 'Failed to send GIF. Try again!');
+      delete self._gifCooldowns[cooldownKey];
     });
   },
 
