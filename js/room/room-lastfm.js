@@ -68,10 +68,15 @@ ROOM.LastFM = {
     }
 
     var self = this;
+
+    // Use a cleaned version for the API query to prevent failure on "M/V" or "Official Video"
+    var queryName = this.extractCoreSong(name, artist) || name;
+
     var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo' +
-      '&track=' + encodeURIComponent(name) +
+      '&track=' + encodeURIComponent(queryName) +
       '&artist=' + encodeURIComponent(artist) +
       '&api_key=' + this.apiKey +
+      '&autocorrect=1' +
       '&format=json';
 
     return fetch(url).then(function (resp) {
