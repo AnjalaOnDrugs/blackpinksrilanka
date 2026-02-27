@@ -3,11 +3,11 @@ import { v } from "convex/values";
 
 const DEFAULT_DURATION_MS = 180000; // 3 minutes
 const DEFAULT_COOLDOWN_MS = 3600000; // 1 hour
-const FILL_POINTS = 8; // Points awarded to all participants on success
-const NUM_DISTRICTS = 3; // Number of districts chosen per event
+const FILL_DISTRICT_POINTS = 2; // Points for first person to fill their district
+const ALL_FILLED_BONUS = 10; // Bonus points for everyone when all districts filled
 
 // Start a Fill the Map event
-// Picks 3 districts that have registered users, picks a random song
+// Uses ALL districts that have registered users, picks a random song
 export const startFillTheMap = mutation({
   args: {
     roomId: v.string(),
@@ -66,16 +66,15 @@ export const startFillTheMap = mutation({
     }
 
     const availableDistricts = Array.from(districtSet);
-    console.log("[FillMap Server] Available districts:", availableDistricts, "| Need:", NUM_DISTRICTS);
-    if (availableDistricts.length < NUM_DISTRICTS) {
-      console.log("[FillMap Server] ⛔ BLOCKED by districts. Have", availableDistricts.length, "unique districts, need", NUM_DISTRICTS);
+    console.log("[FillMap Server] Available districts:", availableDistricts);
+    if (availableDistricts.length === 0) {
+      console.log("[FillMap Server] ⛔ BLOCKED by districts. No districts registered.");
       return null;
     }
-    console.log("[FillMap Server] ✅ District check passed.");
+    console.log("[FillMap Server] ✅ District check passed. Using all", availableDistricts.length, "districts.");
 
-    // Randomly pick 3 districts
-    const shuffled = availableDistricts.sort(() => Math.random() - 0.5);
-    const chosenDistricts = shuffled.slice(0, NUM_DISTRICTS);
+    // Use all registered districts
+    const chosenDistricts = availableDistricts;
 
     const endsAt = now + durationMs;
 
@@ -153,6 +152,21 @@ export const fillDistrict = mutation({
       filledDistricts,
     });
 
+    // Award fill points immediately (2 pts for first person to fill their district)
+    const participant = await ctx.db
+      .query("participants")
+      .withIndex("by_room_phone", (q) =>
+        q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+      )
+      .first();
+
+    if (participant) {
+      await ctx.db.patch(participant._id, {
+        bonusPoints: (participant.bonusPoints ?? 0) + FILL_DISTRICT_POINTS,
+        totalPoints: (participant.totalPoints ?? 0) + FILL_DISTRICT_POINTS,
+      });
+    }
+
     // Broadcast fill event
     await ctx.db.insert("events", {
       roomId: args.roomId,
@@ -163,6 +177,7 @@ export const fillDistrict = mutation({
         phoneNumber: args.phoneNumber,
         username: args.username,
         profilePicture: args.profilePicture,
+        pointsAwarded: FILL_DISTRICT_POINTS,
       },
       createdAt: Date.now(),
     });
@@ -195,7 +210,7 @@ async function completeFillTheMap(
   // Collect all participants who filled a district
   const fillers = Object.values(filledDistricts);
 
-  // Award points to each filler
+  // Award bonus points to each filler for completing the map
   for (const filler of fillers) {
     const participant = await ctx.db
       .query("participants")
@@ -206,8 +221,8 @@ async function completeFillTheMap(
 
     if (participant) {
       await ctx.db.patch(participant._id, {
-        bonusPoints: (participant.bonusPoints ?? 0) + FILL_POINTS,
-        totalPoints: (participant.totalPoints ?? 0) + FILL_POINTS,
+        bonusPoints: (participant.bonusPoints ?? 0) + ALL_FILLED_BONUS,
+        totalPoints: (participant.totalPoints ?? 0) + ALL_FILLED_BONUS,
       });
     }
   }
@@ -225,7 +240,8 @@ async function completeFillTheMap(
     data: {
       fillMapId,
       filledDistricts,
-      pointsEach: FILL_POINTS,
+      bonusPointsEach: ALL_FILLED_BONUS,
+      fillPointsEach: FILL_DISTRICT_POINTS,
       fillers: fillers.map((f) => ({
         phoneNumber: f.phoneNumber,
         username: f.username,
@@ -235,7 +251,7 @@ async function completeFillTheMap(
     createdAt: Date.now(),
   });
 
-  return { pointsEach: FILL_POINTS };
+  return { bonusPointsEach: ALL_FILLED_BONUS };
 }
 
 // End a Fill the Map event (time expired, not all districts filled)

@@ -1,8 +1,8 @@
 /**
  * Room Fill the Map
- * Mini-event: 3 districts are chosen, first user from each district to listen
- * to the main song fills that district. If all 3 are filled within the time limit,
- * all fillers get 8 points.
+ * Mini-event: ALL registered districts are included. First user from each district
+ * to listen to the main song fills that district and earns 2 points. If all districts
+ * are filled within the time limit, every filler gets an additional 10 bonus points.
  */
 
 window.ROOM = window.ROOM || {};
@@ -78,8 +78,8 @@ ROOM.FillMap = {
       if (result === null) {
         console.warn('[FillMap] ⚠️ Convex returned null — event was NOT created. Possible causes:');
         console.warn('  1. Cooldown not elapsed (check fillTheMapEvents table)');
-        console.warn('  2. Less than 2 participants with nowPlaying=true in Convex');
-        console.warn('  3. Less than 3 unique districts among participants');
+        console.warn('  2. Less than 2 participants in Convex');
+        console.warn('  3. No registered districts among participants');
       }
     }).catch(function (err) {
       console.error('[FillMap] ❌ Convex mutation error:', err);
@@ -113,7 +113,7 @@ ROOM.FillMap = {
 
     this._sendPushNotification(
       'Fill the Map!',
-      'Play ' + data.songName + ' by ' + data.songArtist + ' to claim your district and earn 8 points!',
+      'Play ' + data.songName + ' by ' + data.songArtist + ' to claim your district and earn 2 pts! Fill all for +10 bonus!',
       'fill-map-start'
     );
   },
@@ -136,7 +136,7 @@ ROOM.FillMap = {
 
     if (ROOM.Animations && ROOM.Animations.showToast) {
       ROOM.Animations.showToast('join', '✅',
-        '<strong>' + this._esc(data.username) + '</strong> filled <strong>' + this._esc(data.district) + '</strong>!');
+        '<strong>' + this._esc(data.username) + '</strong> filled <strong>' + this._esc(data.district) + '</strong>! +' + (data.pointsAwarded || 2) + ' pts');
     }
   },
 
@@ -186,7 +186,7 @@ ROOM.FillMap = {
 
     if (ROOM.Animations && ROOM.Animations.showToast) {
       ROOM.Animations.showToast('energy', '❌',
-        '<strong>Fill the Map failed!</strong> Only ' + (data.filledCount || 0) + '/' + (data.total || 3) + ' districts filled.');
+        '<strong>Fill the Map failed!</strong> Only ' + (data.filledCount || 0) + '/' + (data.total || '?') + ' districts filled.');
     }
   },
 
@@ -329,7 +329,7 @@ ROOM.FillMap = {
       '<div class="room-fill-map-status" id="fillMapStatus">' +
       '<span class="room-fill-map-status-icon">🎧</span>' +
       '<span>Play <strong>' + songName + '</strong> to fill your district!</span>' +
-      '<span class="room-fill-map-footer-pts">8 pts</span>' +
+      '<span class="room-fill-map-footer-pts">2 pts</span>' +
       '</div>' +
       '</div>' +
       '</div>';
@@ -496,7 +496,7 @@ ROOM.FillMap = {
     if (statusEl) {
       statusEl.innerHTML =
         '<div class="room-fill-map-status-icon">🎉</div>' +
-        '<span><strong>All districts filled!</strong> +8 points earned!</span>';
+        '<span><strong>All districts filled!</strong> +10 bonus points!</span>';
       statusEl.classList.add('room-fill-map-status--success');
     }
 
@@ -896,7 +896,7 @@ ROOM.FillMap = {
           '<div class="room-fill-map-ty-participant">' +
           '<div class="room-fill-map-ty-avatar">' + avatarHtml + '</div>' +
           '<div class="room-fill-map-ty-name">' + this._esc(f.username) + '</div>' +
-          '<div class="room-fill-map-ty-points">+' + (data.pointsEach || 8) + ' pts</div>' +
+          '<div class="room-fill-map-ty-points">+' + ((data.fillPointsEach || 2) + (data.bonusPointsEach || 10)) + ' pts</div>' +
           '</div>';
       }
     }
@@ -908,7 +908,7 @@ ROOM.FillMap = {
       '<div class="room-fill-map-ty-modal">' +
       '<div class="room-fill-map-ty-icon">🗺️</div>' +
       '<div class="room-fill-map-ty-title">Map Complete!</div>' +
-      '<div class="room-fill-map-ty-points-big">+' + (data.pointsEach || 8) + ' points earned!</div>' +
+      '<div class="room-fill-map-ty-points-big">+' + (data.bonusPointsEach || 10) + ' bonus points!</div>' +
       '<div class="room-fill-map-ty-desc">All districts were filled! Amazing teamwork!</div>' +
       '<div class="room-fill-map-ty-list">' + fillersHtml + '</div>' +
       '<button class="room-fill-map-ty-close" id="fillMapCloseBtn">Close</button>' +

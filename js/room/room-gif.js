@@ -94,13 +94,13 @@ ROOM.Gif = {
         var m = this.MEMBERS[i];
         bodyHtml +=
           '<button class="room-gif-option room-gif-member-btn" data-member="' + m.key + '">' +
-            '<span class="room-gif-option-emoji">' + m.emoji + '</span>' +
-            '<span>' + m.label + '</span>' +
+          '<span class="room-gif-option-emoji">' + m.emoji + '</span>' +
+          '<span>' + m.label + '</span>' +
           '</button>';
       }
       bodyHtml += '</div>';
 
-    // ---- ACTION STEP ----
+      // ---- ACTION STEP ----
     } else if (step === 'action') {
       titleText = this._getMemberLabel(this._selectedMember);
       bodyHtml = '<div class="room-gif-grid room-gif-grid--options">';
@@ -108,34 +108,34 @@ ROOM.Gif = {
         var a = this.ACTIONS[j];
         bodyHtml +=
           '<button class="room-gif-option room-gif-action-btn" data-action="' + a.key + '">' +
-            '<span class="room-gif-option-emoji">' + a.emoji + '</span>' +
-            '<span>' + a.label + '</span>' +
+          '<span class="room-gif-option-emoji">' + a.emoji + '</span>' +
+          '<span>' + a.label + '</span>' +
           '</button>';
       }
       bodyHtml += '</div>';
 
-    // ---- CUSTOM SEARCH STEP ----
+      // ---- CUSTOM SEARCH STEP ----
     } else if (step === 'custom') {
       titleText = 'Custom Search';
       bodyHtml =
         '<div class="room-gif-custom-search">' +
-          '<div class="room-gif-search-row">' +
-            '<input type="text" class="room-gif-search-input" id="gifCustomInput" placeholder="Type your search..." maxlength="60" autocomplete="off">' +
-            '<button class="room-gif-search-btn" id="gifCustomSearchBtn">Search</button>' +
-          '</div>' +
-          '<div class="room-gif-search-hint">Will search: blackpink + your text</div>' +
-          '<div class="room-gif-grid room-gif-grid--results" id="gifResultsGrid"></div>' +
+        '<div class="room-gif-search-row">' +
+        '<input type="text" class="room-gif-search-input" id="gifCustomInput" placeholder="Type your search..." maxlength="60" autocomplete="off">' +
+        '<button class="room-gif-search-btn" id="gifCustomSearchBtn">Search</button>' +
+        '</div>' +
+        '<div class="room-gif-search-hint">Will search: blackpink + your text</div>' +
+        '<div class="room-gif-grid room-gif-grid--results" id="gifResultsGrid"></div>' +
         '</div>';
 
-    // ---- RESULTS STEP ----
+      // ---- RESULTS STEP ----
     } else if (step === 'results') {
       titleText = this._getMemberLabel(this._selectedMember) + ' · ' + this._getActionLabel(this._selectedAction);
       bodyHtml =
         '<div class="room-gif-grid room-gif-grid--results" id="gifResultsGrid">' +
-          '<div class="room-gif-loading"><div class="room-gif-spinner"></div>Searching GIFs...</div>' +
+        '<div class="room-gif-loading"><div class="room-gif-spinner"></div>Searching GIFs...</div>' +
         '</div>';
 
-    // ---- CONFIRM STEP (GIF selected, add message) ----
+      // ---- CONFIRM STEP (GIF selected, add message) ----
     } else if (step === 'confirm') {
       titleText = 'Send to ' + this._esc(this._targetUsername);
       var previewHtml = this._selectedGifIsVideo
@@ -144,26 +144,26 @@ ROOM.Gif = {
 
       bodyHtml =
         '<div class="room-gif-confirm">' +
-          '<div class="room-gif-confirm-preview">' + previewHtml + '</div>' +
-          '<input type="text" class="room-gif-message-input" id="gifMessageInput" placeholder="Add a message (optional)" maxlength="100" autocomplete="off">' +
-          '<button class="room-gif-send-btn" id="gifSendBtn">' +
-            '<span>Send GIF</span>' +
-            '<span class="room-gif-send-cost">' + this._getAvailableGifs() + ' left</span>' +
-          '</button>' +
+        '<div class="room-gif-confirm-preview">' + previewHtml + '</div>' +
+        '<input type="text" class="room-gif-message-input" id="gifMessageInput" placeholder="Add a message (optional)" maxlength="100" autocomplete="off">' +
+        '<button class="room-gif-send-btn" id="gifSendBtn">' +
+        '<span>Send GIF</span>' +
+        '<span class="room-gif-send-cost">Token x' + this._getAvailableGifs() + '</span>' +
+        '</button>' +
         '</div>';
     }
 
     modal.innerHTML =
       '<div class="room-gif-modal-backdrop"></div>' +
       '<div class="room-gif-modal-content">' +
-        '<div class="room-gif-modal-header">' +
-          (step !== 'member' ? '<button class="room-gif-modal-back">&#8249;</button>' : '') +
-          '<span class="room-gif-modal-title">' + titleText + '</span>' +
-          '<button class="room-gif-modal-close">&times;</button>' +
-        '</div>' +
-        '<div class="room-gif-modal-body">' +
-          bodyHtml +
-        '</div>' +
+      '<div class="room-gif-modal-header">' +
+      (step !== 'member' ? '<button class="room-gif-modal-back">&#8249;</button>' : '') +
+      '<span class="room-gif-modal-title">' + titleText + '</span>' +
+      '<button class="room-gif-modal-close">&times;</button>' +
+      '</div>' +
+      '<div class="room-gif-modal-body">' +
+      bodyHtml +
+      '</div>' +
       '</div>';
 
     document.body.appendChild(modal);
@@ -374,7 +374,7 @@ ROOM.Gif = {
       if (isVideo) {
         mediaHtml =
           '<video autoplay loop muted playsinline class="room-gif-result-media">' +
-            '<source src="' + this._esc(previewUrl) + '" type="video/mp4">' +
+          '<source src="' + this._esc(previewUrl) + '" type="video/mp4">' +
           '</video>';
       } else {
         mediaHtml = '<img src="' + this._esc(previewUrl) + '" alt="" class="room-gif-result-media" loading="lazy">';
@@ -382,7 +382,7 @@ ROOM.Gif = {
 
       html +=
         '<div class="room-gif-result-card" data-gif-url="' + this._esc(gifUrl) + '" data-gif-is-video="' + isVideo + '">' +
-          mediaHtml +
+        mediaHtml +
         '</div>';
     }
 
@@ -450,7 +450,7 @@ ROOM.Gif = {
       ROOM.Animations && ROOM.Animations.showToast(
         'gif',
         '🎞',
-        'GIF sent to <strong>' + self._esc(targetUsername) + '</strong>! (' + remaining + ' left)'
+        'GIF sent to <strong>' + self._esc(targetUsername) + '</strong>! (Token x' + remaining + ')'
       );
     });
   },
@@ -470,7 +470,7 @@ ROOM.Gif = {
     if (data.gifIsVideo) {
       mediaHtml =
         '<video autoplay loop muted playsinline class="room-gif-recv-media">' +
-          '<source src="' + this._esc(data.gifUrl) + '" type="video/mp4">' +
+        '<source src="' + this._esc(data.gifUrl) + '" type="video/mp4">' +
         '</video>';
     } else {
       mediaHtml = '<img src="' + this._esc(data.gifUrl) + '" alt="GIF" class="room-gif-recv-media">';
@@ -483,13 +483,13 @@ ROOM.Gif = {
     overlay.innerHTML =
       '<div class="room-gif-recv-backdrop"></div>' +
       '<div class="room-gif-recv-scene">' +
-        '<div class="room-gif-recv-aura"></div>' +
-        '<div class="room-gif-recv-media-wrap">' + mediaHtml + '</div>' +
-        '<div class="room-gif-recv-sender">' +
-          '<strong>' + this._esc(data.senderUsername) + '</strong> sent you a GIF!' +
-        '</div>' +
-        messageHtml +
-        '<button class="room-gif-recv-dismiss">Dismiss</button>' +
+      '<div class="room-gif-recv-aura"></div>' +
+      '<div class="room-gif-recv-media-wrap">' + mediaHtml + '</div>' +
+      '<div class="room-gif-recv-sender">' +
+      '<strong>' + this._esc(data.senderUsername) + '</strong> sent you a GIF!' +
+      '</div>' +
+      messageHtml +
+      '<button class="room-gif-recv-dismiss">Dismiss</button>' +
       '</div>';
 
     document.body.appendChild(overlay);

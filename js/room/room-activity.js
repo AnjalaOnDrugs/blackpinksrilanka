@@ -197,7 +197,7 @@ ROOM.Activity = {
       (Date.now() - d.lastCheckIn) < (CONFIG.checkInInterval || 3600000);
     var statusClass = isOnline ? 'room-activity-status--online'
       : isOfflineTracked ? 'room-activity-status--tracked'
-      : 'room-activity-status--idle';
+        : 'room-activity-status--idle';
 
     var trackHtml = '';
     var albumArtHtml = '';
@@ -210,49 +210,49 @@ ROOM.Activity = {
           : 'other';
         var platformBadge = platform === 'youtube'
           ? '<span class="room-activity-platform room-activity-platform--yt">' +
-              '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 00.5 6.19 31.74 31.74 0 000 12a31.74 31.74 0 00.5 5.81 3.02 3.02 0 002.12 2.14c1.84.55 9.38.55 9.38.55s7.54 0 9.38-.55a3.02 3.02 0 002.12-2.14A31.74 31.74 0 0024 12a31.74 31.74 0 00-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg>' +
-            '</span>'
+          '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 00.5 6.19 31.74 31.74 0 000 12a31.74 31.74 0 00.5 5.81 3.02 3.02 0 002.12 2.14c1.84.55 9.38.55 9.38.55s7.54 0 9.38-.55a3.02 3.02 0 002.12-2.14A31.74 31.74 0 0024 12a31.74 31.74 0 00-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg>' +
+          '</span>'
           : platform === 'spotify'
-          ? '<span class="room-activity-platform room-activity-platform--sp">' +
-              '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.7 1.32.42.18.48.66.24 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-.99-.12-1.11-.6-.12-.48.12-.99.6-1.11 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.21 1.17zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-.96.6-1.5.3z"/></svg>' +
+            ? '<span class="room-activity-platform room-activity-platform--sp">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.7 1.32.42.18.48.66.24 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-.99-.12-1.11-.6-.12-.48.12-.99.6-1.11 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.21 1.17zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-.96.6-1.5.3z"/></svg>' +
             '</span>'
-          : '<span class="room-activity-platform room-activity-platform--other">' +
-              '<img src="assets/logo/music.png" alt="" width="16" height="16" style="display:block;">' +
+            : '<span class="room-activity-platform room-activity-platform--other">' +
+            '<img src="assets/logo/music.png" alt="" width="16" height="16" style="display:block;">' +
             '</span>';
 
         trackHtml =
           '<div class="room-activity-track">' +
-            '<div class="room-activity-mini-eq">' +
-              '<div class="room-eq-bar" style="--eq-speed:0.4s;--eq-min:2px;--eq-max:8px;"></div>' +
-              '<div class="room-eq-bar" style="--eq-speed:0.3s;--eq-min:3px;--eq-max:10px;"></div>' +
-              '<div class="room-eq-bar" style="--eq-speed:0.5s;--eq-min:1px;--eq-max:7px;"></div>' +
-            '</div>' +
-            platformBadge +
-            '<span>' + this.escapeHtml(d.currentTrack.name) + ' - ' + this.escapeHtml(d.currentTrack.artist) + '</span>' +
+          '<div class="room-activity-mini-eq">' +
+          '<div class="room-eq-bar" style="--eq-speed:0.4s;--eq-min:2px;--eq-max:8px;"></div>' +
+          '<div class="room-eq-bar" style="--eq-speed:0.3s;--eq-min:3px;--eq-max:10px;"></div>' +
+          '<div class="room-eq-bar" style="--eq-speed:0.5s;--eq-min:1px;--eq-max:7px;"></div>' +
+          '</div>' +
+          platformBadge +
+          '<span>' + this.escapeHtml(d.currentTrack.name) + ' - ' + this.escapeHtml(d.currentTrack.artist) + '</span>' +
           '</div>';
       } else {
         var timeAgo = this.getTimeAgo(d.currentTrack.timestamp);
         trackHtml =
           '<div class="room-activity-track room-activity-track--idle">' +
-            '<span>Last played ' + timeAgo + '</span>' +
+          '<span>Last played ' + timeAgo + '</span>' +
           '</div>';
       }
 
       if (d.currentTrack.albumArt) {
         albumArtHtml =
           '<div class="room-activity-albumart">' +
-            '<img src="' + d.currentTrack.albumArt + '" alt="" loading="lazy">' +
+          '<img src="' + d.currentTrack.albumArt + '" alt="" loading="lazy">' +
           '</div>';
       }
     } else if (d.lastfmUsername) {
       trackHtml =
         '<div class="room-activity-track room-activity-track--idle">' +
-          '<span>No recent activity</span>' +
+        '<span>No recent activity</span>' +
         '</div>';
     } else {
       trackHtml =
         '<div class="room-activity-track room-activity-track--idle">' +
-          '<span>Last.fm not linked</span>' +
+        '<span>Last.fm not linked</span>' +
         '</div>';
     }
 
@@ -264,48 +264,48 @@ ROOM.Activity = {
     if (ROOM.currentUser && participantPhone && participantPhone !== ROOM.currentUser.phoneNumber) {
       actionsHtml =
         '<div class="room-activity-actions">' +
-          '<button class="room-activity-menu-toggle" aria-label="Open actions" aria-expanded="false">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">' +
-              '<path d="M6 9l6 6 6-6"></path>' +
-            '</svg>' +
-          '</button>' +
+        '<button class="room-activity-menu-toggle" aria-label="Open actions" aria-expanded="false">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">' +
+        '<path d="M6 9l6 6 6-6"></path>' +
+        '</svg>' +
+        '</button>' +
         '</div>';
 
       menuHtml =
         '<div class="room-activity-dropdown">' +
-          '<button class="room-activity-dropdown-item room-activity-bong-btn"' +
-            ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
-            ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
-            ' data-target-color="' + color + '">' +
-            this.lightstickSvg() +
-            '<span>Bong</span>' +
-          '</button>' +
-          '<button class="room-activity-dropdown-item room-activity-gif-btn"' +
-            ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
-            ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
-            ' data-target-color="' + color + '">' +
-            '<span class="room-gif-btn-icon">🎞</span>' +
-            '<span>Send GIF</span>' +
-            '<span class="room-gif-btn-cost">' + (ROOM.Gif ? ROOM.Gif._getAvailableGifs() : 0) + ' avail</span>' +
-          '</button>' +
+        '<button class="room-activity-dropdown-item room-activity-bong-btn"' +
+        ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
+        ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
+        ' data-target-color="' + color + '">' +
+        this.lightstickSvg() +
+        '<span>Bong</span>' +
+        '</button>' +
+        '<button class="room-activity-dropdown-item room-activity-gif-btn"' +
+        ' data-target-phone="' + this.escapeHtml(participantPhone) + '"' +
+        ' data-target-username="' + this.escapeHtml(d.username || 'Unknown') + '"' +
+        ' data-target-color="' + color + '">' +
+        '<span class="room-gif-btn-icon">🎞</span>' +
+        '<span>Send GIF</span>' +
+        '<span class="room-gif-btn-cost">Token x' + (ROOM.Gif ? ROOM.Gif._getAvailableGifs() : 0) + '</span>' +
+        '</button>' +
         '</div>';
     }
 
     return '<div class="room-activity-card" data-id="' + participant.id + '">' +
       '<div class="room-activity-card-main">' +
-        '<div class="room-activity-avatar" style="' + (av.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
-          av.html +
-          '<div class="room-activity-status ' + statusClass + '"></div>' +
-        '</div>' +
-        '<div class="room-activity-info">' +
-          '<div class="room-activity-name">' + this.escapeHtml(d.username || 'Unknown') + '</div>' +
-          trackHtml +
-        '</div>' +
-        albumArtHtml +
-        actionsHtml +
+      '<div class="room-activity-avatar" style="' + (av.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
+      av.html +
+      '<div class="room-activity-status ' + statusClass + '"></div>' +
+      '</div>' +
+      '<div class="room-activity-info">' +
+      '<div class="room-activity-name">' + this.escapeHtml(d.username || 'Unknown') + '</div>' +
+      trackHtml +
+      '</div>' +
+      albumArtHtml +
+      actionsHtml +
       '</div>' +
       menuHtml +
-    '</div>';
+      '</div>';
   },
 
   getTimeAgo: function (timestamp) {
