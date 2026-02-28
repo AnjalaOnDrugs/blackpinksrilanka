@@ -48,15 +48,13 @@ ROOM.TheHour = {
     var banner = document.createElement('div');
     banner.className = 'room-the-hour-banner';
     banner.innerHTML =
-      '<div class="room-the-hour-icon">2x</div>' +
-      '<div class="room-the-hour-text">' +
-        '<strong>THE Hour is LIVE!</strong>' +
-        '<span>All points are doubled right now</span>' +
-      '</div>';
+      '<span class="room-the-hour-icon">⚡ 2x</span>' +
+      '<span class="room-the-hour-label"><span class="room-the-hour-title">THE Hour</span> is LIVE — All points doubled!</span>';
 
-    var roomArea = document.getElementById('roomLayout');
-    if (roomArea) {
-      roomArea.insertBefore(banner, roomArea.firstChild);
+    // Insert between topbar and layout, not inside the grid
+    var topbar = document.getElementById('roomTopbar');
+    if (topbar && topbar.parentNode) {
+      topbar.parentNode.insertBefore(banner, topbar.nextSibling);
     }
 
     this._bannerEl = banner;

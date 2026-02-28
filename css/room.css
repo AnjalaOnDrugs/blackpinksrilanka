@@ -9415,47 +9415,71 @@
 
 /* ===== THE Hour (2x Points) Banner ===== */
 .room-the-hour-banner {
+  position: fixed;
+  top: 62px;
+  left: 0;
+  right: 0;
+  z-index: 99;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border-radius: 12px;
-  margin: 8px 16px;
-  animation: room-the-hour-pulse 2s ease-in-out infinite;
-  z-index: 10;
-  position: relative;
+  justify-content: center;
+  gap: 8px;
+  padding: 5px 16px;
+  background: linear-gradient(90deg, #b45309, #d97706, #f59e0b, #d97706, #b45309);
+  background-size: 300% 100%;
+  animation: room-the-hour-shimmer 4s linear infinite;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.03em;
 }
 
 .room-the-hour-icon {
-  font-size: 1.5rem;
   font-weight: 900;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  padding: 4px 10px;
-  min-width: 40px;
-  text-align: center;
-  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+  line-height: 1.4;
 }
 
-.room-the-hour-text {
-  display: flex;
-  flex-direction: column;
-  color: #fff;
+.room-the-hour-label {
+  opacity: 0.95;
 }
 
-.room-the-hour-text strong {
-  font-size: 0.95rem;
-  font-family: 'Outfit', sans-serif;
+.room-the-hour-title {
+  color: #fef3c7;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 10px rgba(253, 224, 71, 0.6), 0 0 20px rgba(253, 224, 71, 0.3);
 }
 
-.room-the-hour-text span {
-  font-size: 0.8rem;
-  opacity: 0.85;
+/* Push room content down when THE Hour banner is visible */
+body.room-the-hour-active .room-layout {
+  padding-top: 100px;
 }
 
-@keyframes room-the-hour-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+@keyframes room-the-hour-shimmer {
+  0% { background-position: 300% 0; }
+  100% { background-position: -300% 0; }
+}
+
+@media (max-width: 768px) {
+  .room-the-hour-banner {
+    top: 56px;
+    font-size: 0.72rem;
+    padding: 4px 12px;
+  }
+
+  body.room-the-hour-active .room-layout {
+    padding-top: 88px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+  body.room-the-hour-active .room-layout {
+    padding-top: 100px;
+  }
 }
