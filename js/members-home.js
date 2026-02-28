@@ -47,6 +47,25 @@ checkAuthState().then(async (user) => {
         console.error('Error loading streak:', streakErr);
       }
     }
+
+    // Check for extra rooms (restricted/test rooms) visible to this user
+    if (userData && userData.phoneNumber) {
+      try {
+        var visibleRooms = await ConvexService.query('rooms:listVisibleRooms', {
+          phoneNumber: userData.phoneNumber
+        });
+        if (visibleRooms) {
+          var extraRooms = visibleRooms.filter(function (r) {
+            return r.roomId !== 'streaming';
+          });
+          if (extraRooms.length > 0) {
+            MembersRoom._renderExtraRooms(extraRooms);
+          }
+        }
+      } catch (extraErr) {
+        console.error('Error loading visible rooms:', extraErr);
+      }
+    }
   } catch (err) {
     console.error('Error loading user data:', err);
     document.getElementById('greetingName').innerHTML =
@@ -56,25 +75,6 @@ checkAuthState().then(async (user) => {
 
   // After auth, start loading real room data
   MembersRoom.init();
-
-  // Check for extra rooms (restricted/test rooms) visible to this user
-  if (userData && userData.phoneNumber) {
-    try {
-      var visibleRooms = await ConvexService.query('rooms:listVisibleRooms', {
-        phoneNumber: userData.phoneNumber
-      });
-      if (visibleRooms) {
-        var extraRooms = visibleRooms.filter(function (r) {
-          return r.roomId !== 'streaming';
-        });
-        if (extraRooms.length > 0) {
-          MembersRoom._renderExtraRooms(extraRooms);
-        }
-      }
-    } catch (extraErr) {
-      console.error('Error loading visible rooms:', extraErr);
-    }
-  }
 });
 
 // ========== ROOM NAVIGATION ==========
