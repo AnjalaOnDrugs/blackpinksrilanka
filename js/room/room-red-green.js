@@ -55,6 +55,7 @@ ROOM.RedGreen = {
   },
 
   _tryTrigger: function () {
+    if (ROOM.TheHour && ROOM.TheHour.isActive()) return;
     if (this._activeEventId) return;
     if (!ROOM.Events.canFireEvent()) return; // 10s grace period after joining
     if (!ROOM.currentUser) return;

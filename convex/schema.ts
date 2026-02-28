@@ -403,6 +403,52 @@ export default defineSchema({
   }).index("by_room", ["roomId"])
     .index("by_recipient_unread", ["roomId", "recipientPhoneNumber", "isRead"]),
 
+  // DJ Event: rotating DJ picks from online users during THE Hour
+  djEvents: defineTable({
+    roomId: v.string(),
+    currentDj: v.optional(
+      v.object({
+        phoneNumber: v.string(),
+        username: v.string(),
+        avatarColor: v.string(),
+        profilePicture: v.optional(v.string()),
+        song: v.optional(
+          v.object({
+            name: v.string(),
+            artist: v.string(),
+            albumArt: v.optional(v.string()),
+          })
+        ),
+        selectedAt: v.number(),
+        songChosenAt: v.optional(v.number()),
+        roundEndsAt: v.optional(v.number()),
+      })
+    ),
+    // Phone numbers of users who have already DJ'd
+    djHistory: v.array(v.string()),
+    // Votes for current DJ round (one per user)
+    votes: v.array(
+      v.object({
+        phoneNumber: v.string(),
+        vote: v.string(), // "up" | "down"
+      })
+    ),
+    // Users who played the DJ's song this round
+    listeners: v.array(
+      v.object({
+        phoneNumber: v.string(),
+        username: v.string(),
+      })
+    ),
+    // All online phone numbers at event start (rotation pool)
+    onlinePool: v.array(v.string()),
+    startedAt: v.number(),
+    status: v.string(), // "active" | "ended"
+    pointsAwarded: v.optional(v.boolean()),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_status", ["roomId", "status"]),
+
   // Daily check-ins for calendar page
   checkins: defineTable({
     phoneNumber: v.string(),

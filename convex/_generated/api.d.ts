@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as adminAuth from "../adminAuth.js";
 import type * as checkins from "../checkins.js";
+import type * as djEvent from "../djEvent.js";
 import type * as events from "../events.js";
 import type * as fillTheMap from "../fillTheMap.js";
 import type * as gifMessages from "../gifMessages.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   adminAuth: typeof adminAuth;
   checkins: typeof checkins;
+  djEvent: typeof djEvent;
   events: typeof events;
   fillTheMap: typeof fillTheMap;
   gifMessages: typeof gifMessages;

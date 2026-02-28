@@ -257,6 +257,19 @@ ROOM.Firebase = {
       }
     );
 
+    // 9a. Subscribe to active DJ event (for late joiners)
+    var unsub9a = ConvexService.watch(
+      'djEvent:getActiveDjEvent',
+      { roomId: roomId },
+      function (event) {
+        if (event && event.status === 'active') {
+          if (ROOM.DjEvent && ROOM.DjEvent.handleActiveEvent) {
+            ROOM.DjEvent.handleActiveEvent(event);
+          }
+        }
+      }
+    );
+
     // 9. Subscribe to unread GIF messages for the current user (offline catch-up)
     var gifProcessedIds = {};
     var isInitialGifLoad = true;
@@ -293,7 +306,7 @@ ROOM.Firebase = {
       }
     );
 
-    this.unsubscribers.push(unsub1, unsub1a, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8, unsub9);
+    this.unsubscribers.push(unsub1, unsub1a, unsub2, unsub3, unsub3b, unsub4, unsub5, unsub6, unsub7, unsub8, unsub9a, unsub9);
     var selfRef = this;
     this.unsubscribers.push(function () { if (selfRef._unsubPfps) selfRef._unsubPfps(); });
   },

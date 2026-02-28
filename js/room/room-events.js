@@ -124,11 +124,25 @@ ROOM.Events = {
     if (ROOM.ListenAlong && ROOM.ListenAlong._activeEventId) return true;
     if (ROOM.FillMap && ROOM.FillMap._activeEventId) return true;
     if (ROOM.Vroom && ROOM.Vroom._activeEventId) return true;
+    if (ROOM.DjEvent && ROOM.DjEvent._activeEventId) return true;
     return false;
   },
 
   handleEvent: function (eventData) {
     if (!eventData || !eventData.type) return;
+
+    // Disable events during THE Hour, except THE Hour and DJ Events
+    if (ROOM.TheHour && ROOM.TheHour.isActive()) {
+      var allowedTypes = [
+        'the_hour_start', 'the_hour_end', 'admin_message',
+        'dj_event_start', 'dj_new_dj', 'dj_song_chosen',
+        'dj_listener_join', 'dj_vote', 'dj_skip',
+        'dj_round_end', 'dj_event_end'
+      ];
+      if (allowedTypes.indexOf(eventData.type) === -1) {
+        return;
+      }
+    }
 
     switch (eventData.type) {
       case 'join':
@@ -217,6 +231,30 @@ ROOM.Events = {
         break;
       case 'the_hour_end':
         ROOM.TheHour && ROOM.TheHour._renderBanner();
+        break;
+      case 'dj_event_start':
+        ROOM.DjEvent && ROOM.DjEvent.handleStart(eventData.data);
+        break;
+      case 'dj_new_dj':
+        ROOM.DjEvent && ROOM.DjEvent.handleNewDj(eventData.data);
+        break;
+      case 'dj_song_chosen':
+        ROOM.DjEvent && ROOM.DjEvent.handleSongChosen(eventData.data);
+        break;
+      case 'dj_listener_join':
+        ROOM.DjEvent && ROOM.DjEvent.handleListenerJoin(eventData.data);
+        break;
+      case 'dj_vote':
+        ROOM.DjEvent && ROOM.DjEvent.handleVote(eventData.data);
+        break;
+      case 'dj_skip':
+        ROOM.DjEvent && ROOM.DjEvent.handleSkip(eventData.data);
+        break;
+      case 'dj_round_end':
+        ROOM.DjEvent && ROOM.DjEvent.handleRoundEnd(eventData.data);
+        break;
+      case 'dj_event_end':
+        ROOM.DjEvent && ROOM.DjEvent.handleEnd(eventData.data);
         break;
     }
   },

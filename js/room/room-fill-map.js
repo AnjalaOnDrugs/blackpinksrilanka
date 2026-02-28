@@ -44,6 +44,7 @@ ROOM.FillMap = {
   },
 
   _tryTrigger: function () {
+    if (ROOM.TheHour && ROOM.TheHour.isActive()) return; // Events disabled during THE Hour
     if (this._activeEventId) return;
     if (!ROOM.Events.canFireEvent()) return;
     if (ROOM.Events.isTimedEventActive()) return;

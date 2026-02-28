@@ -68,6 +68,7 @@ ROOM.Vroom = {
   },
 
   _tryTrigger: function () {
+    if (ROOM.TheHour && ROOM.TheHour.isActive()) return;
     if (this._activeEventId) return;
     if (!ROOM.Events.canFireEvent()) return; // 10s grace period after joining
     if (ROOM.Events.isTimedEventActive()) return; // Another timed event is running

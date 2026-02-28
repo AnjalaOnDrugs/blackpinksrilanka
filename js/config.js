@@ -96,6 +96,12 @@ const CONFIG = {
   redGreenSongCheckInterval: 3000,          // Check every 3s if user is playing on correct platform
   redGreenProgressSaveInterval: 5000,       // Save listen progress to server every 5s
 
+  // DJ Event settings
+  djEventSelectionTimeout: 60000,        // 1 minute for DJ to choose song
+  djEventRoundDuration: 120000,          // 2 minutes per song round
+  djEventSongCheckInterval: 5000,        // Check every 5s for song/listen detection
+  djEventSongGracePeriod: 5000,          // 5s grace before detecting DJ's song
+
   // Klipy GIF API
   klipyApiKey: 'dYu1PSt79FOOy7cv4JgoyK3Styf5zzAlHHWHNJOKwL2voxQ2c9rHoPaMgua1snFv',
 

@@ -47,6 +47,7 @@ ROOM.ListenAlong = {
   },
 
   _tryTrigger: function () {
+    if (ROOM.TheHour && ROOM.TheHour.isActive()) return; // Events disabled during THE Hour
     if (this._activeEventId) return; // Event already active
     if (!ROOM.Events.canFireEvent()) return; // 10s grace period after joining
     if (ROOM.Events.isTimedEventActive()) return; // Another timed event is running
