@@ -9493,15 +9493,18 @@ body.room-the-hour-active .room-layout {
 /* ========== DJ EVENT ========== */
 
 .room-dj-card {
+  display: block !important;
+  visibility: visible !important;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10000;
+  z-index: 999999 !important;
   width: 380px;
-  animation: roomDjCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: roomDjCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: auto;
+  opacity: 1;
 }
 
 .room-dj-card--minimized {
@@ -9889,6 +9892,7 @@ body.room-the-hour-active .room-layout {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.85) translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1) translateY(0);
@@ -9900,6 +9904,7 @@ body.room-the-hour-active .room-layout {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.9) translateY(20px);
@@ -9907,31 +9912,53 @@ body.room-the-hour-active .room-layout {
 }
 
 @keyframes roomDjGlowPulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes roomDjAvatarPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+  }
 }
 
 @keyframes roomDjFadeIn {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== DJ EVENT RESPONSIVE ===== */
 
 @media (max-width: 768px) {
   .room-dj-card {
-    top: auto;
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-    left: 10px;
-    right: 10px;
-    transform: none;
-    width: auto;
-    max-width: none;
+    top: auto !important;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: none !important;
+    animation: roomDjFadeIn 0.5s ease forwards !important;
   }
 
   .room-dj-card--minimized {
@@ -9959,6 +9986,12 @@ body.room-the-hour-active .room-layout {
 }
 
 @keyframes roomDjCardOutMobile {
-  0% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(20px); }
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 }
