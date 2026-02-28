@@ -21,6 +21,7 @@ import type * as redGreen from "../redGreen.js";
 import type * as rooms from "../rooms.js";
 import type * as runPlaylist from "../runPlaylist.js";
 import type * as streams from "../streams.js";
+import type * as theHour from "../theHour.js";
 import type * as users from "../users.js";
 import type * as voiceMessages from "../voiceMessages.js";
 import type * as vroom from "../vroom.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   rooms: typeof rooms;
   runPlaylist: typeof runPlaylist;
   streams: typeof streams;
+  theHour: typeof theHour;
   users: typeof users;
   voiceMessages: typeof voiceMessages;
   vroom: typeof vroom;

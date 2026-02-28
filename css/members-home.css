@@ -1465,3 +1465,79 @@
     padding: 32px;
   }
 }
+
+/* ===== Extra Room Cards (restricted/test rooms) ===== */
+.mh-room-extra {
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.mh-room-extra:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(247, 166, 185, 0.3);
+}
+
+.mh-room-extra-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.mh-room-extra-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mh-room-extra-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(247, 166, 185, 0.12);
+  color: #f7a6b9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mh-room-extra-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.mh-room-extra-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+}
+
+.mh-room-extra-type {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.mh-room-extra-join {
+  background: rgba(247, 166, 185, 0.12);
+  color: #f7a6b9;
+  border: 1px solid rgba(247, 166, 185, 0.25);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  font-family: 'Outfit', sans-serif;
+}
+
+.mh-room-extra-join:hover {
+  background: rgba(247, 166, 185, 0.22);
+}

@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { assertAdminAccess } from "./adminAuth";
+import { getPointMultiplier } from "./theHour";
 
 /**
  * Stream Counting System — Platform-Specific Rules + Points System
@@ -588,7 +589,8 @@ export const tryCountStream = mutation({
     }
 
     // 5. All checks passed — count the stream!
-    const points = calculateStreamPoints(platform, isMain);
+    const multiplier = await getPointMultiplier(ctx, args.roomId);
+    const points = calculateStreamPoints(platform, isMain) * multiplier;
     const isBpOrSolo = isBlackpinkOrSolo(session.trackArtist);
     const userDoc = await ctx.db
       .query("users")

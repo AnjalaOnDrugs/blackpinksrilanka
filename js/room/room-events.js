@@ -212,6 +212,12 @@ ROOM.Events = {
       case 'admin_message':
         ROOM.Animations && ROOM.Animations.playAdminMessage(eventData.data);
         break;
+      case 'the_hour_start':
+        ROOM.TheHour && ROOM.TheHour._renderBanner();
+        break;
+      case 'the_hour_end':
+        ROOM.TheHour && ROOM.TheHour._renderBanner();
+        break;
     }
   },
 

@@ -286,6 +286,7 @@ export default defineSchema({
     createdAt: v.number(),
     lockedUntil: v.optional(v.number()),
     allowedUsers: v.optional(v.array(v.string())),
+    restricted: v.optional(v.boolean()),
     currentMostPlayed: v.optional(
       v.object({
         track: v.string(),
@@ -294,6 +295,16 @@ export default defineSchema({
       })
     ),
   }).index("by_roomId", ["roomId"]),
+
+  // THE Hour events: admin-triggered 2x points period
+  theHourEvents: defineTable({
+    roomId: v.string(),
+    startedAt: v.number(),
+    endedAt: v.optional(v.number()),
+    active: v.boolean(),
+    startedBy: v.string(),
+  }).index("by_room", ["roomId"])
+    .index("by_room_active", ["roomId", "active"]),
 
   // Voice messages from top 5 players
   // Each user can have one active voice message at a time (replaced on new send)

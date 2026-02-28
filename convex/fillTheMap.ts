@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getPointMultiplier } from "./theHour";
 
 const DEFAULT_DURATION_MS = 180000; // 3 minutes
 const DEFAULT_COOLDOWN_MS = 3600000; // 1 hour
@@ -142,6 +143,9 @@ export const fillDistrict = mutation({
     });
 
     // Award fill points immediately (2 pts for first person to fill their district)
+    const multiplier = await getPointMultiplier(ctx, args.roomId);
+    const fillPoints = FILL_DISTRICT_POINTS * multiplier;
+
     const participant = await ctx.db
       .query("participants")
       .withIndex("by_room_phone", (q) =>
@@ -151,8 +155,8 @@ export const fillDistrict = mutation({
 
     if (participant) {
       await ctx.db.patch(participant._id, {
-        bonusPoints: (participant.bonusPoints ?? 0) + FILL_DISTRICT_POINTS,
-        totalPoints: (participant.totalPoints ?? 0) + FILL_DISTRICT_POINTS,
+        bonusPoints: (participant.bonusPoints ?? 0) + fillPoints,
+        totalPoints: (participant.totalPoints ?? 0) + fillPoints,
       });
     }
 
@@ -166,7 +170,7 @@ export const fillDistrict = mutation({
         phoneNumber: args.phoneNumber,
         username: args.username,
         profilePicture: args.profilePicture,
-        pointsAwarded: FILL_DISTRICT_POINTS,
+        pointsAwarded: fillPoints,
       },
       createdAt: Date.now(),
     });
@@ -199,6 +203,9 @@ async function completeFillTheMap(
   // Collect all participants who filled a district
   const fillers = Object.values(filledDistricts);
 
+  const multiplier = await getPointMultiplier(ctx, roomId);
+  const bonus = ALL_FILLED_BONUS * multiplier;
+
   // Award bonus points to each filler for completing the map
   for (const filler of fillers) {
     const participant = await ctx.db
@@ -210,8 +217,8 @@ async function completeFillTheMap(
 
     if (participant) {
       await ctx.db.patch(participant._id, {
-        bonusPoints: (participant.bonusPoints ?? 0) + ALL_FILLED_BONUS,
-        totalPoints: (participant.totalPoints ?? 0) + ALL_FILLED_BONUS,
+        bonusPoints: (participant.bonusPoints ?? 0) + bonus,
+        totalPoints: (participant.totalPoints ?? 0) + bonus,
       });
     }
   }

@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getPointMultiplier } from "./theHour";
 
 const DEFAULT_DURATION_MS = 180000; // 3 minutes
 const DEFAULT_COOLDOWN_MS = 3600000; // 1 hour
@@ -150,7 +151,8 @@ export const endListenAlong = mutation({
     if (event.pointsAwarded) return null;
 
     const participantCount = event.participants.length;
-    const pointsEach = participantCount;
+    const multiplier = await getPointMultiplier(ctx, args.roomId);
+    const pointsEach = participantCount * multiplier;
 
     // Award points to each participant
     for (const p of event.participants) {

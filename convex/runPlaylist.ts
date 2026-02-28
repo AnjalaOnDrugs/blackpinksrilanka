@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getPointMultiplier } from "./theHour";
 
 const DEFAULT_COOLDOWN_MS = 3600000; // 1 hour
 const PLAYLIST_POINTS = 5;
@@ -157,10 +158,13 @@ async function awardPoints(
     )
     .first();
 
+  const multiplier = await getPointMultiplier(ctx, roomId);
+  const points = PLAYLIST_POINTS * multiplier;
+
   if (participant) {
     await ctx.db.patch(participant._id, {
-      bonusPoints: (participant.bonusPoints ?? 0) + PLAYLIST_POINTS,
-      totalPoints: (participant.totalPoints ?? 0) + PLAYLIST_POINTS,
+      bonusPoints: (participant.bonusPoints ?? 0) + points,
+      totalPoints: (participant.totalPoints ?? 0) + points,
     });
   }
 
@@ -169,7 +173,7 @@ async function awardPoints(
     pointsAwarded: true,
   });
 
-  return { pointsAwarded: PLAYLIST_POINTS };
+  return { pointsAwarded: points };
 }
 
 // User manually quits — no points awarded.

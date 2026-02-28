@@ -90,6 +90,15 @@ export const joinRoom = mutation({
       }
     }
 
+    // Restricted room access check
+    if (room?.restricted) {
+      const isAdmin = ALWAYS_ALLOWED.includes(args.phoneNumber);
+      const isAllowed = room.allowedUsers && room.allowedUsers.includes(args.phoneNumber);
+      if (!isAdmin && !isAllowed) {
+        throw new Error("ROOM_RESTRICTED");
+      }
+    }
+
     const existing = await ctx.db
       .query("participants")
       .withIndex("by_room_phone", (q) =>

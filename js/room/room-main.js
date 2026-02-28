@@ -99,6 +99,14 @@ checkAuthState().then(async function (user) {
           '<div class="room-closed-date">' + dateStr + ' at ' + timeStr + '</div>' +
           '<a href="members.html" class="room-closed-btn">Go Back</a>' +
         '</div>';
+    } else if (errorMsg.indexOf('ROOM_RESTRICTED') >= 0) {
+      loadingEl.innerHTML =
+        '<div class="room-closed-card">' +
+          '<div class="room-closed-icon">🔒</div>' +
+          '<div class="room-closed-title">Restricted Room</div>' +
+          '<div class="room-closed-msg">You don\'t have access to this room.</div>' +
+          '<a href="members.html" class="room-closed-btn">Go Back</a>' +
+        '</div>';
     } else {
       loadingEl.innerHTML =
         '<div class="room-closed-card">' +
@@ -155,6 +163,7 @@ async function initRoom(roomId) {
   ROOM.RunPlaylist.init();
   ROOM.RedGreen.init();
   ROOM.Vroom.init();
+  ROOM.TheHour.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 

@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getPointMultiplier } from "./theHour";
 
 const DEFAULT_COOLDOWN_MS = 7200000; // 2 hours
 
@@ -217,8 +218,9 @@ async function awardVroomPoints(
   lanes: any,
   winner: string
 ) {
-  const BASE_POINTS = 3;
-  const BONUS_POINTS = 5;
+  const multiplier = await getPointMultiplier(ctx, roomId);
+  const BASE_POINTS = 3 * multiplier;
+  const BONUS_POINTS = 5 * multiplier;
 
   for (const member of MEMBERS) {
     const isWinner = member === winner;

@@ -9412,3 +9412,50 @@
     opacity: 0;
   }
 }
+
+/* ===== THE Hour (2x Points) Banner ===== */
+.room-the-hour-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 12px;
+  margin: 8px 16px;
+  animation: room-the-hour-pulse 2s ease-in-out infinite;
+  z-index: 10;
+  position: relative;
+}
+
+.room-the-hour-icon {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  min-width: 40px;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+}
+
+.room-the-hour-text {
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+
+.room-the-hour-text strong {
+  font-size: 0.95rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.room-the-hour-text span {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+@keyframes room-the-hour-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+}

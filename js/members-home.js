@@ -56,6 +56,25 @@ checkAuthState().then(async (user) => {
 
   // After auth, start loading real room data
   MembersRoom.init();
+
+  // Check for extra rooms (restricted/test rooms) visible to this user
+  if (userData && userData.phoneNumber) {
+    try {
+      var visibleRooms = await ConvexService.query('rooms:listVisibleRooms', {
+        phoneNumber: userData.phoneNumber
+      });
+      if (visibleRooms) {
+        var extraRooms = visibleRooms.filter(function (r) {
+          return r.roomId !== 'streaming';
+        });
+        if (extraRooms.length > 0) {
+          MembersRoom._renderExtraRooms(extraRooms);
+        }
+      }
+    } catch (extraErr) {
+      console.error('Error loading visible rooms:', extraErr);
+    }
+  }
 });
 
 // ========== ROOM NAVIGATION ==========
@@ -633,5 +652,53 @@ var MembersRoom = {
     }
     this._unsubs = [];
     if (this._songRotationTimer) clearInterval(this._songRotationTimer);
+  },
+
+  _renderExtraRooms: function (rooms) {
+    var roomsContainer = document.querySelector('.mh-rooms');
+    if (!roomsContainer) return;
+
+    for (var i = 0; i < rooms.length; i++) {
+      var room = rooms[i];
+      var card = document.createElement('div');
+      card.className = 'mh-room-extra';
+      card.innerHTML =
+        '<div class="mh-room-extra-content">' +
+          '<div class="mh-room-extra-left">' +
+            '<div class="mh-room-extra-badge">' +
+              (room.restricted ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><polygon points="5,3 19,12 5,21"/></svg>') +
+            '</div>' +
+            '<div class="mh-room-extra-info">' +
+              '<div class="mh-room-extra-name">' + this._esc(room.name) + '</div>' +
+              '<div class="mh-room-extra-type">' +
+                (room.restricted ? 'Private Room' : room.type) +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<button class="mh-room-extra-join">Join</button>' +
+        '</div>';
+
+      var roomId = room.roomId;
+      card.querySelector('.mh-room-extra-join').addEventListener('click', (function (id) {
+        return function () {
+          window.location.href = 'room.html?id=' + id;
+        };
+      })(roomId));
+
+      card.addEventListener('click', (function (id) {
+        return function (e) {
+          if (e.target.closest('.mh-room-extra-join')) return;
+          window.location.href = 'room.html?id=' + id;
+        };
+      })(roomId));
+
+      roomsContainer.appendChild(card);
+    }
+  },
+
+  _esc: function (str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 };
