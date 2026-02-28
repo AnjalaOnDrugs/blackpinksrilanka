@@ -1,8 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { ALWAYS_ALLOWED_PHONES, assertAdminAccess } from "./adminAuth";
 
 // Users who can always enter locked rooms (admins)
-const ALWAYS_ALLOWED = ["714066514", "714545776"]; // Modinee, Anjala
+const ALWAYS_ALLOWED = ALWAYS_ALLOWED_PHONES;
 
 // Set a room lock until a specific timestamp
 export const setRoomLock = mutation({
@@ -10,8 +11,12 @@ export const setRoomLock = mutation({
         roomId: v.string(),
         lockedUntil: v.optional(v.number()), // Time when lock expires (or null/undefined to unlock)
         allowedUsers: v.optional(v.array(v.string())),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
         const room = await ctx.db
             .query("rooms")
             .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
@@ -75,8 +80,12 @@ export const kickUser = mutation({
     args: {
         roomId: v.string(),
         phoneNumber: v.string(),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
         const participant = await ctx.db
             .query("participants")
             .withIndex("by_room_phone", (q) =>
@@ -94,8 +103,12 @@ export const kickUser = mutation({
 export const kickAllUsers = mutation({
     args: {
         roomId: v.string(),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
         const participants = await ctx.db
             .query("participants")
             .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -111,8 +124,12 @@ export const kickAllUsers = mutation({
 export const deleteVoiceMessages = mutation({
     args: {
         roomId: v.string(),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
         const messages = await ctx.db
             .query("voiceMessages")
             .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -128,8 +145,11 @@ export const deleteVoiceMessages = mutation({
 export const deleteVoiceMessage = mutation({
     args: {
         messageId: v.id("voiceMessages"),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
         await ctx.db.delete(args.messageId);
     },
 });
@@ -143,8 +163,12 @@ export const sendAdminMessage = mutation({
         bgImage: v.string(),
         gifUrl: v.optional(v.string()),
         gifIsVideo: v.optional(v.boolean()),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
         await ctx.db.insert("events", {
             roomId: args.roomId,
             type: "admin_message",
@@ -169,8 +193,12 @@ export const sendAdminGifMessage = mutation({
         gifUrl: v.string(),
         gifIsVideo: v.boolean(),
         bgImage: v.optional(v.string()),
+        actorPhone: v.string(),
+        adminKey: v.string(),
     },
     handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
         await ctx.db.insert("events", {
             roomId: args.roomId,
             type: "admin_message",

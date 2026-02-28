@@ -158,6 +158,7 @@ var MembersRoom = {
   _currentTrackIdx: 0,
 
   _rawParticipants: [],
+  _tracksCache: {},
   _pfpCache: {},
   _lastPhoneHash: '',
   _unsubPfps: null,
@@ -205,6 +206,21 @@ var MembersRoom = {
     );
     this._unsubs.push(unsub1);
 
+    // 1b. Watch tracks separately (lightweight, from participantTracks table)
+    var unsub1b = ConvexService.watch(
+      'participants:listTracks',
+      { roomId: this._roomId },
+      function (tracks) {
+        if (!tracks) return;
+        self._tracksCache = {};
+        for (var i = 0; i < tracks.length; i++) {
+          self._tracksCache[tracks[i].phoneNumber] = tracks[i].currentTrack;
+        }
+        self._mergeAndRender();
+      }
+    );
+    this._unsubs.push(unsub1b);
+
     // 2. Watch room document for currentMostPlayed
     var unsub2 = ConvexService.watch(
       'rooms:getRoom',
@@ -217,13 +233,15 @@ var MembersRoom = {
     this._unsubs.push(unsub2);
   },
 
-  // ---- Merge Convex participants with Firebase RTDB presence ----
+  // ---- Merge Convex participants with Firebase RTDB presence + tracks ----
   _mergeAndRender: function () {
     var pfpCache = this._pfpCache || {};
+    var tracksCache = this._tracksCache || {};
     this._participants = (this._rawParticipants || []).map(function (p) {
       var merged = Object.assign({}, p);
       merged.data = Object.assign({}, p.data);
       merged.data.profilePicture = pfpCache[p.id] || null;
+      merged.data.currentTrack = tracksCache[p.id] || null;
       // Override isOnline from Firebase RTDB presence
       merged.data.isOnline = ROOM.Presence.isOnline(p.id);
       var presenceLastSeen = ROOM.Presence.getLastSeen(p.id);

@@ -1,8 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { ALWAYS_ALLOWED_PHONES, assertAdminAccess } from "./adminAuth";
 
 // Users who can always enter locked rooms (admins)
-const ALWAYS_ALLOWED = ["714066514", "714545776"]; // Modinee, Anjala
+const ALWAYS_ALLOWED = ALWAYS_ALLOWED_PHONES;
 
 // Get all participants for a room (sorted by totalMinutes desc)
 export const listByRoom = query({
@@ -41,19 +42,19 @@ export const listByRoom = query({
   },
 });
 
-// Lightweight track-only query — subscribed separately so track changes
-// don't cause the full participant list to re-send.
+// Lightweight track-only query — reads from the separate participantTracks
+// table so track mutations never invalidate the listByRoom subscription.
 export const listTracks = query({
   args: { roomId: v.string() },
   handler: async (ctx, args) => {
-    const participants = await ctx.db
-      .query("participants")
+    const tracks = await ctx.db
+      .query("participantTracks")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    return participants.map((p) => ({
-      phoneNumber: p.phoneNumber,
-      currentTrack: p.currentTrack ?? null,
+    return tracks.map((t) => ({
+      phoneNumber: t.phoneNumber,
+      currentTrack: t.currentTrack ?? null,
     }));
   },
 });
@@ -114,11 +115,25 @@ export const joinRoom = mutation({
         currentRank: 0,
         previousRank: 0,
         milestones: [],
-        currentTrack: null,
         avatarColor: args.avatarColor,
         profilePicture: profilePicture,
         streakMinutes: 0,
       });
+
+      // Ensure a participantTracks row exists for this user
+      const existingTrack = await ctx.db
+        .query("participantTracks")
+        .withIndex("by_room_phone", (q) =>
+          q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+        )
+        .first();
+      if (!existingTrack) {
+        await ctx.db.insert("participantTracks", {
+          roomId: args.roomId,
+          phoneNumber: args.phoneNumber,
+          currentTrack: null,
+        });
+      }
     }
   },
 });
@@ -152,7 +167,9 @@ export const leaveRoom = mutation({
 // Firebase RTDB uses onDisconnect() for instant offline detection at the
 // connection level. No polling/heartbeat mutations needed.
 
-// Update track with change detection (only writes if track actually changed)
+// Update track with change detection (only writes if track actually changed).
+// Writes to the separate participantTracks table so track mutations never
+// invalidate the listByRoom subscription on the participants table.
 export const updateTrack = mutation({
   args: {
     roomId: v.string(),
@@ -169,16 +186,15 @@ export const updateTrack = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const participant = await ctx.db
-      .query("participants")
+    // Upsert into participantTracks table
+    const trackRow = await ctx.db
+      .query("participantTracks")
       .withIndex("by_room_phone", (q) =>
         q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
       )
       .first();
 
-    if (!participant) return { changed: false, wasIdle: false };
-
-    const prevTrack = participant.currentTrack;
+    const prevTrack = trackRow?.currentTrack ?? null;
 
     // Check if track actually changed
     if (args.trackData === null && prevTrack === null) {
@@ -186,9 +202,9 @@ export const updateTrack = mutation({
     }
 
     if (args.trackData === null) {
-      await ctx.db.patch(participant._id, {
-        currentTrack: null,
-      });
+      if (trackRow) {
+        await ctx.db.patch(trackRow._id, { currentTrack: null });
+      }
       return { changed: true, wasIdle: true };
     }
 
@@ -199,9 +215,15 @@ export const updateTrack = mutation({
       prevTrack.nowPlaying !== args.trackData.nowPlaying;
 
     if (trackChanged) {
-      await ctx.db.patch(participant._id, {
-        currentTrack: args.trackData,
-      });
+      if (trackRow) {
+        await ctx.db.patch(trackRow._id, { currentTrack: args.trackData });
+      } else {
+        await ctx.db.insert("participantTracks", {
+          roomId: args.roomId,
+          phoneNumber: args.phoneNumber,
+          currentTrack: args.trackData,
+        });
+      }
     }
 
     const wasIdle = !prevTrack || !prevTrack.nowPlaying;
@@ -303,11 +325,17 @@ export const disableOfflineTracking = mutation({
   },
 });
 
-// Reset all participant points to 0 and clear stream counts
+// Reset all participant points to 0 while preserving verified stream history.
 export const resetAllPoints = mutation({
-  args: { roomId: v.string() },
+  args: {
+    roomId: v.string(),
+    actorPhone: v.string(),
+    adminKey: v.string(),
+  },
   handler: async (ctx, args) => {
-    // 1. Reset totalPoints and bonusPoints on all participants
+    assertAdminAccess(args);
+
+    // 1. Reset totalPoints and bonusPoints on all participants.
     const participants = await ctx.db
       .query("participants")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -320,38 +348,66 @@ export const resetAllPoints = mutation({
       });
     }
 
-    // 2. Delete all streamCounts for this room
-    const streams = await ctx.db
-      .query("streamCounts")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .collect();
-
-    for (const s of streams) {
-      await ctx.db.delete(s._id);
-    }
-
-    // 3. Clear materialized stream stats
-    const roomStats = await ctx.db
-      .query("roomStreamStats")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .collect();
-    for (const rs of roomStats) {
-      await ctx.db.delete(rs._id);
-    }
-
+    // 2. Reset user materialized points only (keep stream counters intact).
     const userStats = await ctx.db
       .query("userStreamStats")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
     for (const us of userStats) {
-      await ctx.db.delete(us._id);
+      if ((us.totalPoints ?? 0) !== 0) {
+        await ctx.db.patch(us._id, { totalPoints: 0 });
+      }
     }
 
     return {
       reset: participants.length,
-      streamsCleared: streams.length,
-      roomStatsCleared: roomStats.length,
-      userStatsCleared: userStats.length,
+      userStatsPointsReset: userStats.length,
+    };
+  },
+});
+
+// Restore participant leaderboard points from stream stats + bonus points (+ optional check-in points).
+export const restoreParticipantTotals = mutation({
+  args: {
+    roomId: v.string(),
+    actorPhone: v.string(),
+    adminKey: v.string(),
+    includeCheckInPoints: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    assertAdminAccess(args);
+
+    const includeCheckIn = args.includeCheckInPoints !== false;
+    const participants = await ctx.db
+      .query("participants")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    let updated = 0;
+    for (const p of participants) {
+      const userStats = await ctx.db
+        .query("userStreamStats")
+        .withIndex("by_room_phone", (q) =>
+          q.eq("roomId", args.roomId).eq("phoneNumber", p.phoneNumber)
+        )
+        .first();
+
+      const streamPoints = userStats?.totalPoints ?? 0;
+      const bonusPoints = p.bonusPoints ?? 0;
+      const checkInPoints = includeCheckIn && p.offlineTracking ? 2 : 0;
+      const nextTotal = streamPoints + bonusPoints + checkInPoints;
+
+      if ((p.totalPoints ?? 0) !== nextTotal) {
+        await ctx.db.patch(p._id, { totalPoints: nextTotal });
+        updated++;
+      }
+    }
+
+    return {
+      roomId: args.roomId,
+      participants: participants.length,
+      updated,
+      includeCheckInPoints: includeCheckIn,
     };
   },
 });

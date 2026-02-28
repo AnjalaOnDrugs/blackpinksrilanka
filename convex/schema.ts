@@ -56,6 +56,44 @@ export default defineSchema({
     .index("by_room_phone", ["roomId", "phoneNumber"])
     .index("by_room_minutes", ["roomId", "totalMinutes"]),
 
+  // Separate table for track data — isolates frequent track mutations from
+  // the participants table so listByRoom subscriptions aren't invalidated
+  // on every track change.
+  participantTracks: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    currentTrack: v.union(
+      v.null(),
+      v.object({
+        name: v.string(),
+        artist: v.string(),
+        albumArt: v.optional(v.string()),
+        nowPlaying: v.boolean(),
+        timestamp: v.optional(v.union(v.number(), v.null())),
+      })
+    ),
+  }).index("by_room", ["roomId"])
+    .index("by_room_phone", ["roomId", "phoneNumber"]),
+
+  // Materialized district-level stream aggregates for lightweight heatmap queries.
+  districtStreamStats: defineTable({
+    roomId: v.string(),
+    district: v.string(),
+    totalStreams: v.number(),
+    uniqueUsers: v.array(v.string()),
+  }).index("by_room", ["roomId"])
+    .index("by_room_district", ["roomId", "district"]),
+
+  // Materialized per-user heatmap aggregates for Deck.gl precise heatmap.
+  userHeatmapStats: defineTable({
+    roomId: v.string(),
+    phoneNumber: v.string(),
+    lat: v.number(),
+    lng: v.number(),
+    weight: v.number(),
+  }).index("by_room", ["roomId"])
+    .index("by_room_phone", ["roomId", "phoneNumber"]),
+
   events: defineTable({
     roomId: v.string(),
     type: v.string(),

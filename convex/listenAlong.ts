@@ -32,13 +32,13 @@ export const startListenAlong = mutation({
     // Check 2+ active users (presence is handled by Firebase RTDB on the client;
     // server-side we use nowPlaying tracks as a proxy for active engagement).
     // The client already verifies 2+ online users before calling this mutation.
-    const participants = await ctx.db
-      .query("participants")
+    const tracks = await ctx.db
+      .query("participantTracks")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const activeCount = participants.filter(
-      (p) => p.currentTrack && (p.currentTrack as any).nowPlaying
+    const activeCount = tracks.filter(
+      (t) => t.currentTrack && (t.currentTrack as any).nowPlaying
     ).length;
 
     if (activeCount < 2) return null;

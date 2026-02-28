@@ -131,7 +131,7 @@ export const sendBongBack = mutation({
   },
 });
 
-// Get recent events (last 50)
+// Get recent events (latest 25)
 export const listRecent = query({
   args: {
     roomId: v.string(),
@@ -144,7 +144,9 @@ export const listRecent = query({
         .withIndex("by_room_time", (q) =>
           q.eq("roomId", args.roomId).gt("createdAt", args.since as number)
         )
-        .order("asc")
+        // IMPORTANT: use latest-window semantics so watch subscriptions
+        // continue to include newly arriving events after the first 25.
+        .order("desc")
         .take(25)
       : await ctx.db
         .query("events")
@@ -152,7 +154,7 @@ export const listRecent = query({
         .order("desc")
         .take(25);
 
-    // Return them in ascending order for the client
-    return args.since != null ? events : events.reverse();
+    // Return in ascending order for the client animation queue.
+    return events.reverse();
   },
 });

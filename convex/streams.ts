@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertAdminAccess } from "./adminAuth";
 
 /**
  * Stream Counting System — Platform-Specific Rules + Points System
@@ -645,6 +646,63 @@ export const tryCountStream = mutation({
       totalOther: roomStats.totalOther + (isBpOrSolo ? 0 : 1),
     });
 
+    // 5e. Update materialized district stream stats (for heatmap).
+    const district = userDoc?.district;
+    if (district) {
+      const districtStat = await ctx.db
+        .query("districtStreamStats")
+        .withIndex("by_room_district", (q) =>
+          q.eq("roomId", args.roomId).eq("district", district)
+        )
+        .first();
+
+      if (districtStat) {
+        const users = districtStat.uniqueUsers;
+        if (!users.includes(args.phoneNumber)) {
+          users.push(args.phoneNumber);
+        }
+        await ctx.db.patch(districtStat._id, {
+          totalStreams: districtStat.totalStreams + 1,
+          uniqueUsers: users,
+        });
+      } else {
+        await ctx.db.insert("districtStreamStats", {
+          roomId: args.roomId,
+          district,
+          totalStreams: 1,
+          uniqueUsers: [args.phoneNumber],
+        });
+      }
+    }
+
+    // 5f. Update materialized user heatmap stats (for Deck.gl precise map).
+    const userLat = userDoc?.lat;
+    const userLng = userDoc?.lng;
+    if (userLat != null && userLng != null) {
+      const heatStat = await ctx.db
+        .query("userHeatmapStats")
+        .withIndex("by_room_phone", (q) =>
+          q.eq("roomId", args.roomId).eq("phoneNumber", args.phoneNumber)
+        )
+        .first();
+
+      if (heatStat) {
+        await ctx.db.patch(heatStat._id, {
+          weight: heatStat.weight + 1,
+          lat: userLat,
+          lng: userLng,
+        });
+      } else {
+        await ctx.db.insert("userHeatmapStats", {
+          roomId: args.roomId,
+          phoneNumber: args.phoneNumber,
+          lat: userLat,
+          lng: userLng,
+          weight: 1,
+        });
+      }
+    }
+
     // 6. Check if we crossed a 100-stream milestone (main-song streams only).
     if (isMain && nextTotalMain > 0 && nextTotalMain % 100 === 0) {
       const recentMilestone = await ctx.db
@@ -678,6 +736,228 @@ export const tryCountStream = mutation({
 });
 
 // ── Queries ──
+
+// Rebuild materialized stream stats from canonical streamCounts rows.
+export const rebuildStatsFromStreamCounts = mutation({
+  args: {
+    roomId: v.string(),
+    actorPhone: v.string(),
+    adminKey: v.string(),
+    syncParticipantPoints: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    assertAdminAccess(args);
+
+    const streams = await ctx.db
+      .query("streamCounts")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
+    let youtube = 0;
+    let spotify = 0;
+    let other = 0;
+    let totalMain = 0;
+    let totalBlackpink = 0;
+    let totalOther = 0;
+
+    const userAgg: Record<
+      string,
+      {
+        totalStreams: number;
+        mainYoutube: number;
+        mainSpotify: number;
+        mainOther: number;
+        totalBlackpink: number;
+        totalOther: number;
+        totalPoints: number;
+      }
+    > = {};
+
+    for (const s of streams) {
+      const sIsMain = s.isMainSong ?? isMainEventSong(s.trackName, s.trackArtist);
+      const sIsBp = s.isBlackpinkOrSolo ?? isBlackpinkOrSolo(s.trackArtist);
+      const platform = (s.platform as string) || "other";
+      const phone = s.phoneNumber;
+
+      if (sIsBp) totalBlackpink++;
+      else totalOther++;
+
+      if (sIsMain) {
+        totalMain++;
+        if (platform === "youtube") youtube++;
+        else if (platform === "spotify") spotify++;
+        else other++;
+      }
+
+      if (!userAgg[phone]) {
+        userAgg[phone] = {
+          totalStreams: 0,
+          mainYoutube: 0,
+          mainSpotify: 0,
+          mainOther: 0,
+          totalBlackpink: 0,
+          totalOther: 0,
+          totalPoints: 0,
+        };
+      }
+
+      userAgg[phone].totalPoints += calculateStreamPoints(platform, sIsMain);
+      if (sIsBp) userAgg[phone].totalBlackpink++;
+      else userAgg[phone].totalOther++;
+
+      if (sIsMain) {
+        userAgg[phone].totalStreams++;
+        if (platform === "youtube") userAgg[phone].mainYoutube++;
+        else if (platform === "spotify") userAgg[phone].mainSpotify++;
+        else userAgg[phone].mainOther++;
+      }
+    }
+
+    const existingRoomStats = await ctx.db
+      .query("roomStreamStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const rs of existingRoomStats) {
+      await ctx.db.delete(rs._id);
+    }
+
+    await ctx.db.insert("roomStreamStats", {
+      roomId: args.roomId,
+      youtube,
+      spotify,
+      other,
+      totalMain,
+      totalAll: streams.length,
+      totalBlackpink,
+      totalOther,
+    });
+
+    const existingUserStats = await ctx.db
+      .query("userStreamStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const us of existingUserStats) {
+      await ctx.db.delete(us._id);
+    }
+
+    let insertedUserStats = 0;
+    for (const phoneNumber of Object.keys(userAgg)) {
+      const u = userAgg[phoneNumber];
+      await ctx.db.insert("userStreamStats", {
+        roomId: args.roomId,
+        phoneNumber,
+        totalStreams: u.totalStreams,
+        mainYoutube: u.mainYoutube,
+        mainSpotify: u.mainSpotify,
+        mainOther: u.mainOther,
+        totalBlackpink: u.totalBlackpink,
+        totalOther: u.totalOther,
+        totalPoints: u.totalPoints,
+      });
+      insertedUserStats++;
+    }
+
+    let participantsSynced = 0;
+    if (args.syncParticipantPoints) {
+      const participants = await ctx.db
+        .query("participants")
+        .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+        .collect();
+
+      for (const p of participants) {
+        const streamPoints = userAgg[p.phoneNumber]?.totalPoints ?? 0;
+        const bonusPoints = p.bonusPoints ?? 0;
+        const checkInPoints = p.offlineTracking ? POINTS_CHECK_IN : 0;
+        const points = streamPoints + bonusPoints + checkInPoints;
+        await ctx.db.patch(p._id, { totalPoints: points });
+        participantsSynced++;
+      }
+    }
+
+    // Rebuild districtStreamStats
+    const existingDistrictStats = await ctx.db
+      .query("districtStreamStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const ds of existingDistrictStats) {
+      await ctx.db.delete(ds._id);
+    }
+
+    const districtAgg: Record<string, { totalStreams: number; uniqueUsers: Set<string> }> = {};
+    const userCoords: Record<string, { lat?: number; lng?: number; weight: number }> = {};
+    for (const s of streams) {
+      const district = s.userDistrict;
+      if (district) {
+        if (!districtAgg[district]) {
+          districtAgg[district] = { totalStreams: 0, uniqueUsers: new Set() };
+        }
+        districtAgg[district].totalStreams++;
+        districtAgg[district].uniqueUsers.add(s.phoneNumber);
+      }
+      // Heatmap coords
+      if (!userCoords[s.phoneNumber]) {
+        userCoords[s.phoneNumber] = { weight: 0 };
+      }
+      userCoords[s.phoneNumber].weight++;
+      if (s.userLat != null && s.userLng != null) {
+        userCoords[s.phoneNumber].lat = s.userLat;
+        userCoords[s.phoneNumber].lng = s.userLng;
+      }
+    }
+
+    for (const [district, data] of Object.entries(districtAgg)) {
+      await ctx.db.insert("districtStreamStats", {
+        roomId: args.roomId,
+        district,
+        totalStreams: data.totalStreams,
+        uniqueUsers: Array.from(data.uniqueUsers),
+      });
+    }
+
+    // Rebuild userHeatmapStats
+    const existingHeatStats = await ctx.db
+      .query("userHeatmapStats")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const hs of existingHeatStats) {
+      await ctx.db.delete(hs._id);
+    }
+
+    let heatmapInserted = 0;
+    for (const [phoneNumber, data] of Object.entries(userCoords)) {
+      if (data.lat != null && data.lng != null) {
+        await ctx.db.insert("userHeatmapStats", {
+          roomId: args.roomId,
+          phoneNumber,
+          lat: data.lat,
+          lng: data.lng,
+          weight: data.weight,
+        });
+        heatmapInserted++;
+      }
+    }
+
+    return {
+      roomId: args.roomId,
+      streamRows: streams.length,
+      roomStatsReplaced: existingRoomStats.length,
+      userStatsReplaced: existingUserStats.length,
+      userStatsInserted: insertedUserStats,
+      participantsSynced,
+      districtStatsRebuilt: Object.keys(districtAgg).length,
+      heatmapStatsRebuilt: heatmapInserted,
+      totals: {
+        youtube,
+        spotify,
+        other,
+        totalMain,
+        totalAll: streams.length,
+        totalBlackpink,
+        totalOther,
+      },
+    };
+  },
+});
 
 /**
  * Get stream counts for a room split by platform.
@@ -988,104 +1268,43 @@ export const recalculatePoints = mutation({
 
 /**
  * Get stream counts aggregated by district for the heat map.
- * Joins streamCounts → users (via phoneNumber) to get district,
- * then groups by district.
+ * Reads from the materialized districtStreamStats table (updated
+ * incrementally in tryCountStream) instead of scanning all stream rows.
  */
 export const getStreamsByDistrict = query({
   args: { roomId: v.string() },
   handler: async (ctx, args) => {
-    const streams = await ctx.db
-      .query("streamCounts")
+    const stats = await ctx.db
+      .query("districtStreamStats")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const phoneToDistrict: Record<string, string | null> = {};
-    const districtCounts: Record<string, { totalStreams: number; uniqueUsers: Set<string> }> = {};
-    for (const s of streams) {
-      let district = s.userDistrict ?? null;
-      if (!district) {
-        if (!(s.phoneNumber in phoneToDistrict)) {
-          const user = await ctx.db
-            .query("users")
-            .withIndex("by_phone", (q) => q.eq("phoneNumber", s.phoneNumber))
-            .first();
-          phoneToDistrict[s.phoneNumber] = user?.district ?? null;
-        }
-        district = phoneToDistrict[s.phoneNumber];
-      }
-      if (!district) continue;
-      if (!districtCounts[district]) {
-        districtCounts[district] = { totalStreams: 0, uniqueUsers: new Set() };
-      }
-      districtCounts[district].totalStreams++;
-      districtCounts[district].uniqueUsers.add(s.phoneNumber);
-    }
-
-    // Return as serializable array (Sets aren't serializable)
-    return Object.entries(districtCounts).map(([district, data]) => ({
-      district,
-      totalStreams: data.totalStreams,
-      uniqueUsers: data.uniqueUsers.size,
+    return stats.map((s) => ({
+      district: s.district,
+      totalStreams: s.totalStreams,
+      uniqueUsers: s.uniqueUsers.length,
     }));
   },
 });
 
 /**
  * Get per-user stream counts with precise lat/lng for the Deck.gl heat map.
- * Only returns entries for users who have granted location permission (lat/lng stored).
- * Weight = total stream count for that user in the room.
+ * Reads from the materialized userHeatmapStats table (updated incrementally
+ * in tryCountStream) instead of scanning all stream rows.
  */
 export const getPreciseHeatmapData = query({
   args: { roomId: v.string() },
   handler: async (ctx, args) => {
-    const streams = await ctx.db
-      .query("streamCounts")
+    const stats = await ctx.db
+      .query("userHeatmapStats")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    // Aggregate stream count per user and capture denormalized coordinates when present.
-    const userStreamCounts: Record<string, { weight: number; lat?: number; lng?: number }> = {};
-    for (const s of streams) {
-      if (!userStreamCounts[s.phoneNumber]) {
-        userStreamCounts[s.phoneNumber] = { weight: 0 };
-      }
-      userStreamCounts[s.phoneNumber].weight++;
-      if (s.userLat != null && s.userLng != null) {
-        userStreamCounts[s.phoneNumber].lat = s.userLat;
-        userStreamCounts[s.phoneNumber].lng = s.userLng;
-      }
-    }
-
-    // Fall back to users table only when stream row has no coordinates.
-    const result: Array<{ lat: number; lng: number; weight: number; phoneNumber: string }> = [];
-
-    for (const phoneNumber of Object.keys(userStreamCounts)) {
-      const cached = userStreamCounts[phoneNumber];
-      if (cached.lat != null && cached.lng != null) {
-        result.push({
-          lat: cached.lat,
-          lng: cached.lng,
-          weight: cached.weight,
-          phoneNumber,
-        });
-        continue;
-      }
-
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
-        .first();
-
-      if (user?.lat != null && user?.lng != null) {
-        result.push({
-          lat: user.lat,
-          lng: user.lng,
-          weight: cached.weight,
-          phoneNumber,
-        });
-      }
-    }
-
-    return result;
+    return stats.map((s) => ({
+      lat: s.lat,
+      lng: s.lng,
+      weight: s.weight,
+      phoneNumber: s.phoneNumber,
+    }));
   },
 });
