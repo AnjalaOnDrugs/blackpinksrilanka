@@ -9528,12 +9528,25 @@ body.room-the-hour-active .room-layout {
 }
 
 .room-dj-content {
-  background: linear-gradient(180deg, rgba(30, 20, 40, 0.98) 0%, rgba(10, 8, 15, 0.98) 100%);
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at bottom center, rgba(80, 0, 120, 0.4) 0%, rgba(10, 8, 15, 0.98) 70%),
+    linear-gradient(180deg, rgba(30, 20, 40, 0.98) 0%, rgba(5, 5, 10, 0.99) 100%);
   border: 1px solid rgba(168, 85, 247, 0.35);
   border-radius: 20px;
-  padding: 20px;
+  padding: 0;
   backdrop-filter: blur(20px);
   box-shadow: 0 8px 40px rgba(168, 85, 247, 0.2), 0 0 80px rgba(168, 85, 247, 0.08);
+}
+
+.room-dj-booth {
+  background: linear-gradient(180deg, rgba(40, 10, 60, 0.9) 0%, rgba(15, 5, 25, 0.95) 100%);
+  border-bottom: 2px solid rgba(168, 85, 247, 0.5);
+  padding: 20px;
+  border-radius: 20px 20px 0 0;
+  box-shadow: inset 0 -10px 30px rgba(168, 85, 247, 0.1);
+  position: relative;
+  margin-bottom: 16px;
 }
 
 .room-dj-header {
@@ -9626,6 +9639,7 @@ body.room-the-hour-active .room-layout {
 
 /* Song section */
 .room-dj-song-section {
+  padding: 0 20px;
   margin-bottom: 12px;
 }
 
@@ -9708,8 +9722,26 @@ body.room-the-hour-active .room-layout {
   flex-shrink: 0;
 }
 
+.room-dj-confirm-btn {
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.15);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.25s ease;
+}
+
+.room-dj-confirm-btn:hover {
+  background: rgba(34, 197, 94, 0.3);
+}
+
 /* Vote section */
 .room-dj-vote-section {
+  padding: 0 20px;
   margin: 12px 0;
   text-align: center;
 }
@@ -9760,13 +9792,38 @@ body.room-the-hour-active .room-layout {
 
 /* Listeners */
 .room-dj-listeners {
+  padding: 0 20px 20px 20px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
 
+.room-dj-listeners-label {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.room-dj-listeners-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+
 .room-dj-listener {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -9774,6 +9831,276 @@ body.room-the-hour-active .room-layout {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.4s ease;
+}
+
+/* ===== LISTENER PLAYING DJ'S SONG — NEON GLOW ===== */
+
+.room-dj-listener--listening {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+  box-shadow:
+    0 0 12px rgba(34, 197, 94, 0.35),
+    0 0 24px rgba(34, 197, 94, 0.12),
+    inset 0 0 8px rgba(34, 197, 94, 0.08);
+  animation: roomDjListenerGlow 1.5s ease-in-out infinite;
+}
+
+.room-dj-listener--listening .room-dj-listener-name {
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+  font-weight: 600;
+}
+
+/* Pulsing ring around avatar when listening */
+.room-dj-listener-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 197, 94, 0.6);
+  animation: roomDjListenerPulseRing 1.2s ease-out infinite;
+  pointer-events: none;
+}
+
+/* Music note badge on avatar */
+.room-dj-listener--listening .room-dj-listener-avatar::after {
+  content: '🎵';
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 10px;
+  background: rgba(34, 197, 94, 0.3);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  animation: roomDjNoteBounce 1s ease-in-out infinite;
+}
+
+/* ===== JOIN FLASH EFFECT ===== */
+
+.room-dj-listener--just-joined {
+  animation: roomDjJoinPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Flash overlay on card when someone joins */
+.room-dj-join-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(34, 197, 94, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 50;
+  animation: roomDjFlash 0.8s ease-out forwards;
+  border-radius: inherit;
+}
+
+/* Floating name tag */
+.room-dj-join-floater {
+  position: absolute;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.08));
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  animation: roomDjFloaterRise 2.5s ease-out forwards;
+  pointer-events: none;
+}
+
+.room-dj-join-floater-icon {
+  font-size: 14px;
+  animation: roomDjNoteBounce 0.6s ease-in-out infinite;
+}
+
+.room-dj-join-floater-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+}
+
+.room-dj-join-floater-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== CROWD INTENSITY LEVELS ===== */
+
+/* Level 1: Vibing (1-2 listeners) — subtle warm glow */
+.room-dj-crowd--vibing .room-dj-stage-fog {
+  opacity: 0.5 !important;
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.2) 0%, rgba(153, 193, 255, 0.1) 50%, transparent 72%);
+}
+
+/* Level 2: Hype (3-5 listeners) — pulsing card border + faster beams */
+.room-dj-crowd--hype {
+  animation: roomDjCardHype 2s ease-in-out infinite;
+}
+
+.room-dj-crowd--hype .room-dj-stage-fog {
+  opacity: 1 !important;
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.25) 0%, rgba(34, 197, 94, 0.15) 40%, transparent 72%);
+  animation: roomDjFogDrift 1.5s ease-in-out infinite !important;
+}
+
+.room-dj-crowd--hype .room-dj-light-beam--1 { animation-duration: 1.4s !important; }
+.room-dj-crowd--hype .room-dj-light-beam--2 { animation-duration: 1.1s !important; }
+.room-dj-crowd--hype .room-dj-light-beam--3 { animation-duration: 1.2s !important; }
+.room-dj-crowd--hype .room-dj-light-beam--4 { animation-duration: 1.5s !important; }
+
+/* Level 3: Fire (6+ listeners) — full club mode */
+.room-dj-crowd--fire {
+  animation: roomDjCardFire 1.5s ease-in-out infinite;
+}
+
+.room-dj-crowd--fire .room-dj-content {
+  border-color: rgba(255, 45, 186, 0.6);
+}
+
+.room-dj-crowd--fire .room-dj-stage-fog {
+  opacity: 1 !important;
+  background: radial-gradient(ellipse at center, rgba(255, 45, 186, 0.3) 0%, rgba(168, 85, 247, 0.2) 30%, rgba(34, 197, 94, 0.15) 60%, transparent 80%);
+  animation: roomDjFogDrift 1s ease-in-out infinite !important;
+}
+
+.room-dj-crowd--fire .room-dj-light-beam--1 { animation-duration: 0.9s !important; }
+.room-dj-crowd--fire .room-dj-light-beam--2 { animation-duration: 0.7s !important; }
+.room-dj-crowd--fire .room-dj-light-beam--3 { animation-duration: 0.8s !important; }
+.room-dj-crowd--fire .room-dj-light-beam--4 { animation-duration: 1s !important; }
+
+.room-dj-crowd--fire .room-dj-glow {
+  background: radial-gradient(ellipse at center, rgba(255, 45, 186, 0.3) 0%, rgba(168, 85, 247, 0.2) 30%, transparent 65%) !important;
+  animation-duration: 0.8s !important;
+}
+
+.room-dj-crowd--fire .room-dj-platter {
+  animation-duration: 0.8s !important;
+}
+
+.room-dj-crowd--fire .room-dj-club-ceiling {
+  background: linear-gradient(90deg, rgba(255, 45, 186, 0.35), rgba(168, 85, 247, 0.3), rgba(34, 197, 94, 0.3), rgba(255, 45, 186, 0.35));
+  animation: roomDjCeilingShift 2s linear infinite;
+}
+
+.room-dj-crowd--fire .room-dj-listeners-count {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.2);
+  animation: roomDjCountPulse 0.8s ease-in-out infinite;
+}
+
+/* ===== CROWD KEYFRAMES ===== */
+
+@keyframes roomDjListenerGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.35), 0 0 24px rgba(34, 197, 94, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.5), 0 0 32px rgba(34, 197, 94, 0.2);
+  }
+}
+
+@keyframes roomDjListenerPulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes roomDjNoteBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.15); }
+}
+
+@keyframes roomDjJoinPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes roomDjFlash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes roomDjFloaterRise {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-20px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-40px) scale(0.9);
+  }
+}
+
+@keyframes roomDjCardHype {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.05);
+  }
+}
+
+@keyframes roomDjCardFire {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(1.1) saturate(1.15);
+  }
+}
+
+@keyframes roomDjCeilingShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes roomDjCountPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.room-dj-thumb-anim {
+  position: absolute;
+  top: -10px;
+  right: -5px;
+  font-size: 16px;
+  opacity: 0;
+  animation: roomDjThumbPop 1.2s ease-out forwards;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .room-dj-listener-avatar {
@@ -9787,12 +10114,14 @@ body.room-the-hour-active .room-layout {
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
+  position: relative;
 }
 
 .room-dj-listener-name {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
+  transition: color 0.3s ease;
 }
 
 /* ===== DJ EVENT CAPSULE ===== */
@@ -9911,6 +10240,28 @@ body.room-the-hour-active .room-layout {
   }
 }
 
+@keyframes roomDjThumbPop {
+  0% {
+    transform: translateY(0) scale(0.5) rotate(-10deg);
+    opacity: 0;
+  }
+
+  20% {
+    transform: translateY(-15px) scale(1.3) rotate(5deg);
+    opacity: 1;
+  }
+
+  80% {
+    transform: translateY(-30px) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-40px) scale(0.8) rotate(10deg);
+    opacity: 0;
+  }
+}
+
 @keyframes roomDjGlowPulse {
 
   0%,
@@ -9993,5 +10344,344 @@ body.room-the-hour-active .room-layout {
   100% {
     opacity: 0;
     transform: translateY(20px);
+  }
+}
+
+/* ===== DJ EVENT CLUB REDESIGN ===== */
+
+.room-dj-content {
+  background:
+    radial-gradient(circle at 50% 12%, rgba(18, 112, 255, 0.22) 0%, rgba(18, 112, 255, 0) 36%),
+    radial-gradient(circle at 52% 125%, rgba(255, 45, 186, 0.24) 0%, rgba(255, 45, 186, 0) 46%),
+    linear-gradient(180deg, rgba(7, 11, 26, 0.98) 0%, rgba(2, 4, 12, 0.99) 100%);
+  border: 1px solid rgba(83, 150, 255, 0.45);
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.52), 0 0 60px rgba(52, 128, 255, 0.24);
+}
+
+.room-dj-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 24%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.room-dj-club-ceiling {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 14px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(90deg, rgba(34, 197, 255, 0.22), rgba(255, 45, 186, 0.2), rgba(34, 197, 255, 0.22));
+  border: 1px solid rgba(144, 190, 255, 0.32);
+  box-shadow: 0 2px 10px rgba(34, 197, 255, 0.25);
+  z-index: 2;
+}
+
+.room-dj-stage-fog {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 24%;
+  height: 38%;
+  background: radial-gradient(ellipse at center, rgba(153, 193, 255, 0.2) 0%, rgba(153, 193, 255, 0) 72%);
+  filter: blur(12px);
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.35s ease;
+}
+
+.room-dj-light-beams {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  z-index: 1;
+}
+
+.room-dj-light-beam {
+  position: absolute;
+  top: -16px;
+  width: 36%;
+  height: 76%;
+  border-radius: 40% 40% 100% 100%;
+  filter: blur(1px);
+  transform-origin: top center;
+  opacity: 0;
+}
+
+.room-dj-light-beam--1 {
+  left: -10%;
+  --beam-angle-start: -22deg;
+  --beam-angle-end: -4deg;
+  background: linear-gradient(180deg, rgba(64, 173, 255, 0.62), rgba(64, 173, 255, 0));
+}
+
+.room-dj-light-beam--2 {
+  left: 12%;
+  --beam-angle-start: -12deg;
+  --beam-angle-end: 8deg;
+  background: linear-gradient(180deg, rgba(255, 76, 223, 0.54), rgba(255, 76, 223, 0));
+}
+
+.room-dj-light-beam--3 {
+  right: 12%;
+  --beam-angle-start: 14deg;
+  --beam-angle-end: -6deg;
+  background: linear-gradient(180deg, rgba(255, 178, 66, 0.54), rgba(255, 178, 66, 0));
+}
+
+.room-dj-light-beam--4 {
+  right: -10%;
+  --beam-angle-start: 22deg;
+  --beam-angle-end: 6deg;
+  background: linear-gradient(180deg, rgba(96, 241, 255, 0.55), rgba(96, 241, 255, 0));
+}
+
+.room-dj-booth {
+  background: linear-gradient(180deg, rgba(9, 18, 46, 0.96) 0%, rgba(4, 10, 28, 0.96) 100%);
+  border-bottom: 1px solid rgba(93, 160, 255, 0.58);
+  box-shadow: inset 0 -22px 36px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  z-index: 3;
+}
+
+.room-dj-booth::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 0;
+  height: 8px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(90deg, rgba(34, 197, 255, 0.35), rgba(255, 45, 186, 0.38), rgba(34, 197, 255, 0.35));
+}
+
+.room-dj-booth-rig {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.room-dj-speaker {
+  position: relative;
+  height: 52px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(18, 26, 58, 0.95) 0%, rgba(8, 14, 34, 0.98) 100%);
+  border: 1px solid rgba(128, 178, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.room-dj-speaker::before,
+.room-dj-speaker::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(165, 200, 255, 0.35);
+  background: radial-gradient(circle at 35% 35%, rgba(225, 236, 255, 0.32) 0%, rgba(13, 24, 58, 0.95) 65%);
+}
+
+.room-dj-speaker::before {
+  top: 7px;
+  width: 13px;
+  height: 13px;
+}
+
+.room-dj-speaker::after {
+  bottom: 6px;
+  width: 22px;
+  height: 22px;
+}
+
+.room-dj-rack {
+  height: 12px;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, rgba(112, 174, 255, 0.26) 0 10px, rgba(112, 174, 255, 0) 10px 18px),
+    rgba(8, 15, 40, 0.72);
+  border: 1px solid rgba(125, 176, 255, 0.4);
+}
+
+.room-dj-avatar-wrap {
+  position: relative;
+  z-index: 2;
+}
+
+.room-dj-avatar {
+  border-color: rgba(116, 178, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(11, 22, 56, 0.62), 0 0 26px rgba(96, 160, 255, 0.4);
+}
+
+.room-dj-deck {
+  margin: 14px auto 0;
+  width: 100%;
+  max-width: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(8, 15, 36, 0.95) 0%, rgba(4, 9, 24, 0.98) 100%);
+  border: 1px solid rgba(118, 170, 255, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.room-dj-platter {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 33% 34%, rgba(235, 242, 255, 0.28) 0%, rgba(17, 26, 59, 0.95) 58%, rgba(8, 13, 31, 0.98) 100%);
+  border: 1px solid rgba(144, 185, 255, 0.45);
+  position: relative;
+}
+
+.room-dj-platter::after {
+  content: '';
+  position: absolute;
+  inset: 21px;
+  border-radius: 50%;
+  background: rgba(133, 186, 255, 0.52);
+}
+
+.room-dj-mixer {
+  width: 26px;
+  height: 58px;
+  border-radius: 9px;
+  border: 1px solid rgba(131, 180, 255, 0.42);
+  background:
+    radial-gradient(circle at 50% 14%, rgba(255, 120, 214, 0.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 30%, rgba(89, 194, 255, 0.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 46%, rgba(255, 188, 86, 0.88) 0 2px, transparent 3px),
+    linear-gradient(180deg, rgba(12, 20, 46, 0.95) 0%, rgba(5, 10, 26, 0.98) 100%);
+}
+
+.room-dj-song-section,
+.room-dj-vote-section,
+.room-dj-listeners {
+  position: relative;
+  z-index: 2;
+}
+
+.room-dj-card--playing .room-dj-light-beams {
+  opacity: 1;
+}
+
+.room-dj-card--playing .room-dj-light-beam--1 {
+  animation: roomDjBeamMove 2.1s ease-in-out infinite;
+}
+
+.room-dj-card--playing .room-dj-light-beam--2 {
+  animation: roomDjBeamMove 1.7s ease-in-out 0.2s infinite;
+}
+
+.room-dj-card--playing .room-dj-light-beam--3 {
+  animation: roomDjBeamMove 1.8s ease-in-out 0.4s infinite;
+}
+
+.room-dj-card--playing .room-dj-light-beam--4 {
+  animation: roomDjBeamMove 2.2s ease-in-out 0.12s infinite;
+}
+
+.room-dj-card--playing .room-dj-stage-fog {
+  opacity: 0.9;
+  animation: roomDjFogDrift 2.5s ease-in-out infinite;
+}
+
+.room-dj-card--playing .room-dj-glow {
+  background: radial-gradient(ellipse at center, rgba(82, 168, 255, 0.24) 0%, rgba(255, 64, 210, 0.18) 36%, transparent 72%);
+  animation-duration: 1.2s;
+}
+
+.room-dj-card--playing .room-dj-avatar {
+  animation: roomDjAvatarPulse 1.15s ease-in-out infinite;
+}
+
+.room-dj-card--playing .room-dj-deck {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), 0 0 20px rgba(84, 166, 255, 0.26);
+}
+
+.room-dj-card--playing .room-dj-platter {
+  animation: roomDjDeckSpin 1.55s linear infinite;
+}
+
+.room-dj-capsule--playing {
+  border-color: rgba(75, 169, 255, 0.7);
+  box-shadow: 0 6px 24px rgba(75, 169, 255, 0.34), 0 0 42px rgba(255, 68, 211, 0.2);
+}
+
+@keyframes roomDjBeamMove {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--beam-angle-start)) scaleY(0.58);
+  }
+
+  25% {
+    opacity: 0.72;
+  }
+
+  55% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(var(--beam-angle-end)) scaleY(1.16);
+  }
+}
+
+@keyframes roomDjFogDrift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes roomDjDeckSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .room-dj-booth-rig {
+    grid-template-columns: 36px 1fr 36px;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .room-dj-speaker {
+    height: 46px;
+  }
+
+  .room-dj-deck {
+    max-width: 224px;
+    gap: 10px;
+    padding: 7px 10px;
+  }
+
+  .room-dj-platter {
+    width: 52px;
+    height: 52px;
+  }
+
+  .room-dj-mixer {
+    height: 52px;
   }
 }

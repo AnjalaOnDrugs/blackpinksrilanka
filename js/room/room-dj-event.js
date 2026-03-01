@@ -10,6 +10,7 @@ ROOM.DjEvent = {
   _activeEventId: null,
   _currentDj: null,
   _song: null,
+  _pendingConfirmSong: null,
   _hasVoted: false,
   _hasListened: false,
   _cardEl: null,
@@ -73,7 +74,10 @@ ROOM.DjEvent = {
     if (!this._activeEventId) return;
     if (this._listenersByPhone[data.phoneNumber]) return;
     this._listenersByPhone[data.phoneNumber] = data;
-    this._addListenerToCard(data);
+    this._renderParticipantsList();
+
+    // Epic join flash effect
+    this._spawnListenerJoinEffect(data);
 
     if (ROOM.currentUser && data.phoneNumber === ROOM.currentUser.phoneNumber) {
       this._hasListened = true;
@@ -90,6 +94,19 @@ ROOM.DjEvent = {
     if (ROOM.currentUser && data.voterPhoneNumber === ROOM.currentUser.phoneNumber) {
       this._hasVoted = true;
       this._disableVoteButtons();
+    }
+
+    if (data.vote === 'up' && this._cardEl) {
+      var listenerAvatar = this._cardEl.querySelector('.room-dj-listener[data-phone="' + data.voterPhoneNumber + '"] .room-dj-listener-avatar');
+      if (listenerAvatar) {
+        var thumb = document.createElement('div');
+        thumb.className = 'room-dj-thumb-anim';
+        thumb.textContent = '👍';
+        listenerAvatar.appendChild(thumb);
+        setTimeout(function () {
+          if (thumb.parentNode) thumb.parentNode.removeChild(thumb);
+        }, 1200);
+      }
     }
   },
 
@@ -215,6 +232,7 @@ ROOM.DjEvent = {
 
   _resetRound: function () {
     this._song = null;
+    this._pendingConfirmSong = null;
     this._hasVoted = false;
     this._hasListened = false;
     this._listenersByPhone = {};
@@ -269,18 +287,40 @@ ROOM.DjEvent = {
 
     if (!me || !me.data.currentTrack || !me.data.currentTrack.nowPlaying) return;
 
-    // Song detected!
-    this._stopSongDetection();
+    var track = me.data.currentTrack;
+    if (this._pendingConfirmSong && this._pendingConfirmSong.name === track.name) return;
 
-    ConvexService.mutation('djEvent:chooseSong', {
-      roomId: ROOM.Firebase.roomId,
-      djEventId: this._activeEventId,
-      phoneNumber: ROOM.currentUser.phoneNumber,
-      songName: me.data.currentTrack.name,
-      songArtist: me.data.currentTrack.artist,
-      albumArt: me.data.currentTrack.albumArt || undefined,
-      roundDurationMs: CONFIG.djEventRoundDuration || 120000
-    });
+    this._pendingConfirmSong = track;
+    this._showConfirmSongUI(track);
+  },
+
+  _showConfirmSongUI: function (track) {
+    if (!this._cardEl) return;
+    var statusEl = this._cardEl.querySelector('#djStatus');
+    if (!statusEl) return;
+
+    var self = this;
+    var safeName = this._esc(track.name);
+    statusEl.innerHTML = '<div class="room-dj-status-icon">🎵</div><span>Detected: <strong>' + safeName + '</strong></span>' +
+      '<button class="room-dj-confirm-btn" id="djConfirmBtn" type="button">Confirm</button>';
+
+    var btn = statusEl.querySelector('#djConfirmBtn');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        self._stopSongDetection();
+        statusEl.innerHTML = '<div class="room-dj-status-icon">⏳</div><span>Starting round...</span>';
+
+        ConvexService.mutation('djEvent:chooseSong', {
+          roomId: ROOM.Firebase.roomId,
+          djEventId: self._activeEventId,
+          phoneNumber: ROOM.currentUser.phoneNumber,
+          songName: track.name,
+          songArtist: track.artist,
+          albumArt: track.albumArt || undefined,
+          roundDurationMs: CONFIG.djEventRoundDuration || 120000
+        });
+      });
+    }
   },
 
   // ========== LISTEN DETECTION (non-DJ clients) ==========
@@ -475,6 +515,15 @@ ROOM.DjEvent = {
     card.innerHTML =
       '<div class="room-dj-glow"></div>' +
       '<div class="room-dj-content">' +
+      '<div class="room-dj-club-ceiling" aria-hidden="true"></div>' +
+      '<div class="room-dj-stage-fog" aria-hidden="true"></div>' +
+      '<div class="room-dj-light-beams" aria-hidden="true">' +
+      '<span class="room-dj-light-beam room-dj-light-beam--1"></span>' +
+      '<span class="room-dj-light-beam room-dj-light-beam--2"></span>' +
+      '<span class="room-dj-light-beam room-dj-light-beam--3"></span>' +
+      '<span class="room-dj-light-beam room-dj-light-beam--4"></span>' +
+      '</div>' +
+      '<div class="room-dj-booth">' +
       '<div class="room-dj-header">' +
       '<div class="room-dj-badge">🎧 DJ EVENT</div>' +
       '<div class="room-dj-header-actions">' +
@@ -485,6 +534,11 @@ ROOM.DjEvent = {
       '<button class="room-dj-minimize" id="djMinimizeBtn" type="button" aria-label="Minimize DJ Event">\u2013</button>' +
       '</div>' +
       '</div>' +
+      '<div class="room-dj-booth-rig" aria-hidden="true">' +
+      '<span class="room-dj-speaker room-dj-speaker--left"></span>' +
+      '<span class="room-dj-rack"></span>' +
+      '<span class="room-dj-speaker room-dj-speaker--right"></span>' +
+      '</div>' +
       '<div class="room-dj-avatar-wrap">' +
       '<div class="room-dj-avatar" id="djAvatar" style="' +
       (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
@@ -493,6 +547,12 @@ ROOM.DjEvent = {
       '<div class="room-dj-name" id="djName">' + djName + '</div>' +
       '<div class="room-dj-role" id="djRole">' +
       (isDj ? '🎤 You are the DJ!' : '🎧 ' + djName + ' is the DJ') +
+      '</div>' +
+      '<div class="room-dj-deck" aria-hidden="true">' +
+      '<span class="room-dj-platter"></span>' +
+      '<span class="room-dj-mixer"></span>' +
+      '<span class="room-dj-platter"></span>' +
+      '</div>' +
       '</div>' +
       '</div>' +
       '<div class="room-dj-song-section" id="djSongSection">' +
@@ -519,6 +579,7 @@ ROOM.DjEvent = {
 
     document.body.appendChild(card);
     this._cardEl = card;
+    this._setPlayingVisualState(!!this._song);
 
     // Minimize button
     var minimizeBtn = card.querySelector('#djMinimizeBtn');
@@ -551,10 +612,7 @@ ROOM.DjEvent = {
     if (this._hasVoted) this._disableVoteButtons();
 
     // Render existing listeners
-    var keys = Object.keys(this._listenersByPhone);
-    for (var i = 0; i < keys.length; i++) {
-      this._addListenerToCard(this._listenersByPhone[keys[i]]);
-    }
+    this._renderParticipantsList();
 
     // Push notification
     if (this._currentDj) {
@@ -595,27 +653,28 @@ ROOM.DjEvent = {
       avatarEl.innerHTML = av.html;
     }
 
-    // Update name & role
+    // Update name and role
     var nameEl = this._cardEl.querySelector('#djName');
     if (nameEl) nameEl.textContent = this._currentDj.username;
 
     var roleEl = this._cardEl.querySelector('#djRole');
     if (roleEl) {
       roleEl.innerHTML = isDj
-        ? '🎤 You are the DJ!'
-        : '🎧 ' + djName + ' is the DJ';
+        ? '&#127908; You are the DJ!'
+        : '&#127911; ' + djName + ' is the DJ';
     }
 
     // Update progress
     var progressEl = this._cardEl.querySelector('#djProgressLabel');
     if (progressEl) progressEl.textContent = (total - remaining) + '/' + total;
 
-    // Reset song section
+    // Reset song status
     var statusEl = this._cardEl.querySelector('#djStatus');
     if (statusEl) {
+      statusEl.classList.remove('room-dj-status--joined');
       statusEl.innerHTML = isDj
-        ? '<div class="room-dj-status-icon">🎵</div><span>Play any song to start your set!</span>'
-        : '<div class="room-dj-status-icon">⏳</div><span>Waiting for ' + djName + ' to choose a song...</span>';
+        ? '<div class="room-dj-status-icon">&#127925;</div><span>Play any song to start your set!</span>'
+        : '<div class="room-dj-status-icon">&#9203;</div><span>Waiting for ' + djName + ' to choose a song...</span>';
     }
 
     // Hide song info if it was showing
@@ -641,12 +700,10 @@ ROOM.DjEvent = {
     if (upBtn) { upBtn.disabled = false; upBtn.classList.remove('room-dj-vote-btn--voted'); }
     if (downBtn) { downBtn.disabled = false; downBtn.classList.remove('room-dj-vote-btn--voted'); }
 
-    // Clear listeners
-    var listenersEl = this._cardEl.querySelector('#djListeners');
-    if (listenersEl) listenersEl.innerHTML = '';
-
-    // Update compact card
+    // Rerender attendees and compact card
+    this._renderParticipantsList();
     this._refreshCompactFromState();
+    this._setPlayingVisualState(false);
 
     // Push notification
     this._sendPushNotification(
@@ -665,12 +722,13 @@ ROOM.DjEvent = {
     // Update status
     var statusEl = this._cardEl.querySelector('#djStatus');
     if (statusEl) {
+      statusEl.classList.remove('room-dj-status--joined');
       if (isDj) {
         statusEl.innerHTML =
-          '<div class="room-dj-status-icon">🎶</div><span>Your pick is playing! Enjoy the vibes.</span>';
+          '<div class="room-dj-status-icon">&#127926;</div><span>Your pick is playing! Enjoy the vibes.</span>';
       } else {
         statusEl.innerHTML =
-          '<div class="room-dj-status-icon">🎧</div><span>Play <strong>' +
+          '<div class="room-dj-status-icon">&#127911;</div><span>Play <strong>' +
           this._esc(this._song.name) + '</strong> to earn points!</span>';
       }
     }
@@ -680,7 +738,7 @@ ROOM.DjEvent = {
     if (songSection && !songSection.querySelector('.room-dj-song-info')) {
       var artHtml = this._song.albumArt
         ? '<img src="' + this._esc(this._song.albumArt) + '" alt="" class="room-dj-song-art-img" loading="lazy">'
-        : '<div class="room-dj-song-art-placeholder">♪</div>';
+        : '<div class="room-dj-song-art-placeholder">&#9835;</div>';
 
       var songInfoEl = document.createElement('div');
       songInfoEl.className = 'room-dj-song-info';
@@ -700,13 +758,11 @@ ROOM.DjEvent = {
       voteSection.style.display = '';
     }
 
-    // Update listen status
+    // Update listen status and compact card
     this._updateListenStatus(this._hasListened);
-
-    // Update compact card
     this._refreshCompactFromState();
+    this._setPlayingVisualState(true);
   },
-
   _updateListenStatus: function (listened) {
     var statusEl = this._cardEl ? this._cardEl.querySelector('#djStatus') : null;
     if (!statusEl || !this._song) return;
@@ -719,6 +775,17 @@ ROOM.DjEvent = {
       statusEl.innerHTML =
         '<div class="room-dj-status-icon">✅</div><span>You\'re listening! +2 pts earned</span>';
       statusEl.classList.add('room-dj-status--joined');
+    } else {
+      statusEl.classList.remove('room-dj-status--joined');
+    }
+  },
+
+  _setPlayingVisualState: function (isPlaying) {
+    if (this._cardEl) {
+      this._cardEl.classList.toggle('room-dj-card--playing', !!isPlaying);
+    }
+    if (this._compactEl) {
+      this._compactEl.classList.toggle('room-dj-capsule--playing', !!isPlaying);
     }
   },
 
@@ -750,35 +817,65 @@ ROOM.DjEvent = {
     });
   },
 
-  _addListenerToCard: function (data) {
+  _renderParticipantsList: function () {
     var container = this._cardEl ? this._cardEl.querySelector('#djListeners') : null;
     if (!container) return;
-    if (container.querySelector('[data-phone="' + data.phoneNumber + '"]')) return;
 
-    var pic = (ROOM.profilePicMap && data.phoneNumber) ? ROOM.profilePicMap[data.phoneNumber] : null;
-    var av = ROOM.avatarInner({ profilePicture: pic, username: data.username });
-    var color = 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+    var self = this;
+    var participants = ROOM.Firebase.getParticipants().filter(function (p) { return p.data.isOnline; });
+    // Filter out the DJ — only show audience
+    var djPhone = this._currentDj ? this._currentDj.phoneNumber : null;
+    participants = participants.filter(function (p) { return p.id !== djPhone; });
+    container.innerHTML = '';
 
-    var entry = document.createElement('div');
-    entry.className = 'room-dj-listener';
-    entry.setAttribute('data-phone', data.phoneNumber);
-    entry.innerHTML =
-      '<div class="room-dj-listener-avatar" style="' +
-      (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
-      av.html +
-      '</div>' +
-      '<span class="room-dj-listener-name">' + this._esc(data.username) + '</span>';
+    // Count listeners for crowd intensity
+    var listenerCount = Object.keys(this._listenersByPhone).length;
+    var intensityClass = listenerCount >= 6 ? 'room-dj-crowd--fire'
+      : listenerCount >= 3 ? 'room-dj-crowd--hype'
+      : listenerCount >= 1 ? 'room-dj-crowd--vibing'
+      : '';
 
-    container.appendChild(entry);
+    // Update crowd intensity on the card
+    if (this._cardEl) {
+      this._cardEl.classList.remove('room-dj-crowd--vibing', 'room-dj-crowd--hype', 'room-dj-crowd--fire');
+      if (intensityClass) this._cardEl.classList.add(intensityClass);
+    }
 
-    // Animate
-    entry.style.opacity = '0';
-    entry.style.transform = 'scale(0.8)';
-    requestAnimationFrame(function () {
-      entry.style.transition = 'all 0.3s ease';
-      entry.style.opacity = '1';
-      entry.style.transform = 'scale(1)';
-    });
+    if (participants.length > 0) {
+      var label = document.createElement('div');
+      label.className = 'room-dj-listeners-label';
+      label.textContent = 'Audience';
+      if (listenerCount > 0) {
+        var badge = document.createElement('span');
+        badge.className = 'room-dj-listeners-count';
+        badge.textContent = listenerCount + ' playing';
+        label.appendChild(badge);
+      }
+      container.appendChild(label);
+    }
+
+    for (var i = 0; i < participants.length; i++) {
+      var p = participants[i];
+      var isListening = !!this._listenersByPhone[p.id];
+
+      var pic = ROOM.profilePicMap ? ROOM.profilePicMap[p.id] : null;
+      var av = ROOM.avatarInner({ profilePicture: pic, username: p.data.username });
+      var color = p.data.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+
+      var entry = document.createElement('div');
+      entry.className = 'room-dj-listener' + (isListening ? ' room-dj-listener--listening' : '');
+      entry.setAttribute('data-phone', p.id);
+
+      entry.innerHTML =
+        '<div class="room-dj-listener-avatar" style="' +
+        (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+        av.html +
+        (isListening ? '<div class="room-dj-listener-pulse"></div>' : '') +
+        '</div>' +
+        '<span class="room-dj-listener-name">' + this._esc(p.data.username) + '</span>';
+
+      container.appendChild(entry);
+    }
   },
 
   // ========== UI: COMPACT / CAPSULE ==========
@@ -862,6 +959,7 @@ ROOM.DjEvent = {
         titleEl.textContent = this._currentDj.username;
       }
     }
+    this._compactEl.classList.toggle('room-dj-capsule--playing', !!this._song);
   },
 
   _removeEventCard: function () {
@@ -953,6 +1051,40 @@ ROOM.DjEvent = {
       });
       n.onclick = function () { window.focus(); n.close(); };
     } catch (e) { /* silent */ }
+  },
+
+  _spawnListenerJoinEffect: function (data) {
+    if (!this._cardEl) return;
+
+    var listenerCount = Object.keys(this._listenersByPhone).length;
+    var username = data.username || '???';
+
+    // Screen-wide flash on the card
+    var flash = document.createElement('div');
+    flash.className = 'room-dj-join-flash';
+    this._cardEl.querySelector('.room-dj-content').appendChild(flash);
+    setTimeout(function () { if (flash.parentNode) flash.remove(); }, 800);
+
+    // Floating name tag that rises
+    var floater = document.createElement('div');
+    floater.className = 'room-dj-join-floater';
+    floater.innerHTML = '<span class="room-dj-join-floater-icon">🎵</span> ' +
+      '<span class="room-dj-join-floater-name">' + this._esc(username) + '</span>' +
+      ' <span class="room-dj-join-floater-text">joined the vibe!</span>';
+    this._cardEl.querySelector('.room-dj-content').appendChild(floater);
+    setTimeout(function () { if (floater.parentNode) floater.remove(); }, 2500);
+
+    // At high crowd levels, spawn extra particles
+    if (listenerCount >= 3 && ROOM.Animations && ROOM.Animations.spawnConfetti) {
+      ROOM.Animations.spawnConfetti(listenerCount >= 6 ? 15 : 8);
+    }
+
+    // Highlight the newly joined listener entry
+    var entry = this._cardEl.querySelector('.room-dj-listener[data-phone="' + data.phoneNumber + '"]');
+    if (entry) {
+      entry.classList.add('room-dj-listener--just-joined');
+      setTimeout(function () { entry.classList.remove('room-dj-listener--just-joined'); }, 2000);
+    }
   },
 
   _esc: function (text) {
