@@ -12,10 +12,10 @@ ROOM.MemberPopup = {
   _currentMember: null,
 
   _members: {
-    lisa:   { name: 'Lisa',   img: 'assets/bps/lisa.png' },
-    jennie: { name: 'Jennie', img: 'assets/bps/jennie.png' },
-    rose:   { name: 'Rosé',   img: 'assets/bps/rose.png' },
-    jisoo:  { name: 'Jisoo',  img: 'assets/bps/kim.png' }
+    lisa:   { name: 'Lisa',   img: 'assets/Popup_images/lisa.png' },
+    jennie: { name: 'Jennie', img: 'assets/Popup_images/jennie.png' },
+    rose:   { name: 'Rosé',   img: 'assets/Popup_images/rose.png' },
+    jisoo:  { name: 'Jisoo',  img: 'assets/Popup_images/jisoo.png' }
   },
 
   init: function () {

@@ -10914,7 +10914,7 @@ body.room-the-hour-active .room-layout {
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  z-index: 200;
+  z-index: 10000;
   pointer-events: none;
   animation: roomDjSoloSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
