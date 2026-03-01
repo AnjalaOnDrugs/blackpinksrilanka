@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Room Page Styling
  * Dark arcade theme matching members-home.css design system
  * Fonts: Outfit (display) + Inter (body)
@@ -521,7 +521,7 @@
   gap: 10px;
 }
 
-/* Energy Meter — removed from header, now in stats card */
+/* Energy Meter â€” removed from header, now in stats card */
 
 /* Check-in (offline tracking) */
 .room-checkin {
@@ -971,7 +971,7 @@
   }
 }
 
-/* ========== CENTER STAGE — STATS CARD ========== */
+/* ========== CENTER STAGE â€” STATS CARD ========== */
 .room-stats-card {
   display: flex;
   align-items: center;
@@ -4925,9 +4925,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════
-   Heat Map — Tab Bar
-   ═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Heat Map â€” Tab Bar
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .room-heatmap-tabs {
   display: flex;
   gap: 4px;
@@ -4972,9 +4972,9 @@
   opacity: 0.7;
 }
 
-/* ═══════════════════════════════════════════
-   Heat Map — Deck.gl Canvas (compact panel)
-   ═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Heat Map â€” Deck.gl Canvas (compact panel)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .room-heatmap-deck-canvas {
   width: 100%;
   flex: 1;
@@ -4985,7 +4985,7 @@
   background: rgba(18, 12, 20, 0.18);
 }
 
-/* Deck.gl injects a canvas directly — make sure it fills the container */
+/* Deck.gl injects a canvas directly â€” make sure it fills the container */
 .room-heatmap-deck-canvas canvas,
 .room-heatmap-deck-fullscreen-canvas canvas {
   width: 100% !important;
@@ -5013,9 +5013,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════
-   Heat Map — Deck.gl Controls
-   ═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Heat Map â€” Deck.gl Controls
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .room-heatmap-deck-controls {
   display: flex;
   align-items: center;
@@ -5083,9 +5083,9 @@
   line-height: 1.4;
 }
 
-/* ═══════════════════════════════════════════
-   Heat Map — Fullscreen Overlay
-   ═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Heat Map â€” Fullscreen Overlay
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .room-heatmap-deck-fullscreen-overlay {
   position: fixed;
   inset: 0;
@@ -5596,7 +5596,7 @@
   color: #fff;
 }
 
-/* Floating participant bubbles container — hovers above capsule */
+/* Floating participant bubbles container â€” hovers above capsule */
 .room-listen-along-capsule-bubbles {
   position: fixed;
   right: 12px;
@@ -6004,9 +6004,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FILL THE MAP EVENT
-   ═══════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .room-fill-map-overlay {
   position: fixed;
@@ -6128,7 +6128,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* title/subtitle removed — badge + status footer handle it */
+/* title/subtitle removed â€” badge + status footer handle it */
 
 /* SVG Map Container */
 .room-fill-map-svg-container {
@@ -6159,7 +6159,7 @@
   animation: roomFillMapFillPulse 0.6s ease forwards;
 }
 
-/* District cards removed — labels are now rendered inside the SVG */
+/* District cards removed â€” labels are now rendered inside the SVG */
 
 /* Compact footer: progress + status + points in one block */
 .room-fill-map-footer {
@@ -6235,7 +6235,7 @@
   opacity: 0.7;
 }
 
-/* ── In-SVG district labels ── */
+/* â”€â”€ In-SVG district labels â”€â”€ */
 .room-fill-map-label {
   display: flex;
   flex-direction: column;
@@ -6643,7 +6643,7 @@
   left: 12px;
 }
 
-/* ── Fill the Map Keyframes ── */
+/* â”€â”€ Fill the Map Keyframes â”€â”€ */
 
 @keyframes roomFillMapBlink {
 
@@ -6731,7 +6731,7 @@
   }
 }
 
-/* ── Fill the Map Mobile ── */
+/* â”€â”€ Fill the Map Mobile â”€â”€ */
 @media (max-width: 768px) {
   .room-fill-map-card {
     width: 94%;
@@ -7440,7 +7440,7 @@
 }
 
 
-/* ========== RED GREEN — PLATFORM ALTERNATING CHALLENGE ========== */
+/* ========== RED GREEN â€” PLATFORM ALTERNATING CHALLENGE ========== */
 
 .room-red-green-card {
   position: fixed;
@@ -8147,7 +8147,7 @@
 }
 
 
-/* ========== VROOM RACE — MY LAMBORGHINI GO VROOM VROOM ========== */
+/* ========== VROOM RACE â€” MY LAMBORGHINI GO VROOM VROOM ========== */
 
 .room-vroom-card {
   position: fixed;
@@ -9848,7 +9848,7 @@ body.room-the-hour-active .room-layout {
   transition: all 0.4s ease;
 }
 
-/* ===== LISTENER PLAYING DJ'S SONG — NEON GLOW ===== */
+/* ===== LISTENER PLAYING DJ'S SONG â€” NEON GLOW ===== */
 
 .room-dj-listener--listening {
   border-color: rgba(34, 197, 94, 0.7);
@@ -9870,7 +9870,7 @@ body.room-the-hour-active .room-layout {
 
 /* Music note badge on avatar */
 .room-dj-listener--listening .room-dj-listener-avatar::after {
-  content: '🎵';
+  content: 'ðŸŽµ';
   position: absolute;
   bottom: -4px;
   right: -4px;
@@ -9986,13 +9986,13 @@ body.room-the-hour-active .room-layout {
 
 /* ===== CROWD INTENSITY LEVELS ===== */
 
-/* Level 1: Vibing (1-2 listeners) — subtle warm glow */
+/* Level 1: Vibing (1-2 listeners) â€” subtle warm glow */
 .room-dj-crowd--vibing .room-dj-stage-fog {
   opacity: 0.5 !important;
   background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.2) 0%, rgba(153, 193, 255, 0.1) 50%, transparent 72%);
 }
 
-/* Level 2: Hype (3-5 listeners) — pulsing card border + faster beams */
+/* Level 2: Hype (3-5 listeners) â€” pulsing card border + faster beams */
 .room-dj-crowd--hype {
   animation: roomDjCardHype 2s ease-in-out infinite;
 }
@@ -10019,7 +10019,7 @@ body.room-the-hour-active .room-layout {
   animation-duration: 1.5s !important;
 }
 
-/* Level 3: Fire (6+ listeners) — full club mode */
+/* Level 3: Fire (6+ listeners) â€” full club mode */
 .room-dj-crowd--fire {
   animation: roomDjCardFire 1.5s ease-in-out infinite;
 }
@@ -10978,7 +10978,7 @@ body.room-the-hour-active .room-layout {
 
 
 /* ===================================================================
-   VICTORY SCREEN — Epic celebration for top 10 when streaming party ends
+   VICTORY SCREEN â€” Epic celebration for top 10 when streaming party ends
    =================================================================== */
 
 /* Overlay */
@@ -11526,7 +11526,9 @@ body.room-the-hour-active .room-layout {
   }
 }
 /* ===================================================================
-   VICTORY PERSONAL RESULT CARD (members page)
+/* ===================================================================
+/* ===================================================================
+   VICTORY PERSONAL RESULT CARD — Epic redesign (members page)
    =================================================================== */
 .room-victory-personal-overlay {
   position: fixed;
@@ -11535,117 +11537,606 @@ body.room-the-hour-active .room-layout {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  background: rgba(5, 6, 14, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: roomVictoryFadeIn 0.28s ease forwards;
+  padding: 16px;
+  background: rgba(2, 2, 8, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: rvpOverlayIn 0.4s ease forwards;
 }
 
 .room-victory-personal-overlay--exit {
-  animation: roomVictoryFadeOut 0.3s ease forwards;
+  animation: rvpOverlayOut 0.3s ease forwards;
   pointer-events: none;
 }
 
+/* — Card shell — */
 .room-victory-personal-card {
-  width: min(480px, 92vw);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-  padding: 24px;
+  position: relative;
+  width: min(420px, 92vw);
+  border-radius: 24px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(165deg, rgba(20, 20, 30, 0.95) 0%, rgba(10, 10, 18, 0.98) 100%);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  padding: 28px 24px 24px;
   text-align: center;
   color: #fff;
+  overflow: hidden;
+  animation: rvpCardPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
 }
 
+/* Tier-specific card styles */
 .room-victory-personal--gold {
   border-color: rgba(255, 193, 7, 0.5);
-  box-shadow: 0 0 42px rgba(255, 193, 7, 0.3), 0 20px 60px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(165deg, rgba(40, 32, 8, 0.95) 0%, rgba(15, 12, 4, 0.98) 100%);
+  box-shadow:
+    0 0 60px rgba(255, 193, 7, 0.2),
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 193, 7, 0.1) inset;
 }
 
 .room-victory-personal--silver {
   border-color: rgba(192, 192, 192, 0.45);
+  background: linear-gradient(165deg, rgba(30, 30, 35, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
+  box-shadow:
+    0 0 40px rgba(192, 192, 192, 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
 .room-victory-personal--bronze {
   border-color: rgba(205, 127, 50, 0.45);
+  background: linear-gradient(165deg, rgba(35, 25, 15, 0.95) 0%, rgba(14, 10, 6, 0.98) 100%);
+  box-shadow:
+    0 0 40px rgba(205, 127, 50, 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
 .room-victory-personal--top10 {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(247, 166, 185, 0.35);
 }
 
 .room-victory-personal--participant,
 .room-victory-personal--guest {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.room-victory-personal-title {
+/* — Floating particles inside card — */
+.rvp-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.room-victory-personal--gold .rvp-particles {
+  background:
+    radial-gradient(circle at 20% 80%, rgba(255, 193, 7, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 152, 0, 0.05) 0%, transparent 50%);
+}
+
+/* — Icon — */
+.rvp-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 8px;
+  animation: rvpIconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.room-victory-personal--gold .rvp-icon {
+  font-size: 56px;
+  filter: drop-shadow(0 0 20px rgba(255, 193, 7, 0.6));
+}
+
+/* — Avatar ring — */
+.rvp-avatar-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  padding: 3px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  animation: rvpAvatarIn 0.5s ease 0.5s both;
+  position: relative;
+}
+
+.rvp-avatar-ring--1 {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #ffc107, #ff8f00, #ffd54f, #ffc107);
+  background-size: 300% 300%;
+  animation: rvpAvatarIn 0.5s ease 0.5s both, rvpGoldRingSpin 3s ease-in-out infinite 1s;
+  box-shadow:
+    0 0 30px rgba(255, 193, 7, 0.5),
+    0 0 60px rgba(255, 193, 7, 0.2);
+}
+
+.rvp-avatar-ring--2 {
+  background: linear-gradient(135deg, #d0d0d0, #888, #c0c0c0, #d0d0d0);
+  background-size: 300% 300%;
+  animation: rvpAvatarIn 0.5s ease 0.5s both, rvpGoldRingSpin 4s ease-in-out infinite 1s;
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+}
+
+.rvp-avatar-ring--3 {
+  background: linear-gradient(135deg, #cd7f32, #a0602a, #e8a050, #cd7f32);
+  background-size: 300% 300%;
+  animation: rvpAvatarIn 0.5s ease 0.5s both, rvpGoldRingSpin 4s ease-in-out infinite 1s;
+  box-shadow: 0 0 20px rgba(205, 127, 50, 0.3);
+}
+
+.rvp-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.rvp-avatar-initial {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Outfit', sans-serif;
-  font-size: 30px;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: 0.3px;
+  font-size: 32px;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.room-victory-personal-subtitle {
-  margin-top: 10px;
+/* — Title — */
+.rvp-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.5px;
+  animation: rvpSlideUp 0.4s ease 0.6s both;
+}
+
+.room-victory-personal--gold .rvp-title {
+  background: linear-gradient(135deg, #ffd54f, #ffecb3, #ffc107);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(255, 193, 7, 0.3));
+}
+
+/* — Subtitle — */
+.rvp-subtitle {
+  margin-top: 6px;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  animation: rvpSlideUp 0.4s ease 0.7s both;
 }
 
-.room-victory-personal-rank {
-  margin-top: 16px;
-  display: inline-block;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.12);
+/* — Stats grid — */
+.rvp-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+  animation: rvpSlideUp 0.4s ease 0.8s both;
 }
 
-.room-victory-personal-points {
-  margin-top: 14px;
+.rvp-stat {
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.room-victory-personal--gold .rvp-stat {
+  background: rgba(255, 193, 7, 0.06);
+  border-color: rgba(255, 193, 7, 0.12);
+}
+
+.rvp-stat-value {
   font-family: 'Outfit', sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
+  line-height: 1.2;
+  color: #fff;
 }
 
-.room-victory-personal-time {
-  margin-top: 4px;
+.room-victory-personal--gold .rvp-stat-value {
+  color: #ffd54f;
+}
+
+.rvp-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 2px;
+}
+
+/* — Stream Breakdown — */
+.rvp-breakdown {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: rvpSlideUp 0.4s ease 0.9s both;
+}
+
+.rvp-breakdown-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 10px;
+}
+
+.rvp-breakdown-bar-wrap {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.rvp-breakdown-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f7a6b9, #e8758a);
+  animation: rvpBarGrow 1s ease 1.2s both;
+  transform-origin: left;
+}
+
+.rvp-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rvp-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
 }
 
-.room-victory-personal-close {
-  margin-top: 20px;
+.rvp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rvp-dot--go {
+  background: linear-gradient(135deg, #f7a6b9, #e8758a);
+}
+
+.rvp-dot--other {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.rvp-breakdown-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.rvp-breakdown-val {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-left: auto;
+}
+
+/* — Close button — */
+.rvp-close-btn {
+  margin-top: 18px;
   width: 100%;
-  height: 46px;
+  height: 48px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #f7a6b9, #e8758a);
   color: #1a1015;
   font-family: 'Outfit', sans-serif;
   font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   cursor: pointer;
+  transition: all 0.25s ease;
+  animation: rvpSlideUp 0.4s ease 1s both;
 }
 
-.room-victory-personal-close:hover {
-  filter: brightness(1.05);
+.rvp-close-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(247, 166, 185, 0.3);
 }
 
-@media (max-width: 480px) {
-  .room-victory-personal-card {
-    padding: 20px;
-    border-radius: 16px;
+.rvp-close-btn:active {
+  transform: scale(0.97);
+}
+
+.room-victory-personal--gold .rvp-close-btn {
+  background: linear-gradient(135deg, #ffc107, #ff8f00);
+  color: #1a1200;
+}
+
+/* ===== PERSONAL CARD KEYFRAMES ===== */
+@keyframes rvpOverlayIn {
+  from {
+    opacity: 0;
   }
 
-  .room-victory-personal-title {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rvpOverlayOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes rvpCardPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(30px);
+  }
+
+  60% {
+    transform: scale(1.02) translateY(-4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes rvpIconBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-20deg);
+  }
+
+  60% {
+    transform: scale(1.3) rotate(6deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes rvpAvatarIn {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rvpGoldRingSpin {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes rvpSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rvpBarGrow {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ===== PERSONAL CARD MOBILE ===== */
+@media (max-width: 480px) {
+  .room-victory-personal-card {
+    padding: 22px 18px 20px;
+    border-radius: 20px;
+  }
+
+  .rvp-title {
     font-size: 24px;
+  }
+
+  .rvp-avatar-ring {
+    width: 80px;
+    height: 80px;
+  }
+
+  .rvp-avatar-ring--1 {
+    width: 90px;
+    height: 90px;
+  }
+
+  .rvp-stat-value {
+    font-size: 19px;
+  }
+
+  .rvp-stats-grid {
+    gap: 8px;
+  }
+
+  .rvp-icon {
+    font-size: 40px;
+  }
+
+  .room-victory-personal--gold .rvp-icon {
+    font-size: 48px;
+  }
+}
+
+/* ===================================================================
+   CONFETTI & FIREWORKS — Celebration Effects
+   =================================================================== */
+
+/* — CONFETTI — */
+.rvp-confetti {
+  position: absolute;
+  top: -10px;
+  z-index: 0;
+  pointer-events: none;
+  animation:
+    rvpConfettiFall var(--confetti-dur, 2.5s) cubic-bezier(0.25, 0.46, 0.45, 0.94) var(--confetti-delay, 0s) forwards;
+}
+
+.rvp-confetti--rect {
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.rvp-confetti--circle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.rvp-confetti--strip {
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+@keyframes rvpConfettiFall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translateY(calc(100vh + 20px)) translateX(var(--confetti-x, 0px)) rotate(var(--confetti-r, 720deg)) scale(0.4);
+  }
+}
+
+/* — FIREWORK LAUNCH TRAIL — */
+.rvp-fw-trail {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffd54f;
+  z-index: 0;
+  pointer-events: none;
+  box-shadow:
+    0 0 8px #ffd54f,
+    0 0 20px rgba(255, 213, 79, 0.5);
+  animation: rvpFwLaunch 0.4s ease-out forwards;
+}
+
+@keyframes rvpFwLaunch {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0.6;
+    transform: translateY(calc(-1 * var(--fw-target-y, 50vh)));
+  }
+}
+
+/* — FIREWORK SPARK — */
+.rvp-fw-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+  animation: rvpFwExplode var(--fw-dur, 0.8s) ease-out forwards;
+}
+
+@keyframes rvpFwExplode {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+
+  60% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--fw-dx, 0px), var(--fw-dy, 0px)) scale(0.2);
+  }
+}
+
+/* — FIREWORK FLASH RING — */
+.rvp-fw-ring {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid;
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: rvpFwRing 0.5s ease-out forwards;
+}
+
+@keyframes rvpFwRing {
+  0% {
+    opacity: 0.9;
+    width: 10px;
+    height: 10px;
+    border-width: 3px;
+  }
+
+  100% {
+    opacity: 0;
+    width: 120px;
+    height: 120px;
+    border-width: 1px;
+    margin-left: -55px;
+    margin-top: -55px;
   }
 }

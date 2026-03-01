@@ -184,15 +184,15 @@ ROOM.Victory = {
 
     // Avatar
     var avatarSize = rank === 1 ? 120 : 80;
-    var pic = null;
-    if (ROOM.profilePicMap && entry.phoneNumber) {
+    var pic = entry.profilePicture || null;
+    if (!pic && ROOM.profilePicMap && entry.phoneNumber) {
       pic = ROOM.profilePicMap[entry.phoneNumber];
-    } else if (
-      window.MembersRoom &&
-      window.MembersRoom._pfpCache &&
-      entry.phoneNumber
-    ) {
+    }
+    if (!pic && window.MembersRoom && window.MembersRoom._pfpCache && entry.phoneNumber) {
       pic = window.MembersRoom._pfpCache[entry.phoneNumber];
+    }
+    if (!pic && this._activeData && this._activeData.profilePicByPhone && entry.phoneNumber) {
+      pic = this._activeData.profilePicByPhone[entry.phoneNumber];
     }
     var av = ROOM.avatarInner({
       profilePicture: pic,
@@ -248,15 +248,15 @@ ROOM.Victory = {
     card.className = "room-victory-rest-card";
     card.style.setProperty("--victory-delay", 0.5 + (index - 3) * 0.1 + "s");
 
-    var pic = null;
-    if (ROOM.profilePicMap && entry.phoneNumber) {
+    var pic = entry.profilePicture || null;
+    if (!pic && ROOM.profilePicMap && entry.phoneNumber) {
       pic = ROOM.profilePicMap[entry.phoneNumber];
-    } else if (
-      window.MembersRoom &&
-      window.MembersRoom._pfpCache &&
-      entry.phoneNumber
-    ) {
+    }
+    if (!pic && window.MembersRoom && window.MembersRoom._pfpCache && entry.phoneNumber) {
       pic = window.MembersRoom._pfpCache[entry.phoneNumber];
+    }
+    if (!pic && this._activeData && this._activeData.profilePicByPhone && entry.phoneNumber) {
+      pic = this._activeData.profilePicByPhone[entry.phoneNumber];
     }
     var av = ROOM.avatarInner({
       profilePicture: pic,
@@ -323,6 +323,13 @@ ROOM.Victory = {
     if (pts >= 10000) return (pts / 1000).toFixed(1) + "K pts";
     if (pts >= 1000) return pts.toLocaleString() + " pts";
     return pts + " pts";
+  },
+
+  _formatPointsShort: function (pts) {
+    if (!pts) return "0";
+    if (pts >= 100000) return (pts / 1000).toFixed(0) + "K";
+    if (pts >= 10000) return (pts / 1000).toFixed(1) + "K";
+    return pts.toLocaleString();
   },
 
   _isMembersPage: function () {
@@ -399,54 +406,135 @@ ROOM.Victory = {
     if (this._didShowPersonal) return;
     this._didShowPersonal = true;
 
-    var placement = this._findPlacement(this._activeData);
+    var data = this._activeData;
+    var placement = this._findPlacement(data);
+    var myPhone = this._getCurrentPhone();
 
-    var title = "Thanks for joining the party!";
-    var subtitle = "See you in the next round.";
+    // Get per-user stream stats from the event data
+    var myStats = null;
+    if (data && data.perUserStats && myPhone) {
+      myStats = data.perUserStats[myPhone] || null;
+    }
+
+    // Profile picture
+    var myPfp = null;
+    if (data && data.profilePicByPhone && myPhone) {
+      myPfp = data.profilePicByPhone[myPhone];
+    }
+    if (!myPfp && ROOM.currentUser && ROOM.currentUser.profilePicture) {
+      myPfp = ROOM.currentUser.profilePicture;
+    }
+
+    var title = "Thanks for joining!";
+    var subtitle = "See you in the next streaming party.";
     var cardClass = "room-victory-personal--guest";
-    var rankText = "";
-    var pointsText = "";
-    var timeText = "";
-
-    var iconHtml = "";
+    var rank = 0;
+    var total = 0;
+    var pointsVal = 0;
+    var totalMins = 0;
+    var iconEmoji = "🎵";
 
     if (placement) {
-      var rank = placement.rank;
-      var total = placement.totalParticipants || 0;
+      rank = placement.rank;
+      total = placement.totalParticipants || 0;
       title = "You placed " + this._formatOrdinal(rank) + "!";
       subtitle = this._buildPlacementMessage(rank, total);
-      rankText = total > 0 ? "Rank #" + rank + " of " + total : "Rank #" + rank;
+
+      if (placement.entry) {
+        pointsVal = placement.entry.totalPoints || 0;
+        totalMins = placement.entry.totalMinutes || 0;
+      }
 
       if (rank === 1) {
         cardClass = "room-victory-personal--gold";
-        iconHtml =
-          '<div class="room-victory-personal-icon" style="font-size: 56px; margin-bottom: 12px; filter: drop-shadow(0 0 12px rgba(255,193,7,0.6));">👑</div>';
+        iconEmoji = "👑";
       } else if (rank === 2) {
         cardClass = "room-victory-personal--silver";
-        iconHtml =
-          '<div class="room-victory-personal-icon" style="font-size: 48px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(192,192,192,0.6));">🥈</div>';
+        iconEmoji = "🥈";
       } else if (rank === 3) {
         cardClass = "room-victory-personal--bronze";
-        iconHtml =
-          '<div class="room-victory-personal-icon" style="font-size: 48px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(205,127,50,0.6));">🥉</div>';
+        iconEmoji = "🥉";
       } else if (rank <= 10) {
         cardClass = "room-victory-personal--top10";
-        iconHtml =
-          '<div class="room-victory-personal-icon" style="font-size: 40px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));">⭐</div>';
+        iconEmoji = "⭐";
       } else {
         cardClass = "room-victory-personal--participant";
+        iconEmoji = "🎶";
       }
+    }
 
-      if (placement.entry) {
-        pointsText = this._formatPoints(placement.entry.totalPoints || 0);
-        var mins = Number(placement.entry.totalMinutes || 0);
-        var hours = Math.floor(mins / 60);
-        var remMins = mins % 60;
-        timeText =
-          hours > 0
-            ? hours + "h " + remMins + "m streamed"
-            : remMins + "m streamed";
-      }
+    // Build the profile picture or avatar initial HTML
+    var avatarHtml = "";
+    var username = (ROOM.currentUser && ROOM.currentUser.username) || "BLINK";
+    var avatarColor = (ROOM.currentUser && ROOM.currentUser.avatarColor) || "linear-gradient(135deg, #f7a6b9, #e8758a)";
+    if (myPfp) {
+      avatarHtml =
+        '<div class="rvp-avatar-ring ' + (rank <= 3 ? 'rvp-avatar-ring--' + rank : '') + '">' +
+        '<img src="' + this._esc(myPfp) + '" class="rvp-avatar-img" alt="" />' +
+        '</div>';
+    } else {
+      avatarHtml =
+        '<div class="rvp-avatar-ring ' + (rank <= 3 ? 'rvp-avatar-ring--' + rank : '') + '">' +
+        '<div class="rvp-avatar-initial" style="background:' + avatarColor + '">' +
+        this._esc(username.charAt(0).toUpperCase()) +
+        '</div></div>';
+    }
+
+    // Format listening time from streamCounts listenDuration (seconds)
+    var listenSecs = (myStats && myStats.totalListenSeconds) || 0;
+    var listenH = Math.floor(listenSecs / 3600);
+    var listenM = Math.floor((listenSecs % 3600) / 60);
+    var listenStr = listenH > 0 ? listenH + "h " + listenM + "m" : listenM + "m";
+
+    // Stream breakdown
+    var goStreams = (myStats && myStats.goStreams) || 0;
+    var otherStreams = (myStats && myStats.otherStreams) || 0;
+    var totalStreams = (myStats && myStats.totalStreams) || 0;
+    var goPercent = totalStreams > 0 ? Math.round((goStreams / totalStreams) * 100) : 0;
+
+    // Build stat grid HTML
+    var statsHtml =
+      '<div class="rvp-stats-grid">' +
+      '<div class="rvp-stat">' +
+      '<div class="rvp-stat-value">' + this._formatPointsShort(pointsVal) + '</div>' +
+      '<div class="rvp-stat-label">Total Points</div>' +
+      '</div>' +
+      '<div class="rvp-stat">' +
+      '<div class="rvp-stat-value">' + totalStreams + '</div>' +
+      '<div class="rvp-stat-label">Total Streams</div>' +
+      '</div>' +
+      '<div class="rvp-stat">' +
+      '<div class="rvp-stat-value">' + listenStr + '</div>' +
+      '<div class="rvp-stat-label">Listen Time</div>' +
+      '</div>' +
+      '<div class="rvp-stat">' +
+      '<div class="rvp-stat-value">#' + (rank || '—') + '</div>' +
+      '<div class="rvp-stat-label">of ' + total + ' BLINKs</div>' +
+      '</div>' +
+      '</div>';
+
+    // Stream breakdown bar
+    var breakdownHtml = '';
+    if (totalStreams > 0) {
+      breakdownHtml =
+        '<div class="rvp-breakdown">' +
+        '<div class="rvp-breakdown-title">Stream Breakdown</div>' +
+        '<div class="rvp-breakdown-bar-wrap">' +
+        '<div class="rvp-breakdown-bar-fill" style="width:' + goPercent + '%"></div>' +
+        '</div>' +
+        '<div class="rvp-breakdown-row">' +
+        '<div class="rvp-breakdown-item">' +
+        '<span class="rvp-dot rvp-dot--go"></span>' +
+        '<span class="rvp-breakdown-label">GO Streams</span>' +
+        '<span class="rvp-breakdown-val">' + goStreams + '</span>' +
+        '</div>' +
+        '<div class="rvp-breakdown-item">' +
+        '<span class="rvp-dot rvp-dot--other"></span>' +
+        '<span class="rvp-breakdown-label">Other</span>' +
+        '<span class="rvp-breakdown-val">' + otherStreams + '</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
     }
 
     var overlay = document.createElement("div");
@@ -455,31 +543,23 @@ ROOM.Victory = {
     var card = document.createElement("div");
     card.className = "room-victory-personal-card " + cardClass;
     card.innerHTML =
-      iconHtml +
-      '<div class="room-victory-personal-title">' +
-      this._esc(title) +
-      "</div>" +
-      '<div class="room-victory-personal-subtitle">' +
-      this._esc(subtitle) +
-      "</div>" +
-      (rankText
-        ? '<div class="room-victory-personal-rank">' +
-        this._esc(rankText) +
-        "</div>"
-        : "") +
-      (pointsText
-        ? '<div class="room-victory-personal-points">' +
-        this._esc(pointsText) +
-        "</div>"
-        : "") +
-      (timeText
-        ? '<div class="room-victory-personal-time">' +
-        this._esc(timeText) +
-        "</div>"
-        : "");
+      // Floating particles inside card
+      '<div class="rvp-particles"></div>' +
+      // Icon
+      '<div class="rvp-icon">' + iconEmoji + '</div>' +
+      // Avatar
+      avatarHtml +
+      // Title
+      '<div class="rvp-title">' + this._esc(title) + '</div>' +
+      // Subtitle
+      '<div class="rvp-subtitle">' + this._esc(subtitle) + '</div>' +
+      // Stats grid
+      statsHtml +
+      // Stream breakdown
+      breakdownHtml;
 
     var closeBtn = document.createElement("button");
-    closeBtn.className = "room-victory-personal-close";
+    closeBtn.className = "rvp-close-btn";
     closeBtn.textContent = "Continue";
     var self = this;
     closeBtn.addEventListener("click", function () {
@@ -495,9 +575,123 @@ ROOM.Victory = {
     document.body.appendChild(overlay);
     this._personalOverlay = overlay;
 
+    // ——— CELEBRATION EFFECTS ———
+
+    // 1. Confetti burst — colorful falling pieces
+    this._spawnConfettiBurst(overlay, 80);
+
+    // 2. Firework explosions — 3 bursts staggered
+    var fwSelf = this;
+    setTimeout(function () { fwSelf._spawnFirework(overlay); }, 300);
+    setTimeout(function () { fwSelf._spawnFirework(overlay); }, 900);
+    setTimeout(function () { fwSelf._spawnFirework(overlay); }, 1600);
+    setTimeout(function () { fwSelf._spawnFirework(overlay); }, 2800);
+    setTimeout(function () { fwSelf._spawnFirework(overlay); }, 4000);
+
+    // 3. Continuous mini confetti every 2.5s
+    this._personalConfettiInterval = setInterval(function () {
+      if (!fwSelf._personalOverlay) return;
+      fwSelf._spawnConfettiBurst(overlay, 25);
+    }, 3000);
+
     this._personalTimer = setTimeout(function () {
       self._hidePersonalView();
-    }, 15000);
+    }, 20000);
+  },
+
+  // ——— CONFETTI SYSTEM ———
+  _spawnConfettiBurst: function (container, count) {
+    var colors = [
+      '#f7a6b9', '#e8758a', '#ffc107', '#ff8f00', '#ffd54f',
+      '#ff4081', '#7c4dff', '#00e5ff', '#69f0ae', '#ffab40',
+      '#e040fb', '#ff6e40', '#c0c0c0', '#ffffff'
+    ];
+    var shapes = ['rvp-confetti--rect', 'rvp-confetti--circle', 'rvp-confetti--strip'];
+
+    for (var i = 0; i < count; i++) {
+      var piece = document.createElement('div');
+      piece.className = 'rvp-confetti ' + shapes[Math.floor(Math.random() * shapes.length)];
+
+      var color = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.backgroundColor = color;
+      piece.style.left = (10 + Math.random() * 80) + '%';
+      piece.style.setProperty('--confetti-x', (Math.random() * 200 - 100) + 'px');
+      piece.style.setProperty('--confetti-r', (Math.random() * 1080 - 540) + 'deg');
+      piece.style.setProperty('--confetti-dur', (1.5 + Math.random() * 2) + 's');
+      piece.style.setProperty('--confetti-delay', (Math.random() * 0.5) + 's');
+      piece.style.opacity = (0.8 + Math.random() * 0.2).toString();
+
+      container.appendChild(piece);
+
+      (function (el) {
+        setTimeout(function () {
+          if (el.parentNode) el.remove();
+        }, 4500);
+      })(piece);
+    }
+  },
+
+  // ——— FIREWORK SYSTEM ———
+  _spawnFirework: function (container) {
+    if (!this._personalOverlay) return;
+
+    var cx = 15 + Math.random() * 70; // % from left
+    var cy = 10 + Math.random() * 60; // % from top
+    var sparkCount = 20 + Math.floor(Math.random() * 16);
+    var hue = Math.floor(Math.random() * 360);
+
+    // Launch trail
+    var trail = document.createElement('div');
+    trail.className = 'rvp-fw-trail';
+    trail.style.left = cx + '%';
+    trail.style.bottom = '0';
+    trail.style.setProperty('--fw-target-y', cy + 'vh');
+    container.appendChild(trail);
+
+    var self = this;
+    setTimeout(function () {
+      if (trail.parentNode) trail.remove();
+
+      // Explosion sparks
+      for (var i = 0; i < sparkCount; i++) {
+        var spark = document.createElement('div');
+        spark.className = 'rvp-fw-spark';
+
+        var angle = (i / sparkCount) * 360 + (Math.random() * 20 - 10);
+        var dist = 40 + Math.random() * 80;
+        var dx = Math.cos(angle * Math.PI / 180) * dist;
+        var dy = Math.sin(angle * Math.PI / 180) * dist;
+
+        var sparkHue = hue + Math.floor(Math.random() * 40 - 20);
+        var sat = 80 + Math.random() * 20;
+        var light = 55 + Math.random() * 25;
+
+        spark.style.left = cx + '%';
+        spark.style.top = cy + '%';
+        spark.style.setProperty('--fw-dx', dx + 'px');
+        spark.style.setProperty('--fw-dy', dy + 'px');
+        spark.style.setProperty('--fw-dur', (0.6 + Math.random() * 0.6) + 's');
+        spark.style.backgroundColor = 'hsl(' + sparkHue + ',' + sat + '%,' + light + '%)';
+        spark.style.boxShadow = '0 0 6px hsl(' + sparkHue + ',' + sat + '%,' + light + '%)';
+
+        container.appendChild(spark);
+
+        (function (el) {
+          setTimeout(function () {
+            if (el.parentNode) el.remove();
+          }, 1500);
+        })(spark);
+      }
+
+      // Flash ring
+      var ring = document.createElement('div');
+      ring.className = 'rvp-fw-ring';
+      ring.style.left = cx + '%';
+      ring.style.top = cy + '%';
+      ring.style.borderColor = 'hsl(' + hue + ',80%,70%)';
+      container.appendChild(ring);
+      setTimeout(function () { if (ring.parentNode) ring.remove(); }, 600);
+    }, 400);
   },
 
   _esc: function (text) {
@@ -510,6 +704,10 @@ ROOM.Victory = {
     if (this._personalTimer) {
       clearTimeout(this._personalTimer);
       this._personalTimer = null;
+    }
+    if (this._personalConfettiInterval) {
+      clearInterval(this._personalConfettiInterval);
+      this._personalConfettiInterval = null;
     }
 
     if (!this._personalOverlay) return;

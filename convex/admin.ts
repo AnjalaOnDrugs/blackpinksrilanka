@@ -306,13 +306,83 @@ export const triggerVictoryScreen = mutation({
             placementByPhone[standings[i].phoneNumber] = i + 1;
         }
 
+        // Enrich with profile pictures from users table
+        const allPhones = standings.map((s) => s.phoneNumber);
+        const profilePicByPhone: Record<string, string> = {};
+        for (const phone of allPhones) {
+            const user = await ctx.db
+                .query("users")
+                .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+                .first();
+            if (user?.profilePicture) {
+                profilePicByPhone[phone] = user.profilePicture;
+            }
+        }
+
+        // Enrich top10 with profilePicture
+        const enrichedTop10 = top10.map((entry) => ({
+            ...entry,
+            profilePicture: profilePicByPhone[entry.phoneNumber] || null,
+        }));
+
+        // Build per-user stream stats for the personal card
+        const perUserStats: Record<string, {
+            goStreams: number;
+            otherStreams: number;
+            totalStreams: number;
+            totalListenSeconds: number;
+            spotifyStreams: number;
+            youtubeStreams: number;
+        }> = {};
+        for (const phone of allPhones) {
+            const userStats = await ctx.db
+                .query("userStreamStats")
+                .withIndex("by_room_phone", (q) =>
+                    q.eq("roomId", args.roomId).eq("phoneNumber", phone)
+                )
+                .first();
+
+            // Sum listen durations from streamCounts
+            const streamRows = await ctx.db
+                .query("streamCounts")
+                .withIndex("by_room_phone", (q) =>
+                    q.eq("roomId", args.roomId).eq("phoneNumber", phone)
+                )
+                .collect();
+
+            const totalListenSeconds = streamRows.reduce(
+                (sum, r) => sum + (r.listenDuration || 0),
+                0
+            );
+
+            const goStreams = userStats
+                ? (userStats.mainYoutube || 0) +
+                (userStats.mainSpotify || 0) +
+                (userStats.mainOther || 0)
+                : 0;
+            const otherStreams = userStats
+                ? (userStats.totalStreams || 0) - goStreams
+                : 0;
+
+            perUserStats[phone] = {
+                goStreams,
+                otherStreams: Math.max(0, otherStreams),
+                totalStreams: userStats?.totalStreams || 0,
+                totalListenSeconds,
+                spotifyStreams: userStats?.mainSpotify || 0,
+                youtubeStreams: userStats?.mainYoutube || 0,
+            };
+        }
+
         await ctx.db.insert("events", {
             roomId: args.roomId,
             type: "victory_screen",
             data: {
-                top10,
+                top10: enrichedTop10,
                 totalParticipants: standings.length,
                 placementByPhone,
+                perUserStats,
+                profilePicByPhone,
                 triggeredAt: now,
             },
             createdAt: now,
