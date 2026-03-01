@@ -166,6 +166,7 @@ async function initRoom(roomId) {
   ROOM.TheHour.init();
   ROOM.DjEvent.init();
   ROOM.MemberPopup.init();
+  ROOM.Victory.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 
@@ -626,6 +627,7 @@ function setupCleanup() {
     ROOM.RedGreen.destroy();
     ROOM.Vroom.destroy();
     ROOM.DjEvent.destroy();
+    ROOM.Victory.destroy();
     ROOM.HeatMap.destroy();
     ROOM.Firebase.destroy();
     ROOM.Presence.destroy();

@@ -4,29 +4,44 @@
  * and REAL room data from Convex (participants, leaderboard, now-playing)
  */
 
+window.ROOM = window.ROOM || {};
+
 // ========== AUTH PROTECTION ==========
 checkAuthState().then(async (user) => {
   if (!user) {
-    window.location.href = 'login.html';
+    window.location.href = "login.html";
     return;
   }
 
   // Load user data
   try {
     const userData = await getCurrentUserData();
-    const username = (userData && userData.username) ? userData.username : 'BLINK';
-    document.getElementById('greetingName').innerHTML =
+    const username =
+      userData && userData.username ? userData.username : "BLINK";
+    ROOM.currentUser = {
+      phoneNumber:
+        userData && userData.phoneNumber ? String(userData.phoneNumber) : null,
+      username: username,
+      profilePicture:
+        userData && userData.profilePicture ? userData.profilePicture : null,
+      avatarColor:
+        userData && userData.avatarColor
+          ? userData.avatarColor
+          : "linear-gradient(135deg, #f7a6b9, #e8758a)",
+    };
+    document.getElementById("greetingName").innerHTML =
       username + '<span class="mh-pink">.</span>';
 
     // Show profile picture or initial in top bar
-    var profileInitialEl = document.getElementById('profileInitial');
+    var profileInitialEl = document.getElementById("profileInitial");
     var profileWrap = profileInitialEl ? profileInitialEl.parentElement : null;
     if (userData && userData.profilePicture && profileWrap) {
-      profileInitialEl.style.display = 'none';
-      var pfImg = document.createElement('img');
+      profileInitialEl.style.display = "none";
+      var pfImg = document.createElement("img");
       pfImg.src = userData.profilePicture;
-      pfImg.alt = '';
-      pfImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+      pfImg.alt = "";
+      pfImg.style.cssText =
+        "width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;";
       profileWrap.appendChild(pfImg);
     } else if (profileInitialEl) {
       profileInitialEl.textContent = username.charAt(0).toUpperCase();
@@ -35,42 +50,42 @@ checkAuthState().then(async (user) => {
     // Load streak badge on calendar icon
     if (userData && userData.phoneNumber) {
       try {
-        var streakResult = await ConvexService.query('checkins:getStreak', {
-          phoneNumber: userData.phoneNumber
+        var streakResult = await ConvexService.query("checkins:getStreak", {
+          phoneNumber: userData.phoneNumber,
         });
-        var streakBadge = document.getElementById('streakBadge');
+        var streakBadge = document.getElementById("streakBadge");
         if (streakBadge && streakResult && streakResult.streak > 0) {
           streakBadge.textContent = streakResult.streak;
-          streakBadge.style.display = 'flex';
+          streakBadge.style.display = "flex";
         }
       } catch (streakErr) {
-        console.error('Error loading streak:', streakErr);
+        console.error("Error loading streak:", streakErr);
       }
     }
 
     // Check for extra rooms (restricted/test rooms) visible to this user
     if (userData && userData.phoneNumber) {
       try {
-        var visibleRooms = await ConvexService.query('rooms:listVisibleRooms', {
-          phoneNumber: userData.phoneNumber
+        var visibleRooms = await ConvexService.query("rooms:listVisibleRooms", {
+          phoneNumber: userData.phoneNumber,
         });
         if (visibleRooms) {
           var extraRooms = visibleRooms.filter(function (r) {
-            return r.roomId !== 'streaming';
+            return r.roomId !== "streaming";
           });
           if (extraRooms.length > 0) {
             MembersRoom._renderExtraRooms(extraRooms);
           }
         }
       } catch (extraErr) {
-        console.error('Error loading visible rooms:', extraErr);
+        console.error("Error loading visible rooms:", extraErr);
       }
     }
   } catch (err) {
-    console.error('Error loading user data:', err);
-    document.getElementById('greetingName').innerHTML =
+    console.error("Error loading user data:", err);
+    document.getElementById("greetingName").innerHTML =
       'BLINK<span class="mh-pink">.</span>';
-    document.getElementById('profileInitial').textContent = 'B';
+    document.getElementById("profileInitial").textContent = "B";
   }
 
   // After auth, start loading real room data
@@ -78,62 +93,66 @@ checkAuthState().then(async (user) => {
 });
 
 // ========== ROOM NAVIGATION ==========
-var joinStreamBtn = document.getElementById('joinStreamBtn');
+var joinStreamBtn = document.getElementById("joinStreamBtn");
 if (joinStreamBtn) {
-  joinStreamBtn.addEventListener('click', function () {
-    if (joinStreamBtn.classList.contains('mh-room-join-btn--locked')) return;
-    window.location.href = 'room.html?id=streaming';
+  joinStreamBtn.addEventListener("click", function () {
+    if (joinStreamBtn.classList.contains("mh-room-join-btn--locked")) return;
+    window.location.href = "room.html?id=streaming";
   });
 }
 
 // Also make the featured room card clickable
-var streamingRoom = document.getElementById('streamingRoom');
+var streamingRoom = document.getElementById("streamingRoom");
 if (streamingRoom) {
-  streamingRoom.addEventListener('click', function (e) {
+  streamingRoom.addEventListener("click", function (e) {
     // Don't navigate if clicking the users button
-    if (e.target.closest('.mh-room-users-btn')) return;
-    if (joinStreamBtn && joinStreamBtn.classList.contains('mh-room-join-btn--locked')) return;
-    window.location.href = 'room.html?id=streaming';
+    if (e.target.closest(".mh-room-users-btn")) return;
+    if (
+      joinStreamBtn &&
+      joinStreamBtn.classList.contains("mh-room-join-btn--locked")
+    )
+      return;
+    window.location.href = "room.html?id=streaming";
   });
 }
 
 // ========== LOGOUT ==========
-var logoutBtn = document.getElementById('logoutBtn');
+var logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => {
+  logoutBtn.addEventListener("click", async () => {
     try {
       await logoutUser();
-      window.location.href = 'index.html';
+      window.location.href = "index.html";
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error("Logout error:", err);
     }
   });
 }
 
 // ========== FLOATING PARTICLES (background) ==========
 (function createParticles() {
-  var container = document.getElementById('particles');
+  var container = document.getElementById("particles");
   if (!container) return;
-  var colors = ['#f7a6b9', '#25D366', '#FA5BFF', '#fcd5de'];
+  var colors = ["#f7a6b9", "#25D366", "#FA5BFF", "#fcd5de"];
   for (var i = 0; i < 20; i++) {
-    var p = document.createElement('div');
-    p.className = 'mh-particle';
+    var p = document.createElement("div");
+    p.className = "mh-particle";
     var size = Math.random() * 4 + 2;
     var color = colors[Math.floor(Math.random() * colors.length)];
-    p.style.width = size + 'px';
-    p.style.height = size + 'px';
+    p.style.width = size + "px";
+    p.style.height = size + "px";
     p.style.background = color;
-    p.style.left = Math.random() * 100 + '%';
-    p.style.setProperty('--p-speed', (Math.random() * 10 + 6) + 's');
-    p.style.setProperty('--p-delay', (Math.random() * 10) + 's');
-    p.style.setProperty('--p-opacity', (Math.random() * 0.3 + 0.1).toString());
+    p.style.left = Math.random() * 100 + "%";
+    p.style.setProperty("--p-speed", Math.random() * 10 + 6 + "s");
+    p.style.setProperty("--p-delay", Math.random() * 10 + "s");
+    p.style.setProperty("--p-opacity", (Math.random() * 0.3 + 0.1).toString());
     container.appendChild(p);
   }
 })();
 
 // ========== FLOATING MUSIC ICONS (inside featured card) ==========
 (function createFloatingIcons() {
-  var container = document.getElementById('floatingIcons');
+  var container = document.getElementById("floatingIcons");
   if (!container) return;
 
   // SVG icon paths
@@ -147,21 +166,24 @@ if (logoutBtn) {
     // Music 2
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></svg>',
     // Radio
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/><circle cx="12" cy="12" r="2"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/><circle cx="12" cy="12" r="2"/></svg>',
   ];
 
   for (var i = 0; i < 12; i++) {
-    var el = document.createElement('div');
-    el.className = 'mh-float-icon';
+    var el = document.createElement("div");
+    el.className = "mh-float-icon";
     el.innerHTML = icons[Math.floor(Math.random() * icons.length)];
 
     var size = Math.random() * 14 + 14; // 14-28px
-    el.style.setProperty('--fi-size', size + 'px');
-    el.style.setProperty('--fi-speed', (Math.random() * 6 + 4) + 's');
-    el.style.setProperty('--fi-delay', (Math.random() * 8) + 's');
-    el.style.setProperty('--fi-opacity', (Math.random() * 0.3 + 0.15).toString());
-    el.style.left = Math.random() * 90 + 5 + '%';
-    el.style.top = Math.random() * 80 + 10 + '%';
+    el.style.setProperty("--fi-size", size + "px");
+    el.style.setProperty("--fi-speed", Math.random() * 6 + 4 + "s");
+    el.style.setProperty("--fi-delay", Math.random() * 8 + "s");
+    el.style.setProperty(
+      "--fi-opacity",
+      (Math.random() * 0.3 + 0.15).toString(),
+    );
+    el.style.left = Math.random() * 90 + 5 + "%";
+    el.style.top = Math.random() * 80 + 10 + "%";
 
     container.appendChild(el);
   }
@@ -169,7 +191,8 @@ if (logoutBtn) {
 
 // ========== REAL ROOM DATA FROM CONVEX ==========
 var MembersRoom = {
-  _roomId: 'streaming',
+  _roomId: "streaming",
+  _myPhone: null,
   _participants: [],
   _unsubs: [],
   _songRotationTimer: null,
@@ -179,12 +202,33 @@ var MembersRoom = {
   _rawParticipants: [],
   _tracksCache: {},
   _pfpCache: {},
-  _lastPhoneHash: '',
+  _lastPhoneHash: "",
   _unsubPfps: null,
   _presenceHandler: null,
+  _processedEventIds: {},
 
   init: function () {
     var self = this;
+    this._myPhone =
+      ROOM.currentUser && ROOM.currentUser.phoneNumber
+        ? String(ROOM.currentUser.phoneNumber)
+        : null;
+
+    // If room page redirected us with a victory payload, consume it immediately.
+    try {
+      var pendingRaw = sessionStorage.getItem("pending_victory_payload");
+      if (pendingRaw) {
+        sessionStorage.removeItem("pending_victory_payload");
+        var pendingParsed = JSON.parse(pendingRaw);
+        if (window.ROOM && window.ROOM.Victory && window.ROOM.Victory.show) {
+          window.ROOM.Victory.show(pendingParsed);
+        } else {
+          window.__pendingVictoryPayload = pendingParsed;
+        }
+      }
+    } catch (e) {
+      // ignore parse/storage errors
+    }
 
     // 0. Initialize Firebase RTDB presence (read-only — just listen, don't write)
     ROOM.Presence.init(this._roomId, null, { readOnly: true });
@@ -197,19 +241,23 @@ var MembersRoom = {
 
     // 1. Watch participants in real time
     var unsub1 = ConvexService.watch(
-      'participants:listByRoom',
+      "participants:listByRoom",
       { roomId: this._roomId },
       function (participants) {
         if (!participants) return;
         self._rawParticipants = participants;
 
-        var phoneNumbers = self._rawParticipants.map(function (p) { return p.id; }).sort();
-        var phoneHash = phoneNumbers.join(',');
+        var phoneNumbers = self._rawParticipants
+          .map(function (p) {
+            return p.id;
+          })
+          .sort();
+        var phoneHash = phoneNumbers.join(",");
         if (self._lastPhoneHash !== phoneHash) {
           self._lastPhoneHash = phoneHash;
           if (self._unsubPfps) self._unsubPfps();
           self._unsubPfps = ConvexService.watch(
-            'users:getProfilePictures',
+            "users:getProfilePictures",
             { roomId: self._roomId, phoneNumbers: phoneNumbers },
             function (pfps) {
               if (!pfps) return;
@@ -217,17 +265,17 @@ var MembersRoom = {
                 self._pfpCache[pfps[i].phoneNumber] = pfps[i].profilePicture;
               }
               self._mergeAndRender();
-            }
+            },
           );
         }
         self._mergeAndRender();
-      }
+      },
     );
     this._unsubs.push(unsub1);
 
     // 1b. Watch tracks separately (lightweight, from participantTracks table)
     var unsub1b = ConvexService.watch(
-      'participants:listTracks',
+      "participants:listTracks",
       { roomId: this._roomId },
       function (tracks) {
         if (!tracks) return;
@@ -236,20 +284,58 @@ var MembersRoom = {
           self._tracksCache[tracks[i].phoneNumber] = tracks[i].currentTrack;
         }
         self._mergeAndRender();
-      }
+      },
     );
     this._unsubs.push(unsub1b);
 
     // 2. Watch room document for currentMostPlayed
     var unsub2 = ConvexService.watch(
-      'rooms:getRoom',
+      "rooms:getRoom",
       { roomId: this._roomId },
       function (room) {
         if (!room) return;
         self._renderRoomStatus(room);
-      }
+      },
     );
     this._unsubs.push(unsub2);
+
+    // 3. Watch for victory screen events to broadcast to members home.
+    // Keep a short lookback so users redirected from the room can still see it.
+    var victoryLookbackMs = 15 * 60 * 1000; // Increased to 15m to absorb clock drift
+    var lastShownVictoryId =
+      sessionStorage.getItem("members_last_victory_event_id") || "";
+    var unsub3 = ConvexService.watch(
+      "events:listRecent",
+      { roomId: this._roomId },
+      function (events) {
+        if (!events) return;
+        var now = Date.now();
+        events.forEach(function (e) {
+          if (!e || !e._id) return;
+          if (e.type !== "victory_screen") return;
+
+          var eventId = String(e._id);
+          if (eventId === lastShownVictoryId) return;
+
+          lastShownVictoryId = eventId;
+          sessionStorage.setItem("members_last_victory_event_id", eventId);
+
+          if (window.ROOM && window.ROOM.Victory && window.ROOM.Victory.show) {
+            window.ROOM.Victory.show(e.data);
+          } else {
+            // room-victory.js loads after this file on members.html.
+            // Queue the latest payload so it can be played once loaded.
+            window.__pendingVictoryPayload = e.data;
+          }
+        });
+      },
+    );
+    this._unsubs.push(unsub3);
+
+    // 4. Initialize animations for victory screen overlay
+    if (window.ROOM && window.ROOM.Animations && window.ROOM.Animations.init) {
+      window.ROOM.Animations.init();
+    }
   },
 
   // ---- Merge Convex participants with Firebase RTDB presence + tracks ----
@@ -276,10 +362,10 @@ var MembersRoom = {
 
   // ---- Render online user avatars ----
   _renderAvatars: function () {
-    var container = document.getElementById('roomAvatars');
-    var countEl = document.getElementById('roomOnlineCount');
+    var container = document.getElementById("roomAvatars");
+    var countEl = document.getElementById("roomOnlineCount");
     if (!container) return;
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     var onlineUsers = [];
     var offlineUsers = [];
@@ -301,72 +387,83 @@ var MembersRoom = {
 
     for (var j = 0; j < toShow.length && j < maxAvatars; j++) {
       var user = toShow[j];
-      var avatar = document.createElement('div');
-      avatar.className = 'mh-room-avatar';
+      var avatar = document.createElement("div");
+      avatar.className = "mh-room-avatar";
       if (user.data.isOnline) {
-        avatar.classList.add('mh-room-avatar--online');
+        avatar.classList.add("mh-room-avatar--online");
       }
       if (user.data.profilePicture) {
-        avatar.style.background = 'transparent';
-        avatar.style.overflow = 'hidden';
-        avatar.innerHTML = '<img src="' + user.data.profilePicture + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        avatar.style.background = "transparent";
+        avatar.style.overflow = "hidden";
+        avatar.innerHTML =
+          '<img src="' +
+          user.data.profilePicture +
+          '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
       } else {
-        avatar.style.background = user.data.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
-        var initial = (user.data.username || '?').charAt(0).toUpperCase();
-        avatar.innerHTML = '<span>' + initial + '</span>';
+        avatar.style.background =
+          user.data.avatarColor || "linear-gradient(135deg, #f7a6b9, #e8758a)";
+        var initial = (user.data.username || "?").charAt(0).toUpperCase();
+        avatar.innerHTML = "<span>" + initial + "</span>";
       }
       container.appendChild(avatar);
     }
 
     // +N more badge
     if (totalMembers > maxAvatars) {
-      var more = document.createElement('div');
-      more.className = 'mh-room-avatar mh-room-avatar--more';
-      more.textContent = '+' + (totalMembers - maxAvatars);
+      var more = document.createElement("div");
+      more.className = "mh-room-avatar mh-room-avatar--more";
+      more.textContent = "+" + (totalMembers - maxAvatars);
       container.appendChild(more);
     }
 
     // Update count text
     if (countEl) {
       if (onlineCount > 0) {
-        countEl.innerHTML = '<strong>' + onlineCount + '</strong> streaming';
+        countEl.innerHTML = "<strong>" + onlineCount + "</strong> streaming";
       } else if (totalMembers > 0) {
-        countEl.innerHTML = '<strong>' + totalMembers + '</strong> member' + (totalMembers !== 1 ? 's' : '');
+        countEl.innerHTML =
+          "<strong>" +
+          totalMembers +
+          "</strong> member" +
+          (totalMembers !== 1 ? "s" : "");
       } else {
-        countEl.innerHTML = '';
+        countEl.innerHTML = "";
       }
     }
 
     // Update status tag based on online users and lock status
-    var tagEl = document.getElementById('roomStatusTag');
-    var tagText = document.getElementById('roomStatusText');
-    var joinBtn = document.getElementById('joinStreamBtn');
+    var tagEl = document.getElementById("roomStatusTag");
+    var tagText = document.getElementById("roomStatusText");
+    var joinBtn = document.getElementById("joinStreamBtn");
     if (tagEl && tagText) {
-      var isLocked = this._roomData && this._roomData.lockedUntil && this._roomData.lockedUntil > Date.now();
+      var isLocked =
+        this._roomData &&
+        this._roomData.lockedUntil &&
+        this._roomData.lockedUntil > Date.now();
 
       if (isLocked) {
-        tagText.textContent = 'Room Closed';
-        tagEl.classList.add('mh-room-tag--idle');
+        tagText.textContent = "Room Closed";
+        tagEl.classList.add("mh-room-tag--idle");
         // Disable join button and start countdown
         if (joinBtn) {
-          joinBtn.classList.add('mh-room-join-btn--locked');
+          joinBtn.classList.add("mh-room-join-btn--locked");
           this._startJoinCountdown(this._roomData.lockedUntil);
         }
       } else {
         // Room is open — restore join button
-        if (joinBtn && joinBtn.classList.contains('mh-room-join-btn--locked')) {
-          joinBtn.classList.remove('mh-room-join-btn--locked');
+        if (joinBtn && joinBtn.classList.contains("mh-room-join-btn--locked")) {
+          joinBtn.classList.remove("mh-room-join-btn--locked");
           this._stopJoinCountdown();
           joinBtn.innerHTML =
             '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>' +
-            'Join Party';
+            "Join Party";
         }
         if (onlineCount > 0) {
-          tagText.textContent = 'Live Now';
-          tagEl.classList.remove('mh-room-tag--idle');
+          tagText.textContent = "Live Now";
+          tagEl.classList.remove("mh-room-tag--idle");
         } else {
-          tagText.textContent = 'Room Open';
-          tagEl.classList.add('mh-room-tag--idle');
+          tagText.textContent = "Room Open";
+          tagEl.classList.add("mh-room-tag--idle");
         }
       }
     }
@@ -374,18 +471,27 @@ var MembersRoom = {
 
   // ---- Render top 3 leaderboard ----
   _renderLeaderboard: function () {
-    var list = document.getElementById('roomLeadersList');
+    var list = document.getElementById("roomLeadersList");
     if (!list) return;
-    list.innerHTML = '';
+    list.innerHTML = "";
 
     // Participants are already sorted by totalPoints desc from Convex
     var top3 = this._participants.slice(0, 3);
-    var rankClasses = ['mh-leader--1st', 'mh-leader--2nd', 'mh-leader--3rd'];
-    var badgeClasses = ['mh-leader-badge--gold', 'mh-leader-badge--silver', 'mh-leader-badge--bronze'];
-    var rankLabelClasses = ['', 'mh-leader-rank--silver', 'mh-leader-rank--bronze'];
+    var rankClasses = ["mh-leader--1st", "mh-leader--2nd", "mh-leader--3rd"];
+    var badgeClasses = [
+      "mh-leader-badge--gold",
+      "mh-leader-badge--silver",
+      "mh-leader-badge--bronze",
+    ];
+    var rankLabelClasses = [
+      "",
+      "mh-leader-rank--silver",
+      "mh-leader-rank--bronze",
+    ];
 
     if (top3.length === 0) {
-      list.innerHTML = '<div class="mh-leader-empty">No streamers yet — be the first!</div>';
+      list.innerHTML =
+        '<div class="mh-leader-empty">No streamers yet — be the first!</div>';
       return;
     }
 
@@ -393,47 +499,73 @@ var MembersRoom = {
       var p = top3[i];
       var data = p.data;
       var rank = i + 1;
-      var color = data.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
+      var color =
+        data.avatarColor || "linear-gradient(135deg, #f7a6b9, #e8758a)";
       var hasPic = !!data.profilePicture;
 
       // Format score: prefer totalPoints, fallback to totalMinutes
       var points = data.totalPoints || 0;
       var mins = data.totalMinutes || 0;
-      var scoreText = '';
+      var scoreText = "";
       if (points > 0) {
-        scoreText = this._formatNumber(points) + ' pts &middot; ' + this._formatNumber(mins) + ' mins';
+        scoreText =
+          this._formatNumber(points) +
+          " pts &middot; " +
+          this._formatNumber(mins) +
+          " mins";
       } else {
-        scoreText = this._formatNumber(mins) + ' mins streamed';
+        scoreText = this._formatNumber(mins) + " mins streamed";
       }
 
       // Rank display: 1st gets star icon, 2nd and 3rd get number
-      var rankHtml = '';
+      var rankHtml = "";
       if (rank === 1) {
-        rankHtml = '<div class="mh-leader-rank">' +
+        rankHtml =
+          '<div class="mh-leader-rank">' +
           '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">' +
           '<path d="M12 2L9.19 8.63L2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/>' +
-          '</svg></div>';
+          "</svg></div>";
       } else {
-        rankHtml = '<div class="mh-leader-rank ' + rankLabelClasses[i] + '">' +
-          '<span>' + rank + '</span></div>';
+        rankHtml =
+          '<div class="mh-leader-rank ' +
+          rankLabelClasses[i] +
+          '">' +
+          "<span>" +
+          rank +
+          "</span></div>";
       }
 
       var avatarInnerHtml = hasPic
-        ? '<img src="' + data.profilePicture + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'
-        : '<span>' + (data.username || '?').charAt(0).toUpperCase() + '</span>';
-      var avatarStyle = hasPic ? 'background:transparent;overflow:hidden;' : 'background: ' + color + ';';
+        ? '<img src="' +
+          data.profilePicture +
+          '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'
+        : "<span>" + (data.username || "?").charAt(0).toUpperCase() + "</span>";
+      var avatarStyle = hasPic
+        ? "background:transparent;overflow:hidden;"
+        : "background: " + color + ";";
 
-      var entry = document.createElement('div');
-      entry.className = 'mh-leader ' + rankClasses[i];
+      var entry = document.createElement("div");
+      entry.className = "mh-leader " + rankClasses[i];
       entry.innerHTML =
         rankHtml +
-        '<div class="mh-leader-avatar" style="' + avatarStyle + '">' +
-        avatarInnerHtml + '</div>' +
+        '<div class="mh-leader-avatar" style="' +
+        avatarStyle +
+        '">' +
+        avatarInnerHtml +
+        "</div>" +
         '<div class="mh-leader-info">' +
-        '<div class="mh-leader-name">' + this._esc(data.username || 'Unknown') + '</div>' +
-        '<div class="mh-leader-score">' + scoreText + '</div></div>' +
-        '<div class="mh-leader-badge ' + badgeClasses[i] + '">' +
-        '<span>#' + rank + '</span></div>';
+        '<div class="mh-leader-name">' +
+        this._esc(data.username || "Unknown") +
+        "</div>" +
+        '<div class="mh-leader-score">' +
+        scoreText +
+        "</div></div>" +
+        '<div class="mh-leader-badge ' +
+        badgeClasses[i] +
+        '">' +
+        "<span>#" +
+        rank +
+        "</span></div>";
 
       list.appendChild(entry);
     }
@@ -449,10 +581,14 @@ var MembersRoom = {
       var p = this._participants[i];
       var track = p.data.currentTrack;
       if (track && track.nowPlaying && track.name) {
-        var key = track.name + '|' + track.artist;
+        var key = track.name + "|" + track.artist;
         if (!seen[key]) {
           seen[key] = true;
-          tracks.push({ title: track.name, artist: track.artist, albumArt: track.albumArt || null });
+          tracks.push({
+            title: track.name,
+            artist: track.artist,
+            albumArt: track.albumArt || null,
+          });
         }
       }
     }
@@ -460,19 +596,19 @@ var MembersRoom = {
     // If no one is playing anything, use fallback list
     if (tracks.length === 0) {
       tracks = [
-        { title: 'Pink Venom', artist: 'BLACKPINK', albumArt: null },
-        { title: 'APT.', artist: 'Rosé ft. Bruno Mars', albumArt: null },
-        { title: 'Shut Down', artist: 'BLACKPINK', albumArt: null },
-        { title: 'How You Like That', artist: 'BLACKPINK', albumArt: null },
-        { title: 'Lovesick Girls', artist: 'BLACKPINK', albumArt: null },
-        { title: 'DDU-DU DDU-DU', artist: 'BLACKPINK', albumArt: null },
-        { title: 'GO', artist: 'BLACKPINK', albumArt: null },
-        { title: 'BOOMBAYAH', artist: 'BLACKPINK', albumArt: null },
-        { title: 'SOLO', artist: 'JENNIE', albumArt: null },
-        { title: 'LALISA', artist: 'LISA', albumArt: null },
-        { title: 'On The Ground', artist: 'Rosé', albumArt: null },
-        { title: 'number one girl', artist: 'Rosé', albumArt: null },
-        { title: 'toxic till the end', artist: 'Rosé', albumArt: null }
+        { title: "Pink Venom", artist: "BLACKPINK", albumArt: null },
+        { title: "APT.", artist: "Rosé ft. Bruno Mars", albumArt: null },
+        { title: "Shut Down", artist: "BLACKPINK", albumArt: null },
+        { title: "How You Like That", artist: "BLACKPINK", albumArt: null },
+        { title: "Lovesick Girls", artist: "BLACKPINK", albumArt: null },
+        { title: "DDU-DU DDU-DU", artist: "BLACKPINK", albumArt: null },
+        { title: "GO", artist: "BLACKPINK", albumArt: null },
+        { title: "BOOMBAYAH", artist: "BLACKPINK", albumArt: null },
+        { title: "SOLO", artist: "JENNIE", albumArt: null },
+        { title: "LALISA", artist: "LISA", albumArt: null },
+        { title: "On The Ground", artist: "Rosé", albumArt: null },
+        { title: "number one girl", artist: "Rosé", albumArt: null },
+        { title: "toxic till the end", artist: "Rosé", albumArt: null },
       ];
     }
 
@@ -487,20 +623,20 @@ var MembersRoom = {
 
   _showTrack: function (track) {
     if (!track) return;
-    var titleEl = document.getElementById('nowPlayingTitle');
-    var artistEl = document.getElementById('nowPlayingArtist');
+    var titleEl = document.getElementById("nowPlayingTitle");
+    var artistEl = document.getElementById("nowPlayingArtist");
     if (titleEl) titleEl.textContent = track.title;
     if (artistEl) artistEl.textContent = track.artist;
 
     // Update vinyl label with album art if available
-    var vinylLabel = document.querySelector('.mh-vinyl-label-inner');
+    var vinylLabel = document.querySelector(".mh-vinyl-label-inner");
     if (vinylLabel) {
       if (track.albumArt) {
-        vinylLabel.style.backgroundImage = 'url(' + track.albumArt + ')';
-        vinylLabel.style.backgroundSize = 'cover';
-        vinylLabel.style.backgroundPosition = 'center';
+        vinylLabel.style.backgroundImage = "url(" + track.albumArt + ")";
+        vinylLabel.style.backgroundSize = "cover";
+        vinylLabel.style.backgroundPosition = "center";
       } else {
-        vinylLabel.style.backgroundImage = '';
+        vinylLabel.style.backgroundImage = "";
       }
     }
   },
@@ -515,19 +651,20 @@ var MembersRoom = {
 
     this._currentTrackIdx = 0;
     this._songRotationTimer = setInterval(function () {
-      self._currentTrackIdx = (self._currentTrackIdx + 1) % self._nowPlayingTracks.length;
-      var titleEl = document.getElementById('nowPlayingTitle');
-      var artistEl = document.getElementById('nowPlayingArtist');
+      self._currentTrackIdx =
+        (self._currentTrackIdx + 1) % self._nowPlayingTracks.length;
+      var titleEl = document.getElementById("nowPlayingTitle");
+      var artistEl = document.getElementById("nowPlayingArtist");
       if (!titleEl || !artistEl) return;
 
       // Fade out
-      titleEl.style.opacity = '0';
-      artistEl.style.opacity = '0';
+      titleEl.style.opacity = "0";
+      artistEl.style.opacity = "0";
 
       setTimeout(function () {
         self._showTrack(self._nowPlayingTracks[self._currentTrackIdx]);
-        titleEl.style.opacity = '1';
-        artistEl.style.opacity = '1';
+        titleEl.style.opacity = "1";
+        artistEl.style.opacity = "1";
       }, 400);
     }, 8000);
   },
@@ -539,24 +676,28 @@ var MembersRoom = {
 
     // If room has a currentMostPlayed track, it shows as the "featured" track
     if (room.currentMostPlayed && room.currentMostPlayed.track) {
-      var titleEl = document.getElementById('nowPlayingTitle');
-      var artistEl = document.getElementById('nowPlayingArtist');
+      var titleEl = document.getElementById("nowPlayingTitle");
+      var artistEl = document.getElementById("nowPlayingArtist");
       if (titleEl && artistEl) {
         // Only override if no live participants are playing
         var hasLiveTracks = false;
         for (var i = 0; i < this._participants.length; i++) {
           var t = this._participants[i].data.currentTrack;
-          if (t && t.nowPlaying) { hasLiveTracks = true; break; }
+          if (t && t.nowPlaying) {
+            hasLiveTracks = true;
+            break;
+          }
         }
         if (!hasLiveTracks) {
           titleEl.textContent = room.currentMostPlayed.track;
-          artistEl.textContent = room.currentMostPlayed.artist || '';
+          artistEl.textContent = room.currentMostPlayed.artist || "";
 
-          var vinylLabel = document.querySelector('.mh-vinyl-label-inner');
+          var vinylLabel = document.querySelector(".mh-vinyl-label-inner");
           if (vinylLabel && room.currentMostPlayed.albumArt) {
-            vinylLabel.style.backgroundImage = 'url(' + room.currentMostPlayed.albumArt + ')';
-            vinylLabel.style.backgroundSize = 'cover';
-            vinylLabel.style.backgroundPosition = 'center';
+            vinylLabel.style.backgroundImage =
+              "url(" + room.currentMostPlayed.albumArt + ")";
+            vinylLabel.style.backgroundSize = "cover";
+            vinylLabel.style.backgroundPosition = "center";
           }
         }
       }
@@ -565,14 +706,14 @@ var MembersRoom = {
 
   // ---- Helpers ----
   _esc: function (str) {
-    var div = document.createElement('div');
+    var div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
   },
 
   _formatNumber: function (n) {
     if (n >= 1000) {
-      return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
     }
     return n.toLocaleString();
   },
@@ -588,17 +729,17 @@ var MembersRoom = {
     function update() {
       var now = Date.now();
       var remaining = lockedUntil - now;
-      var btn = document.getElementById('joinStreamBtn');
+      var btn = document.getElementById("joinStreamBtn");
       if (!btn) return;
 
       if (remaining <= 0) {
         // Room has opened — this will be caught by the next Convex update,
         // but clean up proactively
         self._stopJoinCountdown();
-        btn.classList.remove('mh-room-join-btn--locked');
+        btn.classList.remove("mh-room-join-btn--locked");
         btn.innerHTML =
           '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>' +
-          'Join Party';
+          "Join Party";
         return;
       }
 
@@ -609,20 +750,22 @@ var MembersRoom = {
       var secs = totalSec % 60;
 
       var parts = [];
-      if (days > 0) parts.push(days + 'd');
-      if (hours > 0) parts.push(hours + 'h');
-      parts.push(mins + 'm');
-      parts.push((secs < 10 ? '0' : '') + secs + 's');
+      if (days > 0) parts.push(days + "d");
+      if (hours > 0) parts.push(hours + "h");
+      parts.push(mins + "m");
+      parts.push((secs < 10 ? "0" : "") + secs + "s");
 
       btn.innerHTML =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-          '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>' +
-          '<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>' +
-        '</svg>' +
+        '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>' +
+        '<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>' +
+        "</svg>" +
         '<span class="mh-room-join-countdown">' +
-          '<span class="mh-room-join-countdown-label">Opens in</span>' +
-          '<span class="mh-room-join-countdown-time">' + parts.join(' ') + '</span>' +
-        '</span>';
+        '<span class="mh-room-join-countdown-label">Opens in</span>' +
+        '<span class="mh-room-join-countdown-time">' +
+        parts.join(" ") +
+        "</span>" +
+        "</span>";
     }
 
     update();
@@ -648,57 +791,67 @@ var MembersRoom = {
     }
     ROOM.Presence.destroy();
     for (var i = 0; i < this._unsubs.length; i++) {
-      if (typeof this._unsubs[i] === 'function') this._unsubs[i]();
+      if (typeof this._unsubs[i] === "function") this._unsubs[i]();
     }
     this._unsubs = [];
     if (this._songRotationTimer) clearInterval(this._songRotationTimer);
   },
 
   _renderExtraRooms: function (rooms) {
-    var roomsContainer = document.querySelector('.mh-rooms');
+    var roomsContainer = document.querySelector(".mh-rooms");
     if (!roomsContainer) return;
 
     for (var i = 0; i < rooms.length; i++) {
       var room = rooms[i];
-      var card = document.createElement('div');
-      card.className = 'mh-room-extra';
+      var card = document.createElement("div");
+      card.className = "mh-room-extra";
       card.innerHTML =
         '<div class="mh-room-extra-content">' +
-          '<div class="mh-room-extra-left">' +
-            '<div class="mh-room-extra-badge">' +
-              (room.restricted ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><polygon points="5,3 19,12 5,21"/></svg>') +
-            '</div>' +
-            '<div class="mh-room-extra-info">' +
-              '<div class="mh-room-extra-name">' + this._esc(room.name) + '</div>' +
-              '<div class="mh-room-extra-type">' +
-                (room.restricted ? 'Private Room' : room.type) +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<button class="mh-room-extra-join">Join</button>' +
-        '</div>';
+        '<div class="mh-room-extra-left">' +
+        '<div class="mh-room-extra-badge">' +
+        (room.restricted
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><polygon points="5,3 19,12 5,21"/></svg>') +
+        "</div>" +
+        '<div class="mh-room-extra-info">' +
+        '<div class="mh-room-extra-name">' +
+        this._esc(room.name) +
+        "</div>" +
+        '<div class="mh-room-extra-type">' +
+        (room.restricted ? "Private Room" : room.type) +
+        "</div>" +
+        "</div>" +
+        "</div>" +
+        '<button class="mh-room-extra-join">Join</button>' +
+        "</div>";
 
       var roomId = room.roomId;
-      card.querySelector('.mh-room-extra-join').addEventListener('click', (function (id) {
-        return function () {
-          window.location.href = 'room.html?id=' + id;
-        };
-      })(roomId));
+      card.querySelector(".mh-room-extra-join").addEventListener(
+        "click",
+        (function (id) {
+          return function () {
+            window.location.href = "room.html?id=" + id;
+          };
+        })(roomId),
+      );
 
-      card.addEventListener('click', (function (id) {
-        return function (e) {
-          if (e.target.closest('.mh-room-extra-join')) return;
-          window.location.href = 'room.html?id=' + id;
-        };
-      })(roomId));
+      card.addEventListener(
+        "click",
+        (function (id) {
+          return function (e) {
+            if (e.target.closest(".mh-room-extra-join")) return;
+            window.location.href = "room.html?id=" + id;
+          };
+        })(roomId),
+      );
 
       roomsContainer.appendChild(card);
     }
   },
 
   _esc: function (str) {
-    var div = document.createElement('div');
+    var div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
-  }
+  },
 };

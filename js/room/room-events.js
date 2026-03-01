@@ -138,7 +138,8 @@ ROOM.Events = {
         'dj_event_start', 'dj_new_dj', 'dj_song_chosen',
         'dj_listener_join', 'dj_vote', 'dj_skip',
         'dj_round_end', 'dj_event_end',
-        'member_popup_show', 'member_popup_dialog', 'member_popup_hide'
+        'member_popup_show', 'member_popup_dialog', 'member_popup_hide',
+        'victory_screen'
       ];
       if (allowedTypes.indexOf(eventData.type) === -1) {
         return;
@@ -265,6 +266,22 @@ ROOM.Events = {
         break;
       case 'member_popup_hide':
         ROOM.MemberPopup && ROOM.MemberPopup.handleHide();
+        break;
+      case 'victory_screen':
+        // Victory UI should run on members page.
+        // If this event arrives while user is on room page, hand off payload
+        // and redirect so the animation runs there.
+        if (document.body && document.body.classList && document.body.classList.contains('members-home')) {
+          ROOM.Victory && ROOM.Victory.show(eventData.data);
+        } else {
+          try {
+            sessionStorage.setItem('pending_victory_payload', JSON.stringify(eventData.data || {}));
+          } catch (e) { /* ignore storage quota errors */ }
+          if (!window.__victoryRedirecting) {
+            window.__victoryRedirecting = true;
+            window.location.href = 'members.html?victory=1';
+          }
+        }
         break;
     }
   },

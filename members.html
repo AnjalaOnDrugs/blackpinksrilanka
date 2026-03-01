@@ -206,8 +206,16 @@
     <!-- Presence (Firebase RTDB) -->
     <script src="js/room/room-presence.js"></script>
 
+    <!-- Realtime Room Specific UI hooks for victory screen to play -->
+    <div id="eventOverlay" style="position:fixed;inset:0;pointer-events:none;z-index:9999;"></div>
+
     <!-- Members Home Logic -->
     <script src="js/members-home.js"></script>
+
+    <!-- Room Animations & Victory Screen support so members see it too -->
+    <link rel="stylesheet" href="css/room.css">
+    <script src="js/room/room-animations.js"></script>
+    <script src="js/room/room-victory.js"></script>
 
 </body>
 

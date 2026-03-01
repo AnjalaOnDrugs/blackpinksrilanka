@@ -1,9 +1,6 @@
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { ALWAYS_ALLOWED_PHONES, assertAdminAccess } from "./adminAuth";
-
-// Users who can always enter locked rooms (admins)
-const ALWAYS_ALLOWED = ALWAYS_ALLOWED_PHONES;
+import { assertAdminAccess } from "./adminAuth";
 
 // Set a room lock until a specific timestamp
 export const setRoomLock = mutation({
@@ -33,18 +30,43 @@ export const setRoomLock = mutation({
 
         if (args.lockedUntil && args.lockedUntil > Date.now()) {
             const now = Date.now();
-            const allowed = args.allowedUsers || [];
 
-            // Kick unauthorized users
+            // Capture a standings snapshot before kicking everyone so the
+            // victory screen can still be shown after the room is locked.
             const participants = await ctx.db
                 .query("participants")
                 .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
                 .collect();
 
+            const standings = participants
+                .map((p) => ({
+                    phoneNumber: p.phoneNumber,
+                    username: p.username,
+                    totalPoints: p.totalPoints ?? 0,
+                    totalMinutes: p.totalMinutes ?? 0,
+                    avatarColor: p.avatarColor,
+                }))
+                .sort(
+                    (a, b) =>
+                        (b.totalPoints ?? 0) - (a.totalPoints ?? 0) ||
+                        (b.totalMinutes ?? 0) - (a.totalMinutes ?? 0)
+                );
+
+            if (standings.length > 0) {
+                await ctx.db.insert("events", {
+                    roomId: args.roomId,
+                    type: "room_lock_snapshot",
+                    data: {
+                        standings,
+                        capturedAt: now,
+                    },
+                    createdAt: now,
+                });
+            }
+
+            // Kick all users currently in the room.
             for (const participant of participants) {
-                if (!allowed.includes(participant.phoneNumber) && !ALWAYS_ALLOWED.includes(participant.phoneNumber)) {
-                    await ctx.db.delete(participant._id);
-                }
+                await ctx.db.delete(participant._id);
             }
 
             // End active events
@@ -71,7 +93,11 @@ export const setRoomLock = mutation({
                 },
                 createdAt: now,
             });
+
+            return { locked: true, kickedCount: participants.length };
         }
+
+        return { locked: false, kickedCount: 0 };
     },
 });
 
@@ -181,6 +207,112 @@ export const sendAdminMessage = mutation({
             },
             createdAt: Date.now(),
         });
+    },
+});
+
+// Trigger the victory screen for all users in the room
+export const triggerVictoryScreen = mutation({
+    args: {
+        roomId: v.string(),
+        actorPhone: v.string(),
+        adminKey: v.string(),
+    },
+    handler: async (ctx, args) => {
+        assertAdminAccess(args);
+
+        const now = Date.now();
+
+        const participants = await ctx.db
+            .query("participants")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .collect();
+
+        type Standing = {
+            phoneNumber: string;
+            username: string;
+            totalPoints: number;
+            totalMinutes: number;
+            avatarColor?: string;
+        };
+
+        let standings: Standing[] = participants.map((p) => ({
+            phoneNumber: p.phoneNumber,
+            username: p.username,
+            totalPoints: p.totalPoints ?? 0,
+            totalMinutes: p.totalMinutes ?? 0,
+            avatarColor: p.avatarColor,
+        }));
+
+        // If everyone was already kicked (e.g., room was locked first),
+        // fall back to the latest pre-lock standings snapshot.
+        if (standings.length === 0) {
+            const snapshotEvent = await ctx.db
+                .query("events")
+                .withIndex("by_room_type", (q) =>
+                    q.eq("roomId", args.roomId).eq("type", "room_lock_snapshot")
+                )
+                .order("desc")
+                .first();
+
+            if (snapshotEvent && Array.isArray(snapshotEvent.data?.standings)) {
+                standings = snapshotEvent.data.standings.map((p: any) => ({
+                    phoneNumber: String(p?.phoneNumber || ""),
+                    username: String(p?.username || "BLINK"),
+                    totalPoints: Number(p?.totalPoints || 0),
+                    totalMinutes: Number(p?.totalMinutes || 0),
+                    avatarColor: p?.avatarColor ? String(p.avatarColor) : undefined,
+                })).filter((p: Standing) => !!p.phoneNumber);
+            }
+        }
+
+        standings.sort(
+            (a, b) =>
+                (b.totalPoints ?? 0) - (a.totalPoints ?? 0) ||
+                (b.totalMinutes ?? 0) - (a.totalMinutes ?? 0)
+        );
+
+        const top10 = standings.slice(0, 10).map((p, i) => ({
+            rank: i + 1,
+            username: p.username,
+            totalPoints: p.totalPoints ?? 0,
+            totalMinutes: p.totalMinutes ?? 0,
+            avatarColor: p.avatarColor,
+            phoneNumber: p.phoneNumber,
+        }));
+
+        if (top10.length === 0) {
+            // Provide fallback dummy data so the admin can always preview the screen!
+            top10.push(
+                { rank: 1, username: "ROSÉ", totalPoints: 50000, totalMinutes: 120, phoneNumber: "0001" },
+                { rank: 2, username: "JENNIE", totalPoints: 45000, totalMinutes: 110, phoneNumber: "0002" },
+                { rank: 3, username: "LISA", totalPoints: 40000, totalMinutes: 100, phoneNumber: "0003" },
+                { rank: 4, username: "JISOO", totalPoints: 35000, totalMinutes: 90, phoneNumber: "0004" }
+            );
+            standings.push(...top10);
+        }
+
+        const placementByPhone: Record<string, number> = {};
+        for (let i = 0; i < standings.length; i++) {
+            placementByPhone[standings[i].phoneNumber] = i + 1;
+        }
+
+        await ctx.db.insert("events", {
+            roomId: args.roomId,
+            type: "victory_screen",
+            data: {
+                top10,
+                totalParticipants: standings.length,
+                placementByPhone,
+                triggeredAt: now,
+            },
+            createdAt: now,
+        });
+
+        return {
+            success: true,
+            participantCount: top10.length,
+            totalParticipants: standings.length,
+        };
     },
 });
 
