@@ -12,6 +12,7 @@ ROOM.LastFM = {
   apiKey: null,
   // Client-side caches to skip redundant Convex mutations
   _lastTrackKey: null,
+  _lastSongKey: null, // Song-only key (name|artist) for session_start dedup
   // Map of coreSong → { usernames: [...], count, track, artist }
   // Tracks ALL active twinning groups for persistent mini cards
   _activeTwins: {},
@@ -316,19 +317,33 @@ ROOM.LastFM = {
 
   /** Internal: apply filtered track data with change detection + Convex update */
   _applyTrackUpdate: function (phoneNumber, trackData) {
-    var newKey = trackData
-      ? trackData.name + '|' + trackData.artist + '|' + trackData.nowPlaying
+    // Dedup key uses only song identity (name + artist), NOT nowPlaying state.
+    // Including nowPlaying caused the same song to fire duplicate events when
+    // Last.fm polling caught brief pause/resume transitions.
+    var songKey = trackData
+      ? trackData.name + '|' + trackData.artist
       : null;
+    var isNowPlaying = trackData && trackData.nowPlaying;
 
-    if (newKey === this._lastTrackKey) return;
-    this._lastTrackKey = newKey;
+    // Track the full state (song + playing status) for Convex updates,
+    // but use song-only key for session_start dedup
+    var fullKey = songKey ? songKey + '|' + isNowPlaying : null;
+
+    // Skip if nothing changed at all
+    if (fullKey === this._lastTrackKey) return;
+    this._lastTrackKey = fullKey;
+
+    // Only fire session_start if the SONG itself changed (not just nowPlaying toggle)
+    var songChanged = songKey !== this._lastSongKey;
+    if (songKey) this._lastSongKey = songKey;
 
     var self = this;
     var isCurrentUser = ROOM.currentUser && phoneNumber === ROOM.currentUser.phoneNumber;
 
     return ROOM.Firebase.updateParticipantTrack(phoneNumber, trackData)
       .then(function (result) {
-        if (result && result.wasIdle && trackData && trackData.nowPlaying) {
+        // Only fire session_start when the song actually changed AND user was idle
+        if (result && result.wasIdle && isNowPlaying && songChanged) {
           ROOM.Firebase.fireEvent('session_start', {
             username: ROOM.currentUser.username,
             track: trackData.name,
@@ -338,11 +353,13 @@ ROOM.LastFM = {
 
         // Stream counting: only for current user
         if (isCurrentUser) {
-          if (trackData && trackData.nowPlaying) {
+          if (isNowPlaying) {
             // Start or continue a listening session
             self._startStreamSession(trackData);
-          } else {
-            // Stopped playing or went idle — end session
+          } else if (!songKey) {
+            // Only stop session when track is fully null (user truly stopped).
+            // Don't stop on nowPlaying=false with a song still present —
+            // that's just a transient pause from Last.fm polling.
             self._stopStreamSession();
           }
         }

@@ -235,7 +235,13 @@ export const updateTrack = mutation({
       }
     }
 
-    const wasIdle = !prevTrack || !prevTrack.nowPlaying;
+    // wasIdle = true only when there was no previous track at all, OR
+    // the previous track was a DIFFERENT song that wasn't playing.
+    // Same song toggling nowPlaying (brief pause) should NOT count as idle.
+    const sameSong = prevTrack &&
+      prevTrack.name === args.trackData.name &&
+      prevTrack.artist === args.trackData.artist;
+    const wasIdle = !prevTrack || (!prevTrack.nowPlaying && !sameSong);
 
     return { changed: trackChanged, wasIdle };
   },
