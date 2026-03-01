@@ -16,6 +16,7 @@ import type * as events from "../events.js";
 import type * as fillTheMap from "../fillTheMap.js";
 import type * as gifMessages from "../gifMessages.js";
 import type * as listenAlong from "../listenAlong.js";
+import type * as memberPopup from "../memberPopup.js";
 import type * as messages from "../messages.js";
 import type * as participants from "../participants.js";
 import type * as redGreen from "../redGreen.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   fillTheMap: typeof fillTheMap;
   gifMessages: typeof gifMessages;
   listenAlong: typeof listenAlong;
+  memberPopup: typeof memberPopup;
   messages: typeof messages;
   participants: typeof participants;
   redGreen: typeof redGreen;

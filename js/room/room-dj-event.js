@@ -26,10 +26,13 @@ ROOM.DjEvent = {
   _swipeStartX: null,
   _swipeStartY: null,
   _listenersByPhone: {},
+  _votesByPhone: {},
   _voteUp: 0,
   _voteDown: 0,
   _onlinePool: [],
   _djHistory: [],
+  _djRoundNumber: 1,
+  _songsPerDj: 2,
 
   init: function () {
     // No periodic trigger — DJ event is admin-started
@@ -41,13 +44,20 @@ ROOM.DjEvent = {
     this._activeEventId = data.djEventId;
     this._onlinePool = data.onlinePool || [];
     this._djHistory = [data.djPhoneNumber];
+    this._djRoundNumber = data.roundNumber || 1;
+    this._songsPerDj = data.songsPerDj || 2;
     this._setCurrentDj(data);
     this._showEventCard();
   },
 
   handleNewDj: function (data) {
     if (!this._activeEventId) return;
-    this._djHistory.push(data.djPhoneNumber);
+    this._djRoundNumber = data.roundNumber || 1;
+    this._songsPerDj = data.songsPerDj || 2;
+    // Only push to history if this is a genuinely new DJ (round 1)
+    if (this._djRoundNumber === 1) {
+      this._djHistory.push(data.djPhoneNumber);
+    }
     this._setCurrentDj(data);
     this._resetRound();
     this._updateCardForNewDj();
@@ -89,6 +99,7 @@ ROOM.DjEvent = {
     if (!this._activeEventId) return;
     this._voteUp = data.totalUp || 0;
     this._voteDown = data.totalDown || 0;
+    this._votesByPhone[data.voterPhoneNumber] = data.vote;
     this._updateVoteDisplay();
 
     if (ROOM.currentUser && data.voterPhoneNumber === ROOM.currentUser.phoneNumber) {
@@ -96,12 +107,16 @@ ROOM.DjEvent = {
       this._disableVoteButtons();
     }
 
-    if (data.vote === 'up' && this._cardEl) {
+    // Re-render to show persistent vote badge
+    this._renderParticipantsList();
+
+    // Animated pop on the voter's avatar
+    if (this._cardEl) {
       var listenerAvatar = this._cardEl.querySelector('.room-dj-listener[data-phone="' + data.voterPhoneNumber + '"] .room-dj-listener-avatar');
       if (listenerAvatar) {
         var thumb = document.createElement('div');
         thumb.className = 'room-dj-thumb-anim';
-        thumb.textContent = '👍';
+        thumb.textContent = data.vote === 'up' ? '👍' : '👎';
         listenerAvatar.appendChild(thumb);
         setTimeout(function () {
           if (thumb.parentNode) thumb.parentNode.removeChild(thumb);
@@ -132,6 +147,7 @@ ROOM.DjEvent = {
 
   handleEnd: function (data) {
     this._stopAllTimers();
+    this._clearThumbAnims();
     this._removeEventCard();
     this._activeEventId = null;
     this._currentDj = null;
@@ -152,6 +168,8 @@ ROOM.DjEvent = {
     this._activeEventId = event._id;
     this._onlinePool = event.onlinePool || [];
     this._djHistory = event.djHistory || [];
+    this._djRoundNumber = (event.currentDj && event.currentDj.roundNumber) || 1;
+    this._songsPerDj = 2;
     this._listenersByPhone = {};
     this._voteUp = 0;
     this._voteDown = 0;
@@ -184,6 +202,9 @@ ROOM.DjEvent = {
       if (event.votes) {
         this._voteUp = event.votes.filter(function (v) { return v.vote === 'up'; }).length;
         this._voteDown = event.votes.filter(function (v) { return v.vote === 'down'; }).length;
+        for (var j = 0; j < event.votes.length; j++) {
+          this._votesByPhone[event.votes[j].phoneNumber] = event.votes[j].vote;
+        }
         // Check if current user already voted
         if (ROOM.currentUser) {
           this._hasVoted = event.votes.some(function (v) {
@@ -236,11 +257,13 @@ ROOM.DjEvent = {
     this._hasVoted = false;
     this._hasListened = false;
     this._listenersByPhone = {};
+    this._votesByPhone = {};
     this._voteUp = 0;
     this._voteDown = 0;
     this._stopRoundTimer();
     this._stopListenCheck();
     this._stopSongDetection();
+    this._clearThumbAnims();
   },
 
   // ========== SONG DETECTION (DJ's client) ==========
@@ -548,6 +571,9 @@ ROOM.DjEvent = {
       '<div class="room-dj-role" id="djRole">' +
       (isDj ? '🎤 You are the DJ!' : '🎧 ' + djName + ' is the DJ') +
       '</div>' +
+      '<div class="room-dj-round-badge" id="djRoundBadge">Song ' +
+      this._djRoundNumber + '/' + this._songsPerDj +
+      '</div>' +
       '<div class="room-dj-deck" aria-hidden="true">' +
       '<span class="room-dj-platter"></span>' +
       '<span class="room-dj-mixer"></span>' +
@@ -577,7 +603,9 @@ ROOM.DjEvent = {
       '<div class="room-dj-listeners" id="djListeners"></div>' +
       '</div>';
 
-    document.body.appendChild(card);
+    var overlay = document.getElementById('eventOverlay');
+    if (!overlay) return;
+    overlay.appendChild(card);
     this._cardEl = card;
     this._setPlayingVisualState(!!this._song);
 
@@ -663,6 +691,10 @@ ROOM.DjEvent = {
         ? '&#127908; You are the DJ!'
         : '&#127911; ' + djName + ' is the DJ';
     }
+
+    // Update round badge
+    var roundBadgeEl = this._cardEl.querySelector('#djRoundBadge');
+    if (roundBadgeEl) roundBadgeEl.textContent = 'Song ' + this._djRoundNumber + '/' + this._songsPerDj;
 
     // Update progress
     var progressEl = this._cardEl.querySelector('#djProgressLabel');
@@ -832,8 +864,8 @@ ROOM.DjEvent = {
     var listenerCount = Object.keys(this._listenersByPhone).length;
     var intensityClass = listenerCount >= 6 ? 'room-dj-crowd--fire'
       : listenerCount >= 3 ? 'room-dj-crowd--hype'
-      : listenerCount >= 1 ? 'room-dj-crowd--vibing'
-      : '';
+        : listenerCount >= 1 ? 'room-dj-crowd--vibing'
+          : '';
 
     // Update crowd intensity on the card
     if (this._cardEl) {
@@ -857,22 +889,33 @@ ROOM.DjEvent = {
     for (var i = 0; i < participants.length; i++) {
       var p = participants[i];
       var isListening = !!this._listenersByPhone[p.id];
+      var vote = this._votesByPhone[p.id] || null;
 
       var pic = ROOM.profilePicMap ? ROOM.profilePicMap[p.id] : null;
       var av = ROOM.avatarInner({ profilePicture: pic, username: p.data.username });
       var color = p.data.avatarColor || 'linear-gradient(135deg, #f7a6b9, #e8758a)';
 
       var entry = document.createElement('div');
-      entry.className = 'room-dj-listener' + (isListening ? ' room-dj-listener--listening' : '');
+      entry.className = 'room-dj-listener' +
+        (isListening ? ' room-dj-listener--listening' : '') +
+        (vote === 'up' ? ' room-dj-listener--voted-up' : '') +
+        (vote === 'down' ? ' room-dj-listener--voted-down' : '');
       entry.setAttribute('data-phone', p.id);
+
+      var voteBadgeHtml = '';
+      if (vote === 'up') {
+        voteBadgeHtml = '<div class="room-dj-vote-badge room-dj-vote-badge--up">👍</div>';
+      } else if (vote === 'down') {
+        voteBadgeHtml = '<div class="room-dj-vote-badge room-dj-vote-badge--down">👎</div>';
+      }
 
       entry.innerHTML =
         '<div class="room-dj-listener-avatar" style="' +
-        (av.hasImage ? 'background:transparent;overflow:hidden;' : 'background:' + color + ';') + '">' +
+        (av.hasImage ? 'background:transparent;' : 'background:' + color + ';') + '">' +
         av.html +
         (isListening ? '<div class="room-dj-listener-pulse"></div>' : '') +
-        '</div>' +
-        '<span class="room-dj-listener-name">' + this._esc(p.data.username) + '</span>';
+        voteBadgeHtml +
+        '</div>';
 
       container.appendChild(entry);
     }
@@ -929,7 +972,9 @@ ROOM.DjEvent = {
 
     this._attachSwipeListeners(capsule);
 
-    document.body.appendChild(capsule);
+    var overlay = document.getElementById('eventOverlay');
+    if (!overlay) return;
+    overlay.appendChild(capsule);
     this._compactEl = capsule;
 
     if (this._capsuleSide === 'left') {
@@ -1040,6 +1085,14 @@ ROOM.DjEvent = {
 
   // ========== UTILITIES ==========
 
+  _clearThumbAnims: function () {
+    if (!this._cardEl) return;
+    var thumbs = this._cardEl.querySelectorAll('.room-dj-thumb-anim');
+    for (var i = 0; i < thumbs.length; i++) {
+      if (thumbs[i].parentNode) thumbs[i].parentNode.removeChild(thumbs[i]);
+    }
+  },
+
   _sendPushNotification: function (title, body, tag) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
@@ -1091,6 +1144,64 @@ ROOM.DjEvent = {
     var div = document.createElement('div');
     div.textContent = text || '';
     return div.innerHTML;
+  },
+
+  _checkSoloMemberSong: function () {
+    if (!this._song || !this._currentDj) return;
+
+    if (document.querySelector('.room-dj-solo-popup')) return;
+
+    var artist = (this._song.artist || '').toUpperCase();
+    var songName = (this._song.name || '').toUpperCase();
+    var djName = this._esc(this._currentDj.username);
+
+    var soloMembers = [
+      { key: 'LISA', name: 'Lisa', img: 'assets/bps/lisa.png' },
+      { key: 'JENNIE', name: 'Jennie', img: 'assets/bps/jennie.png' },
+      { key: 'ROSÉ', name: 'Rosé', img: 'assets/bps/rose.png' },
+      { key: 'ROSE', name: 'Rosé', img: 'assets/bps/rose.png' },
+      { key: 'JISOO', name: 'Jisoo', img: 'assets/bps/kim.png' },
+      { key: 'ROSIE', name: 'Rosé', img: 'assets/bps/rose.png' }
+    ];
+
+    var matched = null;
+    for (var i = 0; i < soloMembers.length; i++) {
+      var m = soloMembers[i];
+      if (artist.indexOf(m.key) !== -1 || songName.indexOf(m.key) !== -1) {
+        matched = m;
+        break;
+      }
+    }
+
+    if (matched) {
+      this._showSoloMemberPopup(matched, djName);
+    }
+  },
+
+  _showSoloMemberPopup: function (member, djName) {
+    var popup = document.createElement('div');
+    popup.className = 'room-dj-solo-popup';
+
+    var bubble = document.createElement('div');
+    bubble.className = 'room-dj-solo-bubble';
+    bubble.innerHTML = djName + " that's a good choice! 💖";
+
+    var img = document.createElement('img');
+    img.src = member.img;
+    img.className = 'room-dj-solo-img';
+    img.alt = member.name;
+
+    popup.appendChild(img);
+    popup.appendChild(bubble);
+
+    document.body.appendChild(popup);
+
+    setTimeout(function () {
+      popup.classList.add('room-dj-solo-popup--exit');
+      setTimeout(function () {
+        if (popup.parentNode) popup.parentNode.removeChild(popup);
+      }, 600);
+    }, 5000);
   },
 
   destroy: function () {

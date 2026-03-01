@@ -422,6 +422,7 @@ export default defineSchema({
         selectedAt: v.number(),
         songChosenAt: v.optional(v.number()),
         roundEndsAt: v.optional(v.number()),
+        roundNumber: v.optional(v.number()),
       })
     ),
     // Phone numbers of users who have already DJ'd

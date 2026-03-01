@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import { assertAdminAccess } from "./adminAuth";
 import { getPointMultiplier } from "./theHour";
 
+const SONGS_PER_DJ = 2;
+
 // Helper: pick a random DJ from the pool who hasn't DJ'd yet
 function pickNextDj(
   onlinePool: string[],
@@ -66,6 +68,7 @@ export const startDjEvent = mutation({
         avatarColor: djAvatarColor,
         profilePicture: djProfilePicture,
         selectedAt: now,
+        roundNumber: 1,
       },
       djHistory: [firstDjPhone],
       votes: [],
@@ -87,6 +90,8 @@ export const startDjEvent = mutation({
         djProfilePicture,
         selectedAt: now,
         onlinePool: args.onlinePhoneNumbers,
+        roundNumber: 1,
+        songsPerDj: SONGS_PER_DJ,
       },
       createdAt: now,
     });
@@ -318,7 +323,49 @@ export const endRound = mutation({
       createdAt: now,
     });
 
-    // Pick next DJ
+    // Check if current DJ has more songs to play
+    const currentRound = event.currentDj.roundNumber ?? 1;
+
+    if (currentRound < SONGS_PER_DJ) {
+      // Same DJ, next song — reset round state but keep the DJ
+      const nextRound = currentRound + 1;
+
+      await ctx.db.patch(args.djEventId, {
+        currentDj: {
+          ...event.currentDj,
+          song: undefined,
+          songChosenAt: undefined,
+          roundEndsAt: undefined,
+          selectedAt: now,
+          roundNumber: nextRound,
+        },
+        votes: [],
+        listeners: [],
+      });
+
+      // Broadcast as new round for the same DJ
+      await ctx.db.insert("events", {
+        roomId: args.roomId,
+        type: "dj_new_dj",
+        data: {
+          djEventId: args.djEventId,
+          djPhoneNumber: event.currentDj.phoneNumber,
+          djUsername: event.currentDj.username,
+          djAvatarColor: event.currentDj.avatarColor,
+          djProfilePicture: event.currentDj.profilePicture,
+          selectedAt: now,
+          remaining:
+            event.onlinePool.length - event.djHistory.length,
+          roundNumber: nextRound,
+          songsPerDj: SONGS_PER_DJ,
+        },
+        createdAt: now,
+      });
+
+      return { ended: false, nextDj: event.currentDj.username, roundSummary };
+    }
+
+    // DJ finished all songs — pick next DJ
     const nextDjPhone = pickNextDj(event.onlinePool, event.djHistory);
 
     if (!nextDjPhone) {
@@ -356,6 +403,7 @@ export const endRound = mutation({
         "linear-gradient(135deg, #f7a6b9, #e8758a)",
       profilePicture: nextParticipant?.profilePicture,
       selectedAt: now,
+      roundNumber: 1,
     };
 
     await ctx.db.patch(args.djEventId, {
@@ -378,6 +426,8 @@ export const endRound = mutation({
         selectedAt: now,
         remaining:
           event.onlinePool.length - event.djHistory.length - 1,
+        roundNumber: 1,
+        songsPerDj: SONGS_PER_DJ,
       },
       createdAt: now,
     });
@@ -449,6 +499,7 @@ export const skipDj = mutation({
         "linear-gradient(135deg, #f7a6b9, #e8758a)",
       profilePicture: nextParticipant?.profilePicture,
       selectedAt: now,
+      roundNumber: 1,
     };
 
     await ctx.db.patch(args.djEventId, {
@@ -470,6 +521,8 @@ export const skipDj = mutation({
         selectedAt: now,
         remaining:
           event.onlinePool.length - event.djHistory.length - 1,
+        roundNumber: 1,
+        songsPerDj: SONGS_PER_DJ,
       },
       createdAt: now,
     });

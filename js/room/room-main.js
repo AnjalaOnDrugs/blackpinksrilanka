@@ -165,6 +165,7 @@ async function initRoom(roomId) {
   ROOM.Vroom.init();
   ROOM.TheHour.init();
   ROOM.DjEvent.init();
+  ROOM.MemberPopup.init();
   ROOM.Atmosphere.init();
   ROOM.HeatMap.init(roomId);
 

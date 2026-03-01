@@ -9501,7 +9501,7 @@ body.room-the-hour-active .room-layout {
   transform: translate(-50%, -50%);
   z-index: 999999 !important;
   width: 380px;
-  animation: roomDjCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: roomDjCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: auto;
   opacity: 1;
@@ -9635,6 +9635,19 @@ body.room-the-hour-active .room-layout {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
   margin-top: 2px;
+}
+
+.room-dj-round-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(168, 85, 247, 1);
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 10px;
 }
 
 /* Song section */
@@ -9795,7 +9808,8 @@ body.room-the-hour-active .room-layout {
   padding: 0 20px 20px 20px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   margin-top: 10px;
 }
 
@@ -9826,11 +9840,11 @@ body.room-the-hour-active .room-layout {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.1);
   transition: all 0.4s ease;
 }
 
@@ -9838,18 +9852,10 @@ body.room-the-hour-active .room-layout {
 
 .room-dj-listener--listening {
   border-color: rgba(34, 197, 94, 0.7);
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
   box-shadow:
     0 0 12px rgba(34, 197, 94, 0.35),
-    0 0 24px rgba(34, 197, 94, 0.12),
-    inset 0 0 8px rgba(34, 197, 94, 0.08);
+    0 0 24px rgba(34, 197, 94, 0.15);
   animation: roomDjListenerGlow 1.5s ease-in-out infinite;
-}
-
-.room-dj-listener--listening .room-dj-listener-name {
-  color: #4ade80;
-  text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
-  font-weight: 600;
 }
 
 /* Pulsing ring around avatar when listening */
@@ -9878,6 +9884,50 @@ body.room-the-hour-active .room-layout {
   justify-content: center;
   z-index: 2;
   animation: roomDjNoteBounce 1s ease-in-out infinite;
+}
+
+/* ===== VOTE BADGES ON AVATARS ===== */
+
+.room-dj-vote-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 11px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.room-dj-vote-badge--up {
+  background: rgba(34, 197, 94, 0.3);
+  border: 1.5px solid rgba(34, 197, 94, 0.6);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.room-dj-vote-badge--down {
+  background: rgba(239, 68, 68, 0.3);
+  border: 1.5px solid rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.room-dj-listener--voted-up {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.room-dj-listener--voted-down {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Hide the music note ::after when a vote badge is shown (vote badge takes priority) */
+.room-dj-listener--voted-up .room-dj-listener-avatar::after,
+.room-dj-listener--voted-down .room-dj-listener-avatar::after {
+  display: none;
 }
 
 /* ===== JOIN FLASH EFFECT ===== */
@@ -9953,10 +10003,21 @@ body.room-the-hour-active .room-layout {
   animation: roomDjFogDrift 1.5s ease-in-out infinite !important;
 }
 
-.room-dj-crowd--hype .room-dj-light-beam--1 { animation-duration: 1.4s !important; }
-.room-dj-crowd--hype .room-dj-light-beam--2 { animation-duration: 1.1s !important; }
-.room-dj-crowd--hype .room-dj-light-beam--3 { animation-duration: 1.2s !important; }
-.room-dj-crowd--hype .room-dj-light-beam--4 { animation-duration: 1.5s !important; }
+.room-dj-crowd--hype .room-dj-light-beam--1 {
+  animation-duration: 1.4s !important;
+}
+
+.room-dj-crowd--hype .room-dj-light-beam--2 {
+  animation-duration: 1.1s !important;
+}
+
+.room-dj-crowd--hype .room-dj-light-beam--3 {
+  animation-duration: 1.2s !important;
+}
+
+.room-dj-crowd--hype .room-dj-light-beam--4 {
+  animation-duration: 1.5s !important;
+}
 
 /* Level 3: Fire (6+ listeners) — full club mode */
 .room-dj-crowd--fire {
@@ -9973,10 +10034,21 @@ body.room-the-hour-active .room-layout {
   animation: roomDjFogDrift 1s ease-in-out infinite !important;
 }
 
-.room-dj-crowd--fire .room-dj-light-beam--1 { animation-duration: 0.9s !important; }
-.room-dj-crowd--fire .room-dj-light-beam--2 { animation-duration: 0.7s !important; }
-.room-dj-crowd--fire .room-dj-light-beam--3 { animation-duration: 0.8s !important; }
-.room-dj-crowd--fire .room-dj-light-beam--4 { animation-duration: 1s !important; }
+.room-dj-crowd--fire .room-dj-light-beam--1 {
+  animation-duration: 0.9s !important;
+}
+
+.room-dj-crowd--fire .room-dj-light-beam--2 {
+  animation-duration: 0.7s !important;
+}
+
+.room-dj-crowd--fire .room-dj-light-beam--3 {
+  animation-duration: 0.8s !important;
+}
+
+.room-dj-crowd--fire .room-dj-light-beam--4 {
+  animation-duration: 1s !important;
+}
 
 .room-dj-crowd--fire .room-dj-glow {
   background: radial-gradient(ellipse at center, rgba(255, 45, 186, 0.3) 0%, rgba(168, 85, 247, 0.2) 30%, transparent 65%) !important;
@@ -10001,9 +10073,12 @@ body.room-the-hour-active .room-layout {
 /* ===== CROWD KEYFRAMES ===== */
 
 @keyframes roomDjListenerGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 12px rgba(34, 197, 94, 0.35), 0 0 24px rgba(34, 197, 94, 0.12);
   }
+
   50% {
     box-shadow: 0 0 16px rgba(34, 197, 94, 0.5), 0 0 32px rgba(34, 197, 94, 0.2);
   }
@@ -10014,6 +10089,7 @@ body.room-the-hour-active .room-layout {
     transform: scale(1);
     opacity: 0.8;
   }
+
   100% {
     transform: scale(1.6);
     opacity: 0;
@@ -10021,8 +10097,15 @@ body.room-the-hour-active .room-layout {
 }
 
 @keyframes roomDjNoteBounce {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-2px) scale(1.15); }
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-2px) scale(1.15);
+  }
 }
 
 @keyframes roomDjJoinPop {
@@ -10030,10 +10113,12 @@ body.room-the-hour-active .room-layout {
     transform: scale(0.5);
     opacity: 0;
   }
+
   60% {
     transform: scale(1.15);
     opacity: 1;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -10041,8 +10126,13 @@ body.room-the-hour-active .room-layout {
 }
 
 @keyframes roomDjFlash {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes roomDjFloaterRise {
@@ -10050,14 +10140,17 @@ body.room-the-hour-active .room-layout {
     opacity: 0;
     transform: translateX(-50%) translateY(10px) scale(0.8);
   }
+
   15% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }
+
   70% {
     opacity: 1;
     transform: translateX(-50%) translateY(-20px) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-40px) scale(0.9);
@@ -10065,31 +10158,49 @@ body.room-the-hour-active .room-layout {
 }
 
 @keyframes roomDjCardHype {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: brightness(1);
   }
+
   50% {
     filter: brightness(1.05);
   }
 }
 
 @keyframes roomDjCardFire {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: brightness(1) saturate(1);
   }
+
   50% {
     filter: brightness(1.1) saturate(1.15);
   }
 }
 
 @keyframes roomDjCeilingShift {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 @keyframes roomDjCountPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 .room-dj-thumb-anim {
@@ -10104,24 +10215,18 @@ body.room-the-hour-active .room-layout {
 }
 
 .room-dj-listener-avatar {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
   position: relative;
-}
-
-.room-dj-listener-name {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  white-space: nowrap;
-  transition: color 0.3s ease;
+  overflow: visible;
 }
 
 /* ===== DJ EVENT CAPSULE ===== */
@@ -10309,11 +10414,12 @@ body.room-the-hour-active .room-layout {
     transform: none !important;
     width: auto !important;
     max-width: none !important;
-    animation: roomDjFadeIn 0.5s ease forwards !important;
+    animation: roomDjFadeIn 0.5s ease !important;
   }
 
   .room-dj-card--minimized {
-    transform: scale(0.95) translateX(24px);
+    transform: scale(0.95) translateX(24px) !important;
+    opacity: 0 !important;
   }
 
   .room-dj-card--exit {
@@ -10639,6 +10745,7 @@ body.room-the-hour-active .room-layout {
 }
 
 @keyframes roomDjFogDrift {
+
   0%,
   100% {
     transform: translateX(0);
@@ -10683,5 +10790,188 @@ body.room-the-hour-active .room-layout {
 
   .room-dj-mixer {
     height: 52px;
+  }
+}
+
+/* ===== DJ EVENT SOLO MEMBER POPUP ===== */
+
+.room-dj-solo-popup {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 200;
+  pointer-events: none;
+  animation: roomDjSoloSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.room-dj-solo-popup--exit {
+  animation: roomDjSoloSlideOut 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
+.room-dj-solo-img {
+  width: 140px;
+  height: auto;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+  transform-origin: bottom center;
+  animation: roomDjSoloSway 4s ease-in-out infinite alternate;
+}
+
+.room-dj-solo-bubble {
+  background: #fff;
+  color: #000;
+  padding: 12px 18px;
+  border-radius: 20px 20px 20px 4px;
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 220px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  margin-bottom: 24px;
+  position: relative;
+  transform-origin: bottom left;
+  animation: roomDjSoloBubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.room-dj-solo-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: -8px;
+  border-width: 12px 12px 0 0;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+}
+
+@keyframes roomDjSoloSlideIn {
+  from {
+    transform: translateX(120%) translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes roomDjSoloSlideOut {
+  from {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(150%) translateY(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes roomDjSoloSway {
+  from {
+    transform: rotate(-3deg);
+  }
+
+  to {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes roomDjSoloBubblePop {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .room-dj-solo-popup {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    right: 10px;
+  }
+
+  .room-dj-solo-img {
+    width: 100px;
+  }
+
+  .room-dj-solo-bubble {
+    font-size: 13px;
+    padding: 10px 14px;
+    max-width: 180px;
+    margin-bottom: 20px;
+  }
+}
+
+/* ===== ADMIN-CONTROLLED MEMBER POPUP ===== */
+
+.room-member-popup {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 200;
+  pointer-events: none;
+  animation: roomDjSoloSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.room-member-popup--exit {
+  animation: roomDjSoloSlideOut 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
+.room-member-popup__img {
+  width: 140px;
+  height: auto;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+  transform-origin: bottom center;
+  animation: roomDjSoloSway 4s ease-in-out infinite alternate;
+}
+
+.room-member-popup__bubble {
+  background: #fff;
+  color: #000;
+  padding: 12px 18px;
+  border-radius: 20px 20px 20px 4px;
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 220px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  margin-bottom: 24px;
+  position: relative;
+  transform-origin: bottom left;
+  animation: roomDjSoloBubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.room-member-popup__bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: -8px;
+  border-width: 12px 12px 0 0;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+}
+
+@media (max-width: 768px) {
+  .room-member-popup {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    right: 10px;
+  }
+
+  .room-member-popup__img {
+    width: 100px;
+  }
+
+  .room-member-popup__bubble {
+    font-size: 13px;
+    padding: 10px 14px;
+    max-width: 180px;
+    margin-bottom: 20px;
   }
 }

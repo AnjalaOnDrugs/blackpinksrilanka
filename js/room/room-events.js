@@ -137,7 +137,8 @@ ROOM.Events = {
         'the_hour_start', 'the_hour_end', 'admin_message',
         'dj_event_start', 'dj_new_dj', 'dj_song_chosen',
         'dj_listener_join', 'dj_vote', 'dj_skip',
-        'dj_round_end', 'dj_event_end'
+        'dj_round_end', 'dj_event_end',
+        'member_popup_show', 'member_popup_dialog', 'member_popup_hide'
       ];
       if (allowedTypes.indexOf(eventData.type) === -1) {
         return;
@@ -255,6 +256,15 @@ ROOM.Events = {
         break;
       case 'dj_event_end':
         ROOM.DjEvent && ROOM.DjEvent.handleEnd(eventData.data);
+        break;
+      case 'member_popup_show':
+        ROOM.MemberPopup && ROOM.MemberPopup.handleShow(eventData.data);
+        break;
+      case 'member_popup_dialog':
+        ROOM.MemberPopup && ROOM.MemberPopup.handleDialog(eventData.data);
+        break;
+      case 'member_popup_hide':
+        ROOM.MemberPopup && ROOM.MemberPopup.handleHide();
         break;
     }
   },
