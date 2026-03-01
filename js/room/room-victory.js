@@ -41,9 +41,17 @@ ROOM.Victory = {
   },
 
   show: function (data) {
+    console.log("[Victory.show] Called!", "isMembersPage:", this._isMembersPage(), "data:", !!data, "top10:", data && data.top10 ? data.top10.length : 0);
     // Victory animation is intentionally shown on members page only.
-    if (!this._isMembersPage()) return;
-    if (!data || !data.top10 || !data.top10.length) return;
+    if (!this._isMembersPage()) {
+      console.log("[Victory.show] ABORTED - not on members page");
+      return;
+    }
+    if (!data || !data.top10 || !data.top10.length) {
+      console.log("[Victory.show] ABORTED - no data or empty top10");
+      return;
+    }
+    console.log("[Victory.show] Proceeding to build overlay...");
 
     // Prevent duplicate overlays
     if (this._overlay) this.dismiss({ silent: true });
@@ -193,8 +201,8 @@ ROOM.Victory = {
     var avatarBg = av.hasImage
       ? "background:transparent;overflow:hidden;"
       : "background:" +
-        (entry.avatarColor || "linear-gradient(135deg,#f7a6b9,#e8758a)") +
-        ";";
+      (entry.avatarColor || "linear-gradient(135deg,#f7a6b9,#e8758a)") +
+      ";";
 
     // Points
     var pts = this._formatPoints(entry.totalPoints);
@@ -257,8 +265,8 @@ ROOM.Victory = {
     var avatarBg = av.hasImage
       ? "background:transparent;overflow:hidden;"
       : "background:" +
-        (entry.avatarColor || "linear-gradient(135deg,#f7a6b9,#e8758a)") +
-        ";";
+      (entry.avatarColor || "linear-gradient(135deg,#f7a6b9,#e8758a)") +
+      ";";
 
     card.innerHTML =
       '<div class="room-victory-rest-rank">#' +
@@ -456,18 +464,18 @@ ROOM.Victory = {
       "</div>" +
       (rankText
         ? '<div class="room-victory-personal-rank">' +
-          this._esc(rankText) +
-          "</div>"
+        this._esc(rankText) +
+        "</div>"
         : "") +
       (pointsText
         ? '<div class="room-victory-personal-points">' +
-          this._esc(pointsText) +
-          "</div>"
+        this._esc(pointsText) +
+        "</div>"
         : "") +
       (timeText
         ? '<div class="room-victory-personal-time">' +
-          this._esc(timeText) +
-          "</div>"
+        this._esc(timeText) +
+        "</div>"
         : "");
 
     var closeBtn = document.createElement("button");
@@ -553,9 +561,11 @@ ROOM.Victory = {
 };
 
 // If members-home subscribed before this script loaded, play queued payload now.
+console.log("[Victory.init] room-victory.js loaded. __pendingVictoryPayload:", !!window.__pendingVictoryPayload, "ROOM.Victory.show:", !!(ROOM.Victory && ROOM.Victory.show));
 if (window.__pendingVictoryPayload && ROOM.Victory && ROOM.Victory.show) {
   (function (payload) {
     window.__pendingVictoryPayload = null;
+    console.log("[Victory.init] Playing queued victory payload");
     setTimeout(function () {
       ROOM.Victory.show(payload);
     }, 0);

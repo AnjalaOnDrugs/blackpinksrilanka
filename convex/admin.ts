@@ -282,13 +282,23 @@ export const triggerVictoryScreen = mutation({
 
         if (top10.length === 0) {
             // Provide fallback dummy data so the admin can always preview the screen!
-            top10.push(
-                { rank: 1, username: "ROSÉ", totalPoints: 50000, totalMinutes: 120, phoneNumber: "0001" },
-                { rank: 2, username: "JENNIE", totalPoints: 45000, totalMinutes: 110, phoneNumber: "0002" },
-                { rank: 3, username: "LISA", totalPoints: 40000, totalMinutes: 100, phoneNumber: "0003" },
-                { rank: 4, username: "JISOO", totalPoints: 35000, totalMinutes: 90, phoneNumber: "0004" }
-            );
-            standings.push(...top10);
+            const dummies: Standing[] = [
+                { username: "ROSÉ", totalPoints: 50000, totalMinutes: 120, phoneNumber: "0001", avatarColor: "" },
+                { username: "JENNIE", totalPoints: 45000, totalMinutes: 110, phoneNumber: "0002", avatarColor: "" },
+                { username: "LISA", totalPoints: 40000, totalMinutes: 100, phoneNumber: "0003", avatarColor: "" },
+                { username: "JISOO", totalPoints: 35000, totalMinutes: 90, phoneNumber: "0004", avatarColor: "" }
+            ];
+            dummies.forEach((p, i) => {
+                standings.push(p);
+                top10.push({
+                    rank: i + 1,
+                    username: p.username,
+                    totalPoints: p.totalPoints,
+                    totalMinutes: p.totalMinutes,
+                    phoneNumber: p.phoneNumber,
+                    avatarColor: p.avatarColor
+                });
+            });
         }
 
         const placementByPhone: Record<string, number> = {};

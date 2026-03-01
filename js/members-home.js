@@ -304,27 +304,49 @@ var MembersRoom = {
     var victoryLookbackMs = 15 * 60 * 1000; // Increased to 15m to absorb clock drift
     var lastShownVictoryId =
       sessionStorage.getItem("members_last_victory_event_id") || "";
+    console.log("[VictoryWatch] Starting watcher for roomId:", this._roomId, "lastShownVictoryId:", lastShownVictoryId);
+
+    // Clear the stored ID so we always show the victory screen on fresh page load
+    sessionStorage.removeItem("members_last_victory_event_id");
+    lastShownVictoryId = "";
+
     var unsub3 = ConvexService.watch(
       "events:listRecent",
       { roomId: this._roomId },
       function (events) {
-        if (!events) return;
+        if (!events) {
+          console.log("[VictoryWatch] Callback fired but events is null/undefined");
+          return;
+        }
+        console.log("[VictoryWatch] Callback fired, total events:", events.length, "types:", events.map(function (e) { return e.type; }).join(", "));
         var now = Date.now();
+        var victoryEvents = events.filter(function (e) { return e && e.type === "victory_screen"; });
+        console.log("[VictoryWatch] Found", victoryEvents.length, "victory_screen events");
+
         events.forEach(function (e) {
           if (!e || !e._id) return;
           if (e.type !== "victory_screen") return;
 
           var eventId = String(e._id);
-          if (eventId === lastShownVictoryId) return;
+          console.log("[VictoryWatch] Processing victory event:", eventId, "lastShownVictoryId:", lastShownVictoryId);
+          if (eventId === lastShownVictoryId) {
+            console.log("[VictoryWatch] SKIPPED - same as last shown ID");
+            return;
+          }
 
           lastShownVictoryId = eventId;
           sessionStorage.setItem("members_last_victory_event_id", eventId);
 
+          console.log("[VictoryWatch] About to show victory. ROOM.Victory exists:", !!(window.ROOM && window.ROOM.Victory), "ROOM.Victory.show exists:", !!(window.ROOM && window.ROOM.Victory && window.ROOM.Victory.show));
+          console.log("[VictoryWatch] Event data:", JSON.stringify(e.data).substring(0, 200));
+
           if (window.ROOM && window.ROOM.Victory && window.ROOM.Victory.show) {
+            console.log("[VictoryWatch] Calling ROOM.Victory.show()");
             window.ROOM.Victory.show(e.data);
           } else {
             // room-victory.js loads after this file on members.html.
             // Queue the latest payload so it can be played once loaded.
+            console.log("[VictoryWatch] ROOM.Victory not ready, queuing as __pendingVictoryPayload");
             window.__pendingVictoryPayload = e.data;
           }
         });
@@ -537,8 +559,8 @@ var MembersRoom = {
 
       var avatarInnerHtml = hasPic
         ? '<img src="' +
-          data.profilePicture +
-          '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'
+        data.profilePicture +
+        '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'
         : "<span>" + (data.username || "?").charAt(0).toUpperCase() + "</span>";
       var avatarStyle = hasPic
         ? "background:transparent;overflow:hidden;"
