@@ -158,3 +158,20 @@ export const listRecent = query({
     return events.reverse();
   },
 });
+
+// Get the latest victory_screen event for a room (used for locked-room replay)
+export const getLatestVictory = query({
+  args: {
+    roomId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_room_type", (q) =>
+        q.eq("roomId", args.roomId).eq("type", "victory_screen")
+      )
+      .order("desc")
+      .first();
+    return event?.data ?? null;
+  },
+});

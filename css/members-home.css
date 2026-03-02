@@ -1009,7 +1009,7 @@
 .mh-room-join-btn--locked {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.6);
-  cursor: not-allowed;
+  cursor: pointer;
   box-shadow: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
   gap: 10px;
@@ -1018,10 +1018,11 @@
 .mh-room-join-btn--locked:hover {
   transform: none;
   box-shadow: none;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .mh-room-join-btn--locked:active {
-  transform: none;
+  transform: scale(0.97);
 }
 
 .mh-room-join-btn--locked svg {

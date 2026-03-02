@@ -95,8 +95,21 @@ checkAuthState().then(async (user) => {
 // ========== ROOM NAVIGATION ==========
 var joinStreamBtn = document.getElementById("joinStreamBtn");
 if (joinStreamBtn) {
-  joinStreamBtn.addEventListener("click", function () {
-    if (joinStreamBtn.classList.contains("mh-room-join-btn--locked")) return;
+  joinStreamBtn.addEventListener("click", async function () {
+    if (joinStreamBtn.classList.contains("mh-room-join-btn--locked")) {
+      // Show victory animation when clicking locked room
+      try {
+        var victoryData = await ConvexService.query("events:getLatestVictory", {
+          roomId: "streaming",
+        });
+        if (victoryData && window.ROOM && window.ROOM.Victory && window.ROOM.Victory.show) {
+          window.ROOM.Victory.show(victoryData);
+        }
+      } catch (err) {
+        console.error("Error fetching victory data:", err);
+      }
+      return;
+    }
     window.location.href = "room.html?id=streaming";
   });
 }
@@ -104,14 +117,26 @@ if (joinStreamBtn) {
 // Also make the featured room card clickable
 var streamingRoom = document.getElementById("streamingRoom");
 if (streamingRoom) {
-  streamingRoom.addEventListener("click", function (e) {
+  streamingRoom.addEventListener("click", async function (e) {
     // Don't navigate if clicking the users button
     if (e.target.closest(".mh-room-users-btn")) return;
     if (
       joinStreamBtn &&
       joinStreamBtn.classList.contains("mh-room-join-btn--locked")
-    )
+    ) {
+      // Show victory animation when clicking locked room card
+      try {
+        var victoryData = await ConvexService.query("events:getLatestVictory", {
+          roomId: "streaming",
+        });
+        if (victoryData && window.ROOM && window.ROOM.Victory && window.ROOM.Victory.show) {
+          window.ROOM.Victory.show(victoryData);
+        }
+      } catch (err) {
+        console.error("Error fetching victory data:", err);
+      }
       return;
+    }
     window.location.href = "room.html?id=streaming";
   });
 }
@@ -466,10 +491,22 @@ var MembersRoom = {
       if (isLocked) {
         tagText.textContent = "Room Closed";
         tagEl.classList.add("mh-room-tag--idle");
-        // Disable join button and start countdown
+        // Disable join button
         if (joinBtn) {
           joinBtn.classList.add("mh-room-join-btn--locked");
-          this._startJoinCountdown(this._roomData.lockedUntil);
+          // If lock is more than 7 days away, treat as indefinite (no timer)
+          var isIndefinite = (this._roomData.lockedUntil - Date.now()) > 7 * 24 * 60 * 60 * 1000;
+          if (isIndefinite) {
+            this._stopJoinCountdown();
+            joinBtn.innerHTML =
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>' +
+              '<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>' +
+              '</svg>' +
+              'Room Closed';
+          } else {
+            this._startJoinCountdown(this._roomData.lockedUntil);
+          }
         }
       } else {
         // Room is open — restore join button
