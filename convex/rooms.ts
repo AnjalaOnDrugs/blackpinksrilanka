@@ -25,6 +25,11 @@ export const ensureRoom = mutation({
         restricted: args.restricted,
         allowedUsers: args.allowedUsers,
       });
+    } else if (args.allowedUsers !== undefined) {
+      await ctx.db.patch(existing._id, {
+        allowedUsers: args.allowedUsers,
+        ...(args.restricted !== undefined ? { restricted: args.restricted } : {}),
+      });
     }
   },
 });

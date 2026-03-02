@@ -40,6 +40,130 @@ ROOM.Victory = {
     // No init-time DOM needed; overlay is created on demand
   },
 
+  /**
+   * DEBUG: Preview the personal victory card for any rank.
+   * Call from browser console: ROOM.Victory.previewRank(2)
+   * Supports ranks 1-20+. Uses fake data for preview.
+   */
+  previewRank: function (rank) {
+    rank = rank || 1;
+    this._hidePersonalView(true);
+    this._didShowPersonal = false;
+
+    var total = Math.max(rank, 25);
+    var fakePhone = "preview_" + rank;
+    var points = Math.max(0, 50000 - (rank - 1) * 3500);
+
+    // Fake the active data so _findPlacement and _showPersonalView work
+    var top10 = [];
+    for (var i = 0; i < Math.min(10, total); i++) {
+      top10.push({
+        rank: i + 1,
+        username: i + 1 === rank ? (ROOM.currentUser && ROOM.currentUser.username || "You") : "BLINK_" + (i + 1),
+        totalPoints: Math.max(0, 50000 - i * 3500),
+        totalMinutes: 120 - i * 8,
+        phoneNumber: i + 1 === rank ? fakePhone : "other_" + i,
+        avatarColor: "",
+        profilePicture: null,
+      });
+    }
+
+    var placementByPhone = {};
+    placementByPhone[fakePhone] = rank;
+
+    var perUserStats = {};
+    perUserStats[fakePhone] = {
+      goStreams: Math.max(0, 42 - rank * 3),
+      otherStreams: Math.max(0, 18 - rank),
+      totalStreams: Math.max(0, 60 - rank * 4),
+      totalListenSeconds: Math.max(0, (120 - rank * 8) * 60),
+      spotifyStreams: Math.max(0, 20 - rank * 2),
+      youtubeStreams: Math.max(0, 22 - rank),
+    };
+
+    // Override current phone temporarily
+    var origPhone = null;
+    if (window.MembersRoom) {
+      origPhone = window.MembersRoom._myPhone;
+      window.MembersRoom._myPhone = fakePhone;
+    }
+    var origUser = ROOM.currentUser;
+    ROOM.currentUser = ROOM.currentUser || {};
+    ROOM.currentUser.phoneNumber = fakePhone;
+
+    this._activeData = {
+      top10: top10,
+      totalParticipants: total,
+      placementByPhone: placementByPhone,
+      perUserStats: perUserStats,
+      profilePicByPhone: {},
+    };
+
+    this._showPersonalView();
+
+    // Restore
+    if (window.MembersRoom && origPhone !== null) {
+      window.MembersRoom._myPhone = origPhone;
+    }
+    if (origUser) ROOM.currentUser = origUser;
+
+    console.log("[Victory] Previewing rank #" + rank + " of " + total);
+  },
+
+  /**
+   * DEBUG: Preview the full victory screen (podium + top 10) with 10 fake participants.
+   * Call from browser console: ROOM.Victory.previewFull()
+   */
+  previewFull: function () {
+    this.destroy();
+
+    var names = [
+      "Anjala", "Sachini", "Nethmi", "Kavisha", "Dinusha",
+      "Tharushi", "Malsha", "Ishara", "Pavithra", "Sanduni"
+    ];
+    var colors = [
+      "linear-gradient(135deg, #f7a6b9, #e8758a)",
+      "linear-gradient(135deg, #7c4dff, #b388ff)",
+      "linear-gradient(135deg, #00e5ff, #18ffff)",
+      "linear-gradient(135deg, #ffc107, #ff8f00)",
+      "linear-gradient(135deg, #69f0ae, #00e676)",
+      "linear-gradient(135deg, #ff4081, #f50057)",
+      "linear-gradient(135deg, #ffab40, #ff6d00)",
+      "linear-gradient(135deg, #40c4ff, #0091ea)",
+      "linear-gradient(135deg, #e040fb, #aa00ff)",
+      "linear-gradient(135deg, #b2ff59, #76ff03)"
+    ];
+
+    var top10 = [];
+    for (var i = 0; i < 10; i++) {
+      top10.push({
+        rank: i + 1,
+        username: names[i],
+        totalPoints: Math.max(500, 48000 - i * 4200 + Math.floor(Math.random() * 500)),
+        totalMinutes: Math.max(10, 135 - i * 12),
+        phoneNumber: "fake_" + (i + 1),
+        avatarColor: colors[i],
+        profilePicture: null,
+      });
+    }
+
+    var placementByPhone = {};
+    for (var j = 0; j < top10.length; j++) {
+      placementByPhone[top10[j].phoneNumber] = j + 1;
+    }
+
+    var data = {
+      top10: top10,
+      totalParticipants: 10,
+      placementByPhone: placementByPhone,
+      perUserStats: {},
+      profilePicByPhone: {},
+    };
+
+    this.show(data);
+    console.log("[Victory] Previewing full victory screen with 10 participants");
+  },
+
   show: function (data) {
     console.log("[Victory.show] Called!", "isMembersPage:", this._isMembersPage(), "data:", !!data, "top10:", data && data.top10 ? data.top10.length : 0);
     // Victory animation is intentionally shown on members page only.
@@ -207,10 +331,16 @@ ROOM.Victory = {
     // Points
     var pts = this._formatPoints(entry.totalPoints);
 
-    // Time streamed
-    var hours = Math.floor((entry.totalMinutes || 0) / 60);
-    var mins = (entry.totalMinutes || 0) % 60;
-    var timeStr = hours > 0 ? hours + "h " + mins + "m" : mins + "m";
+    // Listen time (prefer totalListenSeconds from perUserStats, fallback to totalMinutes)
+    var listenSecs = 0;
+    if (this._activeData && this._activeData.perUserStats && entry.phoneNumber) {
+      var us = this._activeData.perUserStats[entry.phoneNumber];
+      if (us && us.totalListenSeconds) listenSecs = us.totalListenSeconds;
+    }
+    if (listenSecs <= 0) listenSecs = (entry.totalMinutes || 0) * 60;
+    var lh = Math.floor(listenSecs / 3600);
+    var lm = Math.floor((listenSecs % 3600) / 60);
+    var timeStr = lh > 0 ? lh + "h " + lm + "m" : lm + "m";
 
     // Light rays for 1st place
     var raysHtml = rank === 1 ? '<div class="room-victory-rays"></div>' : "";
@@ -238,7 +368,7 @@ ROOM.Victory = {
       "</div>" +
       '<div class="room-victory-time">' +
       timeStr +
-      " streamed</div>";
+      " listen time</div>";
 
     return card;
   },
@@ -392,13 +522,13 @@ ROOM.Victory = {
   },
 
   _buildPlacementMessage: function (rank, totalParticipants) {
-    if (rank === 1) return "You owned this round. Absolute champion.";
-    if (rank === 2 || rank === 3) return "Podium finish. Massive performance.";
-    if (rank <= 10) return "Top 10 finish. You carried strong energy.";
+    if (rank === 1) return "The sleep nights paid off, You owned this event. Absolute champion.";
+    if (rank === 2 || rank === 3) return "Podium finish. Massive performance. Thanks for your dedication!";
+    if (rank <= 10) return "Top 10 finish. You did Amazing!";
 
     var cutoff = Math.max(10, Math.ceil((totalParticipants || 0) * 0.25));
     if (rank <= cutoff) return "Great run. You finished in the top quarter.";
-    return "Nice effort. Come back stronger next round.";
+    return "Nice effort!";
   },
 
   _showPersonalView: function () {
@@ -594,9 +724,7 @@ ROOM.Victory = {
       fwSelf._spawnConfettiBurst(overlay, 25);
     }, 3000);
 
-    this._personalTimer = setTimeout(function () {
-      self._hidePersonalView();
-    }, 20000);
+    // No auto-dismiss — stays until user clicks Continue or taps backdrop
   },
 
   // ——— CONFETTI SYSTEM ———
