@@ -160,6 +160,7 @@ export const listRecent = query({
 });
 
 // Get the latest victory_screen event for a room (used for locked-room replay)
+// Enriches with fresh profile pictures from the users table.
 export const getLatestVictory = query({
   args: {
     roomId: v.string(),
@@ -172,6 +173,37 @@ export const getLatestVictory = query({
       )
       .order("desc")
       .first();
-    return event?.data ?? null;
+    if (!event?.data) return null;
+
+    const data = event.data as any;
+    const top10 = Array.isArray(data.top10) ? data.top10 : [];
+
+    // Fetch current profile pictures for top10 users.
+    // Unlike the stored event, we can include data URLs here since this is
+    // a query result (not persisted), so size limits don't apply.
+    const profilePicByPhone: Record<string, string> = {};
+    for (const entry of top10) {
+      if (!entry.phoneNumber) continue;
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q: any) => q.eq("phoneNumber", entry.phoneNumber))
+        .first();
+      const pic = user?.profilePicture;
+      if (typeof pic === "string" && pic.trim()) {
+        profilePicByPhone[entry.phoneNumber] = pic.trim();
+      }
+    }
+
+    // Enrich top10 entries with fresh profile pictures
+    const enrichedTop10 = top10.map((entry: any) => ({
+      ...entry,
+      profilePicture: profilePicByPhone[entry.phoneNumber] || entry.profilePicture || null,
+    }));
+
+    return {
+      ...data,
+      top10: enrichedTop10,
+      profilePicByPhone,
+    };
   },
 });
