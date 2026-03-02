@@ -44,6 +44,47 @@
   padding: 32px 0 48px;
 }
 
+/* ---------- LOADING SCREEN ---------- */
+.room-victory-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  animation: roomVictoryFadeIn 0.4s ease forwards;
+}
+
+.room-victory-loading--exit {
+  animation: roomVictoryFadeOut 0.4s ease forwards;
+  pointer-events: none;
+}
+
+.room-victory-loading-video {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(247, 166, 185, 0.5));
+  border-radius: 12px;
+}
+
+.room-victory-loading-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(247, 166, 185, 0.8);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: roomVictoryLoadingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes roomVictoryLoadingPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 /* ---------- BPSL LOGO ---------- */
 .room-victory-logo {
   width: 72px;
@@ -595,6 +636,16 @@
 
 /* ===== VICTORY MOBILE ===== */
 @media (max-width: 480px) {
+  .room-victory-loading-video {
+    width: 120px;
+    height: 120px;
+  }
+
+  .room-victory-loading-text {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+  }
+
   .room-victory-logo {
     width: 56px;
     height: 56px;

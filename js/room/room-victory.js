@@ -191,7 +191,38 @@ ROOM.Victory = {
     var overlay = document.createElement("div");
     overlay.className = "room-victory-overlay";
 
-    // Sparkle canvas (background golden particles)
+    // --- LOADING SCREEN (shown first for 3 seconds) ---
+    var loadingScreen = document.createElement("div");
+    loadingScreen.className = "room-victory-loading";
+    loadingScreen.innerHTML =
+      '<video src="assets/logo/Loading_animation.mp4" autoplay muted playsinline loop class="room-victory-loading-video"></video>' +
+      '<div class="room-victory-loading-text">Calculating results...</div>';
+    overlay.appendChild(loadingScreen);
+
+    document.body.appendChild(overlay);
+    this._overlay = overlay;
+
+    // After 3 seconds, fade out loading and reveal the actual victory content
+    var LOADING_DURATION = 3000;
+    setTimeout(function () {
+      if (self._overlay !== overlay) return;
+
+      // Fade out loading screen
+      loadingScreen.classList.add("room-victory-loading--exit");
+      setTimeout(function () {
+        if (loadingScreen.parentNode) loadingScreen.remove();
+      }, 400);
+
+      // Now build and show the actual victory content
+      self._revealVictoryContent(overlay, data);
+    }, LOADING_DURATION);
+  },
+
+  _revealVictoryContent: function (overlay, data) {
+    var self = this;
+    var top10 = data.top10;
+
+    // Sparkle canvas (background particles)
     var sparkleLayer = document.createElement("div");
     sparkleLayer.className = "room-victory-sparkle-layer";
     overlay.appendChild(sparkleLayer);
@@ -252,9 +283,6 @@ ROOM.Victory = {
       if (e.target === overlay || e.target === sparkleLayer) self.dismiss();
     });
 
-    document.body.appendChild(overlay);
-    this._overlay = overlay;
-
     // Animation timeline
 
     // Screen shake at 4.5s for impact (when 1st place hits)
@@ -282,12 +310,12 @@ ROOM.Victory = {
       }
     }, 6000);
 
-    // Continuous golden sparkles
+    // Continuous sparkles
     this._particleInterval = setInterval(function () {
       self._spawnSparkles(sparkleLayer, 6);
     }, 700);
 
-    // Auto-dismiss after 30 seconds
+    // Auto-dismiss after 30 seconds (from when content reveals)
     this._dismissTimer = setTimeout(function () {
       self.dismiss();
     }, 30000);
