@@ -12,7 +12,7 @@
   justify-content: center;
   padding: 16px;
   overflow-y: auto;
-  background: radial-gradient(ellipse at 50% 30%, rgba(40, 30, 5, 0.97) 0%, rgba(0, 0, 0, 0.99) 70%);
+  background: radial-gradient(ellipse at 50% 30%, rgba(30, 5, 15, 0.97) 0%, rgba(0, 0, 0, 0.99) 70%);
   animation: roomVictoryFadeIn 0.6s ease forwards;
   -webkit-overflow-scrolling: touch;
 }
@@ -44,6 +44,23 @@
   padding: 32px 0 48px;
 }
 
+/* ---------- BPSL LOGO ---------- */
+.room-victory-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.5);
+  animation: roomVictoryLogoIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+  filter: drop-shadow(0 0 20px rgba(247, 166, 185, 0.6)) drop-shadow(0 0 40px rgba(232, 117, 138, 0.3));
+}
+
+@keyframes roomVictoryLogoIn {
+  0% { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+  60% { transform: scale(1.1) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
 /* ---------- TITLE ---------- */
 .room-victory-title {
   font-family: 'Outfit', sans-serif;
@@ -64,13 +81,13 @@
   font-size: 56px;
   letter-spacing: 10px;
   line-height: 1.1;
-  background: linear-gradient(135deg, #ffd54f 0%, #ffecb3 30%, #ffc107 50%, #ff8f00 80%, #ffd54f 100%);
+  background: linear-gradient(135deg, #ff6b9d 0%, #f7a6b9 25%, #e8758a 50%, #ff4081 75%, #ff6b9d 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 30px rgba(255, 193, 7, 0.5)) drop-shadow(0 4px 20px rgba(255, 152, 0, 0.3));
-  animation: roomVictoryGoldShimmer 3s ease-in-out infinite 1.5s;
+  filter: drop-shadow(0 0 30px rgba(247, 166, 185, 0.5)) drop-shadow(0 4px 20px rgba(232, 117, 138, 0.3));
+  animation: roomVictoryPinkShimmer 3s ease-in-out infinite 1.5s;
 }
 
 /* ---------- PODIUM ROW ---------- */
@@ -313,8 +330,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(247, 166, 185, 0.04);
+  border: 1px solid rgba(247, 166, 185, 0.1);
   border-radius: 14px;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -327,7 +344,7 @@
 }
 
 .room-victory-rest-card:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(247, 166, 185, 0.08);
 }
 
 .room-victory-rest-rank {
@@ -350,7 +367,7 @@
   font-weight: 700;
   font-size: 14px;
   color: #fff;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(247, 166, 185, 0.2);
 }
 
 .room-victory-rest-info {
@@ -378,22 +395,22 @@
 /* ---------- SPARKLE PARTICLES ---------- */
 .room-victory-sparkle {
   position: absolute;
-  color: #ffc107;
+  color: #f7a6b9;
   font-size: var(--sparkle-size, 14px);
   pointer-events: none;
   opacity: 0;
   animation: roomVictorySparkleFade 1.8s ease var(--sparkle-delay, 0s) forwards;
   z-index: 1;
-  text-shadow: 0 0 8px rgba(255, 193, 7, 0.6);
+  text-shadow: 0 0 8px rgba(247, 166, 185, 0.6);
 }
 
 /* ---------- DISMISS BUTTON ---------- */
 .room-victory-dismiss {
   margin-top: 8px;
   padding: 12px 44px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(247, 166, 185, 0.1);
+  color: rgba(247, 166, 185, 0.7);
+  border: 1px solid rgba(247, 166, 185, 0.25);
   border-radius: 50px;
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
@@ -406,9 +423,10 @@
 }
 
 .room-victory-dismiss:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(247, 166, 185, 0.18);
+  color: rgba(255, 255, 255, 0.9);
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(247, 166, 185, 0.2);
 }
 
 .room-victory-dismiss:active {
@@ -516,6 +534,18 @@
   }
 }
 
+@keyframes roomVictoryPinkShimmer {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 @keyframes roomVictoryCrownBounce {
 
   0%,
@@ -565,6 +595,11 @@
 
 /* ===== VICTORY MOBILE ===== */
 @media (max-width: 480px) {
+  .room-victory-logo {
+    width: 56px;
+    height: 56px;
+  }
+
   .room-victory-title {
     font-size: 18px;
     letter-spacing: 4px;

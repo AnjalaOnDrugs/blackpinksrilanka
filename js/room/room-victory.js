@@ -200,6 +200,13 @@ ROOM.Victory = {
     var container = document.createElement("div");
     container.className = "room-victory-container";
 
+    // BPSL Logo
+    var logo = document.createElement("img");
+    logo.className = "room-victory-logo";
+    logo.src = "assets/Logo.png";
+    logo.alt = "BPSL";
+    container.appendChild(logo);
+
     // Title
     var title = document.createElement("div");
     title.className = "room-victory-title";
@@ -430,7 +437,7 @@ ROOM.Victory = {
     for (var i = 0; i < count; i++) {
       var sparkle = document.createElement("div");
       sparkle.className = "room-victory-sparkle";
-      var symbols = ["\u2726", "\u2728", "\u2736", "\u2605"];
+      var symbols = ["\u2726", "\u2728", "\u2736", "\u2605", "\u2764"];
       sparkle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
       sparkle.style.left = Math.random() * 100 + "%";
       sparkle.style.top = Math.random() * 100 + "%";
