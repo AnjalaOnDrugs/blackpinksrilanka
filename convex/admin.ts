@@ -2,6 +2,47 @@ import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { assertAdminAccess } from "./adminAuth";
 
+const MAX_VICTORY_EVENT_BYTES = 500_000;
+const MAX_PROFILE_PICTURE_LENGTH = 2048;
+const MAX_PLACEMENT_ENTRIES = 500;
+
+function safeProfilePicture(value: unknown): string | null {
+    if (typeof value !== "string") return null;
+    const pic = value.trim();
+    if (!pic) return null;
+    // Data URLs can be very large and can exceed Convex's 1 MiB value limit.
+    if (pic.startsWith("data:")) return null;
+    if (pic.length > MAX_PROFILE_PICTURE_LENGTH) return null;
+    return pic;
+}
+
+function approximateJsonBytes(value: unknown): number {
+    // Multiply by 1.5 to account for Convex internal value overhead
+    // (per-field metadata, UTF-8 encoding, etc.)
+    return Math.ceil(JSON.stringify(value).length * 1.5);
+}
+
+function limitPlacementMap(
+    fullPlacementByPhone: Record<string, number>,
+    keepPhones: string[],
+    maxEntries: number
+): Record<string, number> {
+    const limited: Record<string, number> = {};
+    let count = 0;
+    for (const [phone, rank] of Object.entries(fullPlacementByPhone)) {
+        if (count >= maxEntries) break;
+        limited[phone] = rank;
+        count++;
+    }
+    for (const phone of keepPhones) {
+        const rank = fullPlacementByPhone[phone];
+        if (rank != null) {
+            limited[phone] = rank;
+        }
+    }
+    return limited;
+}
+
 // Set a room lock until a specific timestamp
 export const setRoomLock = mutation({
     args: {
@@ -306,16 +347,18 @@ export const triggerVictoryScreen = mutation({
             placementByPhone[standings[i].phoneNumber] = i + 1;
         }
 
-        // Enrich with profile pictures from users table
-        const allPhones = standings.map((s) => s.phoneNumber);
+        const top10Phones = top10.map((s) => s.phoneNumber);
+
+        // Enrich with profile pictures from users table (top 10 only)
         const profilePicByPhone: Record<string, string> = {};
-        for (const phone of allPhones) {
+        for (const phone of top10Phones) {
             const user = await ctx.db
                 .query("users")
                 .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
                 .first();
-            if (user?.profilePicture) {
-                profilePicByPhone[phone] = user.profilePicture;
+            const safePic = safeProfilePicture(user?.profilePicture);
+            if (safePic) {
+                profilePicByPhone[phone] = safePic;
             }
         }
 
@@ -334,7 +377,7 @@ export const triggerVictoryScreen = mutation({
             spotifyStreams: number;
             youtubeStreams: number;
         }> = {};
-        for (const phone of allPhones) {
+        for (const phone of top10Phones) {
             const userStats = await ctx.db
                 .query("userStreamStats")
                 .withIndex("by_room_phone", (q) =>
@@ -374,17 +417,66 @@ export const triggerVictoryScreen = mutation({
             };
         }
 
+        let victoryData: {
+            top10: typeof enrichedTop10;
+            totalParticipants: number;
+            placementByPhone: Record<string, number>;
+            perUserStats: typeof perUserStats;
+            profilePicByPhone: Record<string, string>;
+            triggeredAt: number;
+        } = {
+            top10: enrichedTop10,
+            totalParticipants: standings.length,
+            placementByPhone,
+            perUserStats,
+            profilePicByPhone,
+            triggeredAt: now,
+        };
+
+        // Final size guard to avoid Convex value-size failures.
+        if (approximateJsonBytes(victoryData) > MAX_VICTORY_EVENT_BYTES) {
+            victoryData = {
+                ...victoryData,
+                placementByPhone: limitPlacementMap(
+                    victoryData.placementByPhone,
+                    top10Phones,
+                    MAX_PLACEMENT_ENTRIES
+                ),
+            };
+        }
+        if (approximateJsonBytes(victoryData) > MAX_VICTORY_EVENT_BYTES) {
+            victoryData = {
+                ...victoryData,
+                perUserStats: {},
+            };
+        }
+        if (approximateJsonBytes(victoryData) > MAX_VICTORY_EVENT_BYTES) {
+            victoryData = {
+                ...victoryData,
+                profilePicByPhone: {},
+            };
+        }
+        if (approximateJsonBytes(victoryData) > MAX_VICTORY_EVENT_BYTES) {
+            victoryData = {
+                ...victoryData,
+                placementByPhone: {},
+            };
+        }
+        // Final hard fallback: trim top10 to top 3 if still too large
+        if (approximateJsonBytes(victoryData) > MAX_VICTORY_EVENT_BYTES) {
+            victoryData = {
+                ...victoryData,
+                top10: victoryData.top10.slice(0, 3),
+                profilePicByPhone: {},
+                perUserStats: {},
+                placementByPhone: {},
+            };
+        }
+
         await ctx.db.insert("events", {
             roomId: args.roomId,
             type: "victory_screen",
-            data: {
-                top10: enrichedTop10,
-                totalParticipants: standings.length,
-                placementByPhone,
-                perUserStats,
-                profilePicByPhone,
-                triggeredAt: now,
-            },
+            data: victoryData,
             createdAt: now,
         });
 
